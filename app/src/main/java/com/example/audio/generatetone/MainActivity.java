@@ -2,6 +2,7 @@ package com.example.audio.generatetone;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,11 +17,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static native void playTone();
+    public static native void createEngine();
+    public static native void createBufferQueueAudioPlayer();
+
+    public static final String TAG = MainActivity.class.getName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //Create the audio engine
+        createEngine();
+        createBufferQueueAudioPlayer();
+
+        Log.d(TAG, "Audio engine created");
 
         setContentView(R.layout.activity_main);
 
