@@ -57,8 +57,8 @@ __attribute__((constructor)) static void onDlOpen(void)
     int sign = 1;
     for (j = 0; j < SQUARE_FRAMES; ++j) {
 
-        if (j % 25 == 0) sign = -sign;
-        squareBuffer[j] = 32768 * sign;
+        if (j % 20 == 0) sign = sign * -1;
+        squareBuffer[j] = 32767 * sign;
     }
 
     unsigned int k;
