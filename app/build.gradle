@@ -1,24 +1,28 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.model.application'
 
-android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+model {
+    android{
+        compileSdkVersion = 22
+        buildToolsVersion = "22.0.1"
 
-    defaultConfig {
-        applicationId "audio.example.com.generatetone"
-        minSdkVersion 10
-        targetSdkVersion 22
-        versionCode 1
-        versionName "1.0"
-        ndk {
-            moduleName "generate_tone"
-            ldLibs "OpenSLES"
+        defaultConfig.with {
+            minSdkVersion.apiLevel = 22
+            targetSdkVersion.apiLevel = 22
+            applicationId = "audio.example.com.generatetone"
+            versionName = "1.0"
+            versionCode = 1
         }
     }
-    buildTypes {
+
+    android.ndk {
+        moduleName += "generate_tone"
+        ldLibs += "OpenSLES"
+    }
+
+    android.buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            isMinifyEnabled = false
+            proguardFiles += file('proguard-rules.pro')
         }
     }
 }

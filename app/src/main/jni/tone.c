@@ -100,7 +100,7 @@ void Java_com_example_audio_generatetone_MainActivity_playTone(JNIEnv* env, jcla
     //nextBuffer = sineBuffer;
     //nextSize = sizeof(sineBuffer);
 
-    nextCount = 10;
+    nextCount = 1;
     if (nextSize > 0) {
         // here we only enqueue one buffer because it is a long clip,
         // but for streaming playback we would typically enqueue at least 2 buffers to start
@@ -144,17 +144,21 @@ void Java_com_example_audio_generatetone_MainActivity_createEngine(JNIEnv* env, 
 
 // create buffer queue audio player
 void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlayer(JNIEnv* env,
-        jclass clazz)
+        jclass clazz, jint sampleRate, jint framesPerBuffer)
 {
+
     SLresult result;
 
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2}; // 2 for double buffering
 
+    // convert the sampling rate to the format expected by SLES
+    SLuint32 nativeSampleRate = (SLuint32) sampleRate * 1000;
+
     SLDataFormat_PCM format_pcm = {
         SL_DATAFORMAT_PCM, //format type
         1, //numChannels
-        SL_SAMPLINGRATE_8, //samplesPerSec
+        nativeSampleRate, //samplesPerSec
         SL_PCMSAMPLEFORMAT_FIXED_16, //bitsPerSample
         SL_PCMSAMPLEFORMAT_FIXED_16, //containerSize
         SL_SPEAKER_FRONT_CENTER, //channelMask
@@ -171,22 +175,15 @@ void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlay
     SLDataSink audioSnk = {&loc_outmix, NULL};
 
     // create audio player
-    const SLInterfaceID ids[3] = {
-        SL_IID_BUFFERQUEUE,
-        SL_IID_EFFECTSEND,
-        SL_IID_VOLUME
-    };
-    const SLboolean req[3] = {
-        SL_BOOLEAN_TRUE,
-        SL_BOOLEAN_TRUE,
-        SL_BOOLEAN_TRUE};
+    const SLInterfaceID ids[1] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE };
+    const SLboolean req[1] = { SL_BOOLEAN_TRUE };
 
     result = (*engineEngine)->CreateAudioPlayer(
         engineEngine, //engine
         &bqPlayerObject, //player object
         &audioSrc, //input
         &audioSnk, //output
-        3, // Number of interfaces
+        1, // Number of interfaces
         ids, // The interfaces
         req // Whether the interfaces are required
     );
@@ -212,17 +209,6 @@ void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlay
 
     // register callback on the buffer queue
     result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue, bqPlayerCallback, NULL);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
-
-    // get the effect send interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_EFFECTSEND,
-            &bqPlayerEffectSend);
-    assert(SL_RESULT_SUCCESS == result);
-    (void)result;
-
-    // get the volume interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_VOLUME, &bqPlayerVolume);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
