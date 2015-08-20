@@ -135,23 +135,16 @@ void Java_com_example_audio_generatetone_MainActivity_createEngine(JNIEnv* env, 
 void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlayer(JNIEnv* env,
         jclass clazz, jint sampleRate, jint framesPerBuffer)
 {
-
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio player with sample rate %d and buffer size %d ", sampleRate, framesPerBuffer);
-
-    // framesPerBuffer represents the *ideal* buffer size according to that reported by the hardware
-    // We'll ignore this now since on Nexus 9 we can just hardcode it to 128.
-    // bufferSize = framesPerBuffer;
-
     SLresult result;
 
     // configure the audio source (supply data through a buffer queue in PCM format)
-    SLDataLocator_BufferQueue locator_bufferqueue_source;
+    SLDataLocator_AndroidSimpleBufferQueue locator_bufferqueue_source;
     SLDataFormat_PCM format_pcm;
     SLDataSource audio_source;
 
     // source location
-    locator_bufferqueue_source.locatorType = SL_DATALOCATOR_BUFFERQUEUE;
-    locator_bufferqueue_source.numBuffers = 1; // 2 for double buffering
+    locator_bufferqueue_source.locatorType = SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE;
+    locator_bufferqueue_source.numBuffers = 1;
 
     // source format
     format_pcm.formatType = SL_DATAFORMAT_PCM;
@@ -159,7 +152,6 @@ void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlay
     format_pcm.samplesPerSec = (SLuint32) sampleRate * 1000;
     format_pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     format_pcm.containerSize = 16;
-    format_pcm.numChannels = 1;
     format_pcm.channelMask = SL_SPEAKER_FRONT_CENTER;
     format_pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
 
@@ -177,17 +169,19 @@ void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlay
     audio_sink.pFormat = NULL;
 
     // create audio player
-    const SLInterfaceID interface_ids[1] = { SL_IID_BUFFERQUEUE };
-    const SLboolean interfaces_required[1] = { SL_BOOLEAN_TRUE };
+    // Note: Adding other output interfaces here will result in your audio being routed using the
+    // normal path NOT the fast path
+    const SLInterfaceID interface_ids[2] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE, SL_IID_VOLUME };
+    const SLboolean interfaces_required[2] = { SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
 
     result = (*engineEngine)->CreateAudioPlayer(
-        engineEngine, //engine
-        &bqPlayerObject, //player object
-        &audio_source, //input
-        &audio_sink, //output
+        engineEngine,
+        &bqPlayerObject,
+        &audio_source,
+        &audio_sink,
         1, // Number of interfaces
-        interface_ids, // The interfaces
-        interfaces_required // Whether the interfaces are required
+        interface_ids,
+        interfaces_required
     );
 
     assert(SL_RESULT_SUCCESS == result);
