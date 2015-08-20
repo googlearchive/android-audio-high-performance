@@ -1,4 +1,3 @@
-
 #include <assert.h>
 #include <jni.h>
 
@@ -9,109 +8,99 @@
 // for native asset manager
 #include <sys/types.h>
 
+// logging
+#include <android/log.h>
+#define APPNAME "GenerateTone"
+
 // engine interfaces
 static SLObjectItf engineObject = NULL;
 static SLEngineItf engineEngine;
 
 // output mix interfaces
 static SLObjectItf outputMixObject = NULL;
-static SLEnvironmentalReverbItf outputMixEnvironmentalReverb = NULL;
 
 // buffer queue player interfaces
 static SLObjectItf bqPlayerObject = NULL;
 static SLPlayItf bqPlayerPlay;
 static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
-static SLEffectSendItf bqPlayerEffectSend;
-static SLVolumeItf bqPlayerVolume;
 
-// synthesized sawtooth clip
-#define SAWTOOTH_FRAMES 8000
-static short sawtoothBuffer[SAWTOOTH_FRAMES];
-
-// synthesized square clip
-#define SQUARE_FRAMES 8000
+// synthesized square wave
+// NOTE: Changing this to 128 results in an output of clicks
+#define SQUARE_FRAMES 128
 static short squareBuffer[SQUARE_FRAMES];
+#define MAXIMUM_AMPLITUDE_VALUE 32767
 
-// synthesized sine clip
-#define SINE_FRAMES 8000
-static short sineBuffer[SINE_FRAMES];
+// how many times to play the square wave buffer (so we can actually hear it)
+#define BUFFERS_TO_PLAY 200
 
-#define TWO_PI (3.14159 * 2)
+static SLuint32 bufferSize; // Amount of frames to feed to the player in each callback
+static unsigned buffersRemaining = BUFFERS_TO_PLAY;
 
-// pointer and size of the next player buffer to enqueue, and number of remaining buffers
-static short *nextBuffer;
-static unsigned nextSize;
-static int nextCount;
-
-
-// synthesize a mono sawtooth wave and place it into a buffer (called automatically on load)
+// synthesize a mono square wave and place it into a buffer (called automatically on load)
 __attribute__((constructor)) static void onDlOpen(void)
 {
-    unsigned i;
-    for (i = 0; i < SAWTOOTH_FRAMES; ++i) {
-        sawtoothBuffer[i] = 32768 - ((i % 100) * 660);
-
-    }
-
     unsigned j;
     int sign = 1;
     for (j = 0; j < SQUARE_FRAMES; ++j) {
 
-        if (j % 20 == 0) sign = sign * -1;
-        squareBuffer[j] = 32767 * sign;
-    }
-
-    unsigned int k;
-    float phaseIncrement = TWO_PI/(8000 / 440);
-    float currentPhase = 0.0;
-    for (k = 0; k < SINE_FRAMES; k++) {
-        sineBuffer[k] = sin(currentPhase);
-        currentPhase += phaseIncrement;
+        /**
+         * Changing the sign every 64 frames gives us a complete square wave every 128 frames.
+         * At a sample rate of 48000Hz this gives us a square wave of 375Hz
+         **/
+        if (j % 64 == 0) sign = sign * -1;
+        squareBuffer[j] = MAXIMUM_AMPLITUDE_VALUE * sign;
+        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Square wave %d %d", j, squareBuffer[j]);
     }
 }
-
-
 
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "In bqPlayerCallback");
+
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
-    // for streaming playback, replace this test by logic to find and fill the next buffer
-    if (--nextCount > 0 && NULL != nextBuffer && 0 != nextSize) {
+
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Buffers remaining %d", buffersRemaining);
+
+    if (buffersRemaining > 0) {
+
         SLresult result;
+
         // enqueue another buffer
-        result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-        // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
-        // which for this code example would indicate a programming error
+        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Enqueuing %d frames to be played. First frame value %d", bufferSize, *squareBuffer);
+
+        buffersRemaining--;
+
+        short* bufferPtr = squareBuffer;
+        result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, bufferPtr, bufferSize);
         assert(SL_RESULT_SUCCESS == result);
-        (void)result;
     }
 }
 
 void Java_com_example_audio_generatetone_MainActivity_playTone(JNIEnv* env, jclass clazz){
 
-    //nextBuffer = sawtoothBuffer;
-    //nextSize = sizeof(sawtoothBuffer);
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Playing tone");
 
-    nextBuffer = squareBuffer;
-    nextSize = sizeof(squareBuffer);
+    buffersRemaining = BUFFERS_TO_PLAY;
+    buffersRemaining--;
 
-    //nextBuffer = sineBuffer;
-    //nextSize = sizeof(sineBuffer);
+    // Ignore the ideal buffer size and just send the whole wave file in at once
+    bufferSize = SQUARE_FRAMES;
 
-    nextCount = 1;
-    if (nextSize > 0) {
-        // here we only enqueue one buffer because it is a long clip,
-        // but for streaming playback we would typically enqueue at least 2 buffers to start
-        SLresult result;
-        result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, nextBuffer, nextSize);
-    }
+    // Enqueue the first buffer
+    short* bufferPtr = squareBuffer;
+    SLresult result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, bufferPtr, bufferSize);
+    assert(result == SL_RESULT_SUCCESS);
+
 }
 
 // create the engine and output mix objects
 void Java_com_example_audio_generatetone_MainActivity_createEngine(JNIEnv* env, jclass clazz)
 {
+
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio engine");
+
     SLresult result;
 
     // create engine
@@ -147,45 +136,58 @@ void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlay
         jclass clazz, jint sampleRate, jint framesPerBuffer)
 {
 
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio player with sample rate %d and buffer size %d ", sampleRate, framesPerBuffer);
+
+    // framesPerBuffer represents the *ideal* buffer size according to that reported by the hardware
+    // We'll ignore this now since on Nexus 9 we can just hardcode it to 128.
+    // bufferSize = framesPerBuffer;
+
     SLresult result;
 
-    // configure audio source
-    SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2}; // 2 for double buffering
+    // configure the audio source (supply data through a buffer queue in PCM format)
+    SLDataLocator_BufferQueue locator_bufferqueue_source;
+    SLDataFormat_PCM format_pcm;
+    SLDataSource audio_source;
 
-    // convert the sampling rate to the format expected by SLES
-    SLuint32 nativeSampleRate = (SLuint32) sampleRate * 1000;
+    // source location
+    locator_bufferqueue_source.locatorType = SL_DATALOCATOR_BUFFERQUEUE;
+    locator_bufferqueue_source.numBuffers = 1; // 2 for double buffering
 
-    SLDataFormat_PCM format_pcm = {
-        SL_DATAFORMAT_PCM, //format type
-        1, //numChannels
-        nativeSampleRate, //samplesPerSec
-        SL_PCMSAMPLEFORMAT_FIXED_16, //bitsPerSample
-        SL_PCMSAMPLEFORMAT_FIXED_16, //containerSize
-        SL_SPEAKER_FRONT_CENTER, //channelMask
-        SL_BYTEORDER_LITTLEENDIAN //endianness
-    };
+    // source format
+    format_pcm.formatType = SL_DATAFORMAT_PCM;
+    format_pcm.numChannels = 1;
+    format_pcm.samplesPerSec = (SLuint32) sampleRate * 1000;
+    format_pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
+    format_pcm.containerSize = 16;
+    format_pcm.numChannels = 1;
+    format_pcm.channelMask = SL_SPEAKER_FRONT_CENTER;
+    format_pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
 
-    SLDataSource audioSrc = {
-        &loc_bufq, // The data source
-        &format_pcm // Data format
-    };
+    audio_source.pLocator = &locator_bufferqueue_source;
+    audio_source.pFormat = &format_pcm;
 
-    // configure audio sink
-    SLDataLocator_OutputMix loc_outmix = {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
-    SLDataSink audioSnk = {&loc_outmix, NULL};
+    // configure the output: An output mix sink
+    SLDataLocator_OutputMix locator_output_mix;
+    SLDataSink audio_sink;
+
+    locator_output_mix.locatorType = SL_DATALOCATOR_OUTPUTMIX;
+    locator_output_mix.outputMix = outputMixObject;
+
+    audio_sink.pLocator = &locator_output_mix;
+    audio_sink.pFormat = NULL;
 
     // create audio player
-    const SLInterfaceID ids[1] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE };
-    const SLboolean req[1] = { SL_BOOLEAN_TRUE };
+    const SLInterfaceID interface_ids[1] = { SL_IID_BUFFERQUEUE };
+    const SLboolean interfaces_required[1] = { SL_BOOLEAN_TRUE };
 
     result = (*engineEngine)->CreateAudioPlayer(
         engineEngine, //engine
         &bqPlayerObject, //player object
-        &audioSrc, //input
-        &audioSnk, //output
+        &audio_source, //input
+        &audio_sink, //output
         1, // Number of interfaces
-        ids, // The interfaces
-        req // Whether the interfaces are required
+        interface_ids, // The interfaces
+        interfaces_required // Whether the interfaces are required
     );
 
     assert(SL_RESULT_SUCCESS == result);

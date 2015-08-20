@@ -17,6 +17,7 @@ model {
     android.ndk {
         moduleName += "generate_tone"
         ldLibs += "OpenSLES"
+        ldLibs += "log"
     }
 
     android.buildTypes {
