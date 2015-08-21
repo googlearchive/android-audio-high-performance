@@ -26,7 +26,7 @@ static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
 
 // synthesized square wave
 // NOTE: Changing this to 128 results in an output of clicks
-#define SQUARE_FRAMES 128
+#define SQUARE_FRAMES 256
 static short squareBuffer[SQUARE_FRAMES];
 #define MAXIMUM_AMPLITUDE_VALUE 32767
 
@@ -35,6 +35,11 @@ static short squareBuffer[SQUARE_FRAMES];
 
 static SLuint32 bufferSize; // Amount of frames to feed to the player in each callback
 static unsigned buffersRemaining = BUFFERS_TO_PLAY;
+
+/**
+ * TODO: Generate a sine wave (or silence) and start outputting it as soon as playback starts
+ */
+
 
 // synthesize a mono square wave and place it into a buffer (called automatically on load)
 __attribute__((constructor)) static void onDlOpen(void)
@@ -135,6 +140,8 @@ void Java_com_example_audio_generatetone_MainActivity_createEngine(JNIEnv* env, 
 void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlayer(JNIEnv* env,
         jclass clazz, jint sampleRate, jint framesPerBuffer)
 {
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio player with sample rate %d and frames per buffer %d", sampleRate, framesPerBuffer);
+
     SLresult result;
 
     // configure the audio source (supply data through a buffer queue in PCM format)
@@ -179,7 +186,7 @@ void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlay
         &bqPlayerObject,
         &audio_source,
         &audio_sink,
-        1, // Number of interfaces
+        2, // Number of interfaces
         interface_ids,
         interfaces_required
     );
