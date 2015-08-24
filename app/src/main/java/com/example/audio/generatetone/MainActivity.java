@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static native void playTone();
     public static native void createEngine();
-    public static native void createBufferQueueAudioPlayer(int sampleRate, int framesPerBuffer);
+    public static native void createBufferQueueAudioPlayer(int frameRate, int framesPerBuffer);
 
     public static final String TAG = MainActivity.class.getName();
 
@@ -33,18 +33,21 @@ public class MainActivity extends AppCompatActivity {
 
         //Check for optimal output sample rate and buffer size
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        String sampleRate = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+
+        // Note: This is actually the FRAME rate, which may or may not be equal to the sample rate
+        // If outputting in stereo (very common) then there are 2 samples per frame.
+        String frameRate = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
         String framesPerBuffer = am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-        Log.d(TAG, "Optimal sample rate is: "+sampleRate);
+        Log.d(TAG, "Optimal frame rate is: "+frameRate);
         Log.d(TAG, "Optimal frames per buffer is: "+framesPerBuffer);
 
         //Convert to ints
-        int sampleRateInt = Integer.parseInt(sampleRate);
+        int frameRateInt = Integer.parseInt(frameRate);
         int framesPerBufferInt = Integer.parseInt(framesPerBuffer);
 
         //Create the audio engine
         createEngine();
-        createBufferQueueAudioPlayer(sampleRateInt, framesPerBufferInt);
+        createBufferQueueAudioPlayer(frameRateInt, framesPerBufferInt);
 
         Log.d(TAG, "Audio engine created");
 

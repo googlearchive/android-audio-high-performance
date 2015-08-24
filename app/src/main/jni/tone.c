@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <jni.h>
+#include <math.h>
 
 // for native audio
 #include <SLES/OpenSLES.h>
@@ -24,86 +25,95 @@ static SLObjectItf bqPlayerObject = NULL;
 static SLPlayItf bqPlayerPlay;
 static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
 
-// synthesized square wave
-// NOTE: Changing this to 128 results in an output of clicks
-#define SQUARE_FRAMES 256
-static short squareBuffer[SQUARE_FRAMES];
+#define CHANNELS 2
+#define TWO_PI (3.14159 * 2)
+
+// Each short represents a 16-bit audio sample
+static short* squareWaveBuffer;
+static short* sineWaveBuffer;
+static short* silenceBuffer;
+static unsigned int bufferSizeInBytes;
+
 #define MAXIMUM_AMPLITUDE_VALUE 32767
 
-// how many times to play the square wave buffer (so we can actually hear it)
-#define BUFFERS_TO_PLAY 200
+// how many times to play the wave table (so we can actually hear it)
+#define BUFFERS_TO_PLAY 10
 
-static SLuint32 bufferSize; // Amount of frames to feed to the player in each callback
-static unsigned buffersRemaining = BUFFERS_TO_PLAY;
+static unsigned buffersRemaining = 0;
 
-/**
- * TODO: Generate a sine wave (or silence) and start outputting it as soon as playback starts
- */
+void createWaveTables(int frames){
 
+    // Create a sine wave using 16-bit samples (shorts) which has one cycle in the supplied number of frames
 
-// synthesize a mono square wave and place it into a buffer (called automatically on load)
-__attribute__((constructor)) static void onDlOpen(void)
-{
-    unsigned j;
-    int sign = 1;
-    for (j = 0; j < SQUARE_FRAMES; ++j) {
+    // First figure out how many samples we need and create an array for it
+    int numSamples = frames * CHANNELS;
+    short waveBuffer[numSamples];
+    silenceBuffer = malloc(sizeof(*silenceBuffer) * numSamples);;
+    sineWaveBuffer = malloc(sizeof(*sineWaveBuffer) * numSamples);
+    bufferSizeInBytes = numSamples * 2;
 
-        /**
-         * Changing the sign every 64 frames gives us a complete square wave every 128 frames.
-         * At a sample rate of 48000Hz this gives us a square wave of 375Hz
-         **/
-        if (j % 64 == 0) sign = sign * -1;
-        squareBuffer[j] = MAXIMUM_AMPLITUDE_VALUE * sign;
-        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Square wave %d %d", j, squareBuffer[j]);
+    __android_log_print(ANDROID_LOG_VERBOSE,
+                        APPNAME,
+                        "Creating wave tables. Frames: %i Channels: %i Total samples: %i Buffer size (bytes): %i",
+                        frames,
+                        CHANNELS,
+                        numSamples,
+                        bufferSizeInBytes);
+
+    // Now create the sine wave
+    float phaseIncrement = TWO_PI/frames;
+    float currentPhase = 0.0;
+
+    unsigned int i;
+    unsigned int j;
+
+    for (i = 0; i < frames; i++) {
+
+        short sampleValue = sin(currentPhase) * MAXIMUM_AMPLITUDE_VALUE;
+
+        for (j = 0; j < CHANNELS; j++){
+            sineWaveBuffer[(i*CHANNELS)+j] = sampleValue;
+            silenceBuffer[(i*CHANNELS)+j] = 0;
+        }
+
+        currentPhase += phaseIncrement;
     }
 }
 
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "In bqPlayerCallback");
-
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
 
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Buffers remaining %d", buffersRemaining);
+    SLresult result;
+
+    short* bufferPtr;
 
     if (buffersRemaining > 0) {
 
-        SLresult result;
-
-        // enqueue another buffer
-        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Enqueuing %d frames to be played. First frame value %d", bufferSize, *squareBuffer);
-
         buffersRemaining--;
+        bufferPtr = sineWaveBuffer;
 
-        short* bufferPtr = squareBuffer;
-        result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, bufferPtr, bufferSize);
-        assert(SL_RESULT_SUCCESS == result);
+    } else {
+
+        //Enqueue silence to keep the player in warmed up state
+        bufferPtr = silenceBuffer;
     }
+
+    result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, bufferPtr, bufferSizeInBytes);
+    assert(SL_RESULT_SUCCESS == result);
 }
 
 void Java_com_example_audio_generatetone_MainActivity_playTone(JNIEnv* env, jclass clazz){
 
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Playing tone");
-
     buffersRemaining = BUFFERS_TO_PLAY;
-    buffersRemaining--;
-
-    // Ignore the ideal buffer size and just send the whole wave file in at once
-    bufferSize = SQUARE_FRAMES;
-
-    // Enqueue the first buffer
-    short* bufferPtr = squareBuffer;
-    SLresult result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, bufferPtr, bufferSize);
-    assert(result == SL_RESULT_SUCCESS);
-
 }
 
 // create the engine and output mix objects
 void Java_com_example_audio_generatetone_MainActivity_createEngine(JNIEnv* env, jclass clazz)
 {
-
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio engine");
 
     SLresult result;
@@ -132,15 +142,18 @@ void Java_com_example_audio_generatetone_MainActivity_createEngine(JNIEnv* env, 
     result = (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
-
 }
 
 
 // create buffer queue audio player
 void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlayer(JNIEnv* env,
-        jclass clazz, jint sampleRate, jint framesPerBuffer)
+        jclass clazz, jint optimalFrameRate, jint optimalFramesPerBuffer)
 {
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio player with sample rate %d and frames per buffer %d", sampleRate, framesPerBuffer);
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio player with frame rate %d and frames per buffer %d",
+                        optimalFrameRate, optimalFramesPerBuffer);
+
+    // create the wave tables which we'll use as the audio signal source
+    createWaveTables(optimalFramesPerBuffer);
 
     SLresult result;
 
@@ -155,11 +168,15 @@ void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlay
 
     // source format
     format_pcm.formatType = SL_DATAFORMAT_PCM;
-    format_pcm.numChannels = 1;
-    format_pcm.samplesPerSec = (SLuint32) sampleRate * 1000;
+    format_pcm.numChannels = CHANNELS;
+
+    // Note: this shouldn't be called samplesPerSec it should be called *framesPerSec*
+    // because when channels = 2 then there are 2 samples per frame.
+    format_pcm.samplesPerSec = (SLuint32) optimalFrameRate * 1000;
     format_pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     format_pcm.containerSize = 16;
-    format_pcm.channelMask = SL_SPEAKER_FRONT_CENTER;
+    format_pcm.channelMask = (CHANNELS == 1) ? SL_SPEAKER_FRONT_CENTER :
+                             SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
     format_pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
 
     audio_source.pLocator = &locator_bufferqueue_source;
@@ -219,4 +236,10 @@ void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlay
     result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
+
+    // enqueue some silence
+    result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, silenceBuffer, bufferSizeInBytes);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+
 }
