@@ -1,4 +1,4 @@
-package com.example.audio.generatetone;
+package com.example.proaudio.hellolowlatency;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -21,15 +22,21 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = MainActivity.class.getName();
 
+    private TextView textLog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
+        textLog = (TextView) findViewById(R.id.textLog);
+        if (textLog == null) Log.e(TAG, "log view is null");
 
         //Check for low latency feature
         PackageManager pm = getPackageManager();
         boolean claimsFeature = pm.hasSystemFeature(PackageManager.FEATURE_AUDIO_LOW_LATENCY);
-        Log.d(TAG, "Has low latency audio feature? " + claimsFeature);
+
+        log("Has low latency audio feature? " + claimsFeature);
 
         //Check for optimal output sample rate and buffer size
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -38,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
         // If outputting in stereo (very common) then there are 2 samples per frame.
         String frameRate = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
         String framesPerBuffer = am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-        Log.d(TAG, "Optimal frame rate is: "+frameRate);
-        Log.d(TAG, "Optimal frames per buffer is: "+framesPerBuffer);
+        log("Optimal frame rate is: " + frameRate);
+        log("Optimal frames per buffer is: " + framesPerBuffer);
 
         //Convert to ints
         int frameRateInt = Integer.parseInt(frameRate);
@@ -51,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "Audio engine created");
 
-        setContentView(R.layout.activity_main);
 
         View layoutMain = findViewById(R.id.layoutMain);
         layoutMain.setOnTouchListener(new View.OnTouchListener() {
@@ -67,5 +73,11 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    private void log(String message){
+
+        Log.d(TAG, message);
+        textLog.setText(textLog.getText() + "\n" + message);
     }
 }

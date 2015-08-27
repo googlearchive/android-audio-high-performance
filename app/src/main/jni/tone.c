@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <jni.h>
 #include <math.h>
+#include <malloc.h>
 
 // for native audio
 #include <SLES/OpenSLES.h>
@@ -11,7 +12,7 @@
 
 // logging
 #include <android/log.h>
-#define APPNAME "GenerateTone"
+#define APPNAME "HelloLowLatency"
 
 // engine interfaces
 static SLObjectItf engineObject = NULL;
@@ -25,7 +26,7 @@ static SLObjectItf bqPlayerObject = NULL;
 static SLPlayItf bqPlayerPlay;
 static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
 
-#define CHANNELS 2
+#define CHANNELS 1
 #define TWO_PI (3.14159 * 2)
 
 // Each short represents a 16-bit audio sample
@@ -37,7 +38,7 @@ static unsigned int bufferSizeInBytes;
 #define MAXIMUM_AMPLITUDE_VALUE 32767
 
 // how many times to play the wave table (so we can actually hear it)
-#define BUFFERS_TO_PLAY 10
+#define BUFFERS_TO_PLAY 100
 
 static unsigned buffersRemaining = 0;
 
@@ -47,8 +48,7 @@ void createWaveTables(int frames){
 
     // First figure out how many samples we need and create an array for it
     int numSamples = frames * CHANNELS;
-    short waveBuffer[numSamples];
-    silenceBuffer = malloc(sizeof(*silenceBuffer) * numSamples);;
+    silenceBuffer = malloc(sizeof(*silenceBuffer) * numSamples);
     sineWaveBuffer = malloc(sizeof(*sineWaveBuffer) * numSamples);
     bufferSizeInBytes = numSamples * 2;
 

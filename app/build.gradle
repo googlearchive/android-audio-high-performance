@@ -8,14 +8,14 @@ model {
         defaultConfig.with {
             minSdkVersion.apiLevel = 22
             targetSdkVersion.apiLevel = 22
-            applicationId = "audio.example.com.generatetone"
-            versionName = "1.0"
-            versionCode = 1
+            applicationId = "com.example.hellolowlatency"
+            versionName = "3.0"
+            versionCode = 3
         }
     }
 
     android.ndk {
-        moduleName += "generate_tone"
+        moduleName += "hello_low_latency"
         ldLibs += "OpenSLES"
         ldLibs += "log"
     }
