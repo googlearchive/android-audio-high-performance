@@ -13,7 +13,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
 
     static {
-        System.loadLibrary("generate_tone");
+        System.loadLibrary("hello_low_latency");
     }
 
     public static native void playTone();

@@ -42,11 +42,12 @@ static unsigned int bufferSizeInBytes;
 
 static unsigned buffersRemaining = 0;
 
+/**
+ * Create wave tables with the specified number of frames
+ */
 void createWaveTables(int frames){
 
-    // Create a sine wave using 16-bit samples (shorts) which has one cycle in the supplied number of frames
-
-    // First figure out how many samples we need and create an array for it
+    // First figure out how many samples we need and allocate memory for the tables
     int numSamples = frames * CHANNELS;
     silenceBuffer = malloc(sizeof(*silenceBuffer) * numSamples);
     sineWaveBuffer = malloc(sizeof(*sineWaveBuffer) * numSamples);
@@ -60,7 +61,7 @@ void createWaveTables(int frames){
                         numSamples,
                         bufferSizeInBytes);
 
-    // Now create the sine wave
+    // Now create the sine wave - we'll just create a single cycle which fills the entire table
     float phaseIncrement = TWO_PI/frames;
     float currentPhase = 0.0;
 
@@ -105,14 +106,14 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     assert(SL_RESULT_SUCCESS == result);
 }
 
-void Java_com_example_audio_generatetone_MainActivity_playTone(JNIEnv* env, jclass clazz){
+void Java_com_example_proaudio_hellolowlatency_MainActivity_playTone(JNIEnv* env, jclass clazz){
 
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Playing tone");
     buffersRemaining = BUFFERS_TO_PLAY;
 }
 
 // create the engine and output mix objects
-void Java_com_example_audio_generatetone_MainActivity_createEngine(JNIEnv* env, jclass clazz)
+void Java_com_example_proaudio_hellolowlatency_MainActivity_createEngine(JNIEnv* env, jclass clazz)
 {
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio engine");
 
@@ -146,7 +147,7 @@ void Java_com_example_audio_generatetone_MainActivity_createEngine(JNIEnv* env, 
 
 
 // create buffer queue audio player
-void Java_com_example_audio_generatetone_MainActivity_createBufferQueueAudioPlayer(JNIEnv* env,
+void Java_com_example_proaudio_hellolowlatency_MainActivity_createBufferQueueAudioPlayer(JNIEnv* env,
         jclass clazz, jint optimalFrameRate, jint optimalFramesPerBuffer)
 {
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio player with frame rate %d and frames per buffer %d",
