@@ -1,0 +1,34 @@
+apply plugin: 'com.android.model.application'
+
+model {
+    android{
+        compileSdkVersion = 22
+        buildToolsVersion = "22.0.1"
+
+        defaultConfig.with {
+            minSdkVersion.apiLevel = 22
+            targetSdkVersion.apiLevel = 22
+            applicationId = "com.example.hellolowlatency"
+            versionName = "3.0"
+            versionCode = 3
+        }
+    }
+
+    android.ndk {
+        moduleName += "hello_low_latency"
+        ldLibs += "OpenSLES"
+        ldLibs += "log"
+    }
+
+    android.buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles += file('proguard-rules.pro')
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:22.2.0'
+}
