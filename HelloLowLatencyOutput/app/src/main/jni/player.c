@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <assert.h>
 #include <jni.h>
 #include <math.h>
@@ -12,28 +28,27 @@
 
 // logging
 #include <android/log.h>
-#define APPNAME "HelloLowLatency"
+#define APPNAME "HelloLowLatencyOutput"
 
 // engine interfaces
 static SLObjectItf engineObject = NULL;
-static SLEngineItf engineEngine;
+static SLEngineItf engineEngine = NULL;
 
 // output mix interfaces
 static SLObjectItf outputMixObject = NULL;
 
 // buffer queue player interfaces
 static SLObjectItf bqPlayerObject = NULL;
-static SLPlayItf bqPlayerPlay;
-static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
+static SLPlayItf bqPlayerPlay = NULL;
+static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue = NULL;
 
-#define CHANNELS 1
+#define CHANNELS 1 // 1 for mono, 2 for stereo
 #define TWO_PI (3.14159 * 2)
 
 // Each short represents a 16-bit audio sample
-static short* squareWaveBuffer;
-static short* sineWaveBuffer;
-static short* silenceBuffer;
-static unsigned int bufferSizeInBytes;
+static short* sineWaveBuffer = NULL;
+static short* silenceBuffer = NULL;
+static unsigned int bufferSizeInBytes = 0;
 
 #define MAXIMUM_AMPLITUDE_VALUE 32767
 
@@ -45,10 +60,10 @@ static unsigned buffersRemaining = 0;
 /**
  * Create wave tables with the specified number of frames
  */
-void createWaveTables(int frames){
+void createWaveTables(unsigned int frames){
 
     // First figure out how many samples we need and allocate memory for the tables
-    int numSamples = frames * CHANNELS;
+    unsigned int numSamples = frames * CHANNELS;
     silenceBuffer = malloc(sizeof(*silenceBuffer) * numSamples);
     sineWaveBuffer = malloc(sizeof(*sineWaveBuffer) * numSamples);
     bufferSizeInBytes = numSamples * 2;
@@ -62,7 +77,7 @@ void createWaveTables(int frames){
                         bufferSizeInBytes);
 
     // Now create the sine wave - we'll just create a single cycle which fills the entire table
-    float phaseIncrement = TWO_PI/frames;
+    float phaseIncrement = (float) TWO_PI/frames;
     float currentPhase = 0.0;
 
     unsigned int i;
@@ -70,7 +85,7 @@ void createWaveTables(int frames){
 
     for (i = 0; i < frames; i++) {
 
-        short sampleValue = sin(currentPhase) * MAXIMUM_AMPLITUDE_VALUE;
+        short sampleValue = (short) (sin(currentPhase) * MAXIMUM_AMPLITUDE_VALUE);
 
         for (j = 0; j < CHANNELS; j++){
             sineWaveBuffer[(i*CHANNELS)+j] = sampleValue;
@@ -84,10 +99,9 @@ void createWaveTables(int frames){
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
+    if (bq == NULL) __android_log_print(ANDROID_LOG_ERROR, APPNAME, "buffer queue was null");
     assert(bq == bqPlayerBufferQueue);
     assert(NULL == context);
-
-    SLresult result;
 
     short* bufferPtr;
 
@@ -102,18 +116,18 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
         bufferPtr = silenceBuffer;
     }
 
-    result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, bufferPtr, bufferSizeInBytes);
+    SLresult result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, bufferPtr, bufferSizeInBytes);
     assert(SL_RESULT_SUCCESS == result);
 }
 
-void Java_com_example_proaudio_hellolowlatency_MainActivity_playTone(JNIEnv* env, jclass clazz){
+void Java_com_example_hellolowlatencyoutput_MainActivity_playTone(JNIEnv* env, jclass clazz){
 
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Playing tone");
     buffersRemaining = BUFFERS_TO_PLAY;
 }
 
 // create the engine and output mix objects
-void Java_com_example_proaudio_hellolowlatency_MainActivity_createEngine(JNIEnv* env, jclass clazz)
+void Java_com_example_hellolowlatencyoutput_MainActivity_createEngine(JNIEnv* env, jclass clazz)
 {
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio engine");
 
@@ -147,14 +161,14 @@ void Java_com_example_proaudio_hellolowlatency_MainActivity_createEngine(JNIEnv*
 
 
 // create buffer queue audio player
-void Java_com_example_proaudio_hellolowlatency_MainActivity_createBufferQueueAudioPlayer(JNIEnv* env,
+void Java_com_example_hellolowlatencyoutput_MainActivity_createBufferQueueAudioPlayer(JNIEnv* env,
         jclass clazz, jint optimalFrameRate, jint optimalFramesPerBuffer)
 {
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio player with frame rate %d and frames per buffer %d",
                         optimalFrameRate, optimalFramesPerBuffer);
 
     // create the wave tables which we'll use as the audio signal source
-    createWaveTables(optimalFramesPerBuffer);
+    createWaveTables((unsigned int)optimalFramesPerBuffer);
 
     SLresult result;
 
