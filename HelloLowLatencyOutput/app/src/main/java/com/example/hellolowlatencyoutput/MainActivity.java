@@ -16,9 +16,7 @@
 
 package com.example.hellolowlatencyoutput;
 
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.media.AudioManager;
+import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,53 +24,30 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import com.example.android.howie.HowieEngine;
 
-    static {
-        System.loadLibrary("hello_low_latency_output");
-    }
+public class MainActivity extends Activity {
 
+
+    public static native void initPlayback();
     public static native void playTone();
-    public static native void createEngine();
-    public static native void createBufferQueueAudioPlayer(int frameRate, int framesPerBuffer);
+    public static native void stopPlaying();
 
     public static final String TAG = MainActivity.class.getName();
 
     private TextView textLog;
+
+    static {
+        System.loadLibrary("hello_low_latency_output");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textLog = (TextView) findViewById(R.id.textLog);
-        if (textLog == null) Log.e(TAG, "log view is null");
-
-        //Check for low latency feature
-        PackageManager pm = getPackageManager();
-        boolean claimsFeature = pm.hasSystemFeature(PackageManager.FEATURE_AUDIO_LOW_LATENCY);
-        log("Has low latency audio feature? " + claimsFeature);
-
-        //Check for optimal output sample rate and buffer size
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-
-        // Note: This is actually the FRAME rate, which may or may not be equal to the sample rate
-        // If outputting in stereo (very common) then there are 2 samples per frame.
-        String frameRate = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-        String framesPerBuffer = am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-        log("Optimal frame rate is: " + frameRate);
-        log("Optimal frames per buffer is: " + framesPerBuffer);
-
-        //Convert to ints
-        int frameRateInt = Integer.parseInt(frameRate);
-        int framesPerBufferInt = Integer.parseInt(framesPerBuffer);
-
-        //Create the audio engine
-        createEngine();
-        createBufferQueueAudioPlayer(frameRateInt, framesPerBufferInt);
-
-        Log.d(TAG, "Audio engine created");
-
+        HowieEngine.init(this);
+        initPlayback();
 
         View layoutMain = findViewById(R.id.layoutMain);
         layoutMain.setOnTouchListener(new View.OnTouchListener() {
@@ -83,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     Log.d(TAG, "Playing sound");
                     playTone();
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    Log.d(TAG, "Stopping playback");
+                    stopPlaying();
                 }
 
                 return true;

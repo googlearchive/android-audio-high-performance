@@ -1,0 +1,37 @@
+apply plugin: 'com.android.model.library'
+
+model {
+    android{
+        compileSdkVersion = 23
+        buildToolsVersion = "23.0.1"
+
+        defaultConfig.with {
+            minSdkVersion.apiLevel = 22
+            targetSdkVersion.apiLevel = 22
+        }
+    }
+
+    android.ndk {
+        moduleName += "howie"
+        cppFlags += "-std=c++11"
+        ldLibs += "OpenSLES"
+        ldLibs += "log"
+        stl = "gnustl_static"
+    }
+
+    android.buildTypes {
+        release {
+            ndk.with {
+                debuggable = true
+            }
+            minifyEnabled = false
+            proguardFiles += file('proguard-rules.pro')
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.0.1'
+}

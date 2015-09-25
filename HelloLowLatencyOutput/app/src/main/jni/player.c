@@ -28,9 +28,12 @@
 
 // logging
 #include <android/log.h>
+#include <string.h>
+#include "../../../../howie/src/main/jni/howie.h"
+
 #define APPNAME "HelloLowLatencyOutput"
 
-// engine interfaces
+// EngineImpl interfaces
 static SLObjectItf engineObject = NULL;
 static SLEngineItf engineEngine = NULL;
 
@@ -38,8 +41,8 @@ static SLEngineItf engineEngine = NULL;
 static SLObjectItf outputMixObject = NULL;
 
 // buffer queue player interfaces
-static SLObjectItf bqPlayerObject = NULL;
-static SLPlayItf bqPlayerPlay = NULL;
+static SLObjectItf bqPlayerObject_ = NULL;
+static SLPlayItf bqPlayerItf_ = NULL;
 static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue = NULL;
 
 #define CHANNELS 1 // 1 for mono, 2 for stereo
@@ -120,30 +123,24 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     assert(SL_RESULT_SUCCESS == result);
 }
 
-void Java_com_example_hellolowlatencyoutput_MainActivity_playTone(JNIEnv* env, jclass clazz){
-
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Playing tone");
-    buffersRemaining = BUFFERS_TO_PLAY;
-}
-
-// create the engine and output mix objects
+// create the EngineImpl and output mix objects
 void Java_com_example_hellolowlatencyoutput_MainActivity_createEngine(JNIEnv* env, jclass clazz)
 {
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio engine");
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio EngineImpl");
 
     SLresult result;
 
-    // create engine
+    // create EngineImpl
     result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
-    // realize the engine
+    // realize the EngineImpl
     result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
-    // get the engine interface, which is needed in order to create other objects
+    // get the EngineImpl interface, which is needed in order to create other objects
     result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &engineEngine);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
@@ -215,7 +212,7 @@ void Java_com_example_hellolowlatencyoutput_MainActivity_createBufferQueueAudioP
 
     result = (*engineEngine)->CreateAudioPlayer(
         engineEngine,
-        &bqPlayerObject,
+        &bqPlayerObject_,
         &audio_source,
         &audio_sink,
         2, // Number of interfaces
@@ -227,17 +224,17 @@ void Java_com_example_hellolowlatencyoutput_MainActivity_createBufferQueueAudioP
     (void)result;
 
     // realize the player
-    result = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE);
+    result = (*bqPlayerObject_)->Realize(bqPlayerObject_, SL_BOOLEAN_FALSE);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
     // get the play interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY, &bqPlayerPlay);
+    result = (*bqPlayerObject_)->GetInterface(bqPlayerObject_, SL_IID_PLAY, &bqPlayerItf_);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
     // get the buffer queue interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE,
+    result = (*bqPlayerObject_)->GetInterface(bqPlayerObject_, SL_IID_BUFFERQUEUE,
             &bqPlayerBufferQueue);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
@@ -248,7 +245,7 @@ void Java_com_example_hellolowlatencyoutput_MainActivity_createBufferQueueAudioP
     (void)result;
 
     // set the player's state to playing
-    result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING);
+    result = (*bqPlayerItf_)->SetPlayState(bqPlayerItf_, SL_PLAYSTATE_PLAYING);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
 
@@ -258,3 +255,50 @@ void Java_com_example_hellolowlatencyoutput_MainActivity_createBufferQueueAudioP
     (void)result;
 
 }
+
+int bufsize;
+HowieError onDeviceChanged(const HowieDeviceCharacteristics * pHDC) {
+  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, __func__);
+  createWaveTables(pHDC->framesPerPeriod);
+  buffersRemaining = 0;
+  bufsize = pHDC->framesPerPeriod * pHDC->samplesPerFrame * pHDC->bytesPerSample;
+  return HOWIE_SUCCESS;
+}
+
+HowieError onProcess(HowieStream* stream, HowieBuffer* in, HowieBuffer* out) {
+  if (buffersRemaining) {
+    memcpy(out->data, sineWaveBuffer, out->byteCount);
+  } else {
+    memset(out->data, 0, out->byteCount);
+  }
+  return HOWIE_SUCCESS;
+}
+
+JNIEXPORT void JNICALL
+Java_com_example_hellolowlatencyoutput_MainActivity_initPlayback(JNIEnv *env,
+                                                                 jclass type) {
+
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Trying to create stream");
+   HowieCreateStream(HOWIE_DIRECTION_PLAYBACK,
+                    onDeviceChanged,
+                    onProcess,
+                    NULL);
+  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Created stream, I think?");
+
+}
+
+void Java_com_example_hellolowlatencyoutput_MainActivity_playTone(JNIEnv* env, jclass clazz){
+
+  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Playing tone");
+  buffersRemaining = BUFFERS_TO_PLAY;
+}
+
+JNIEXPORT void JNICALL
+Java_com_example_hellolowlatencyoutput_MainActivity_stopPlaying(JNIEnv *env,
+                                                                jclass type) {
+
+  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Stopping tone");
+  buffersRemaining = 0;
+
+}
+

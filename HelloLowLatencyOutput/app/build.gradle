@@ -1,5 +1,8 @@
 apply plugin: 'com.android.model.application'
 
+def howiePath = file(project(':howie').projectDir).absolutePath +
+        '/build/intermediates/binaries/debug/obj/arm64-v8a'
+
 model {
     android{
         compileSdkVersion = 23
@@ -18,17 +21,30 @@ model {
         moduleName += "hello_low_latency_output"
         ldLibs += "OpenSLES"
         ldLibs += "log"
+        ldLibs += "howie"
+        stl = "gnustl_static"
     }
 
     android.buildTypes {
         release {
+            ndk.with {
+                debuggable = true
+            }
             minifyEnabled = false
             proguardFiles += file('proguard-rules.pro')
+        }
+    }
+    android.productFlavors {
+        create ("arm64") {
+            ndk.abiFilters += "arm64-v8a"
+            ndk.ldFlags += """-L${howiePath}""".toString()
+                    .toString()
         }
     }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:23.0.1'
+    compile project(':howie')
 }
