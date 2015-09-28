@@ -13,7 +13,7 @@ namespace howie {
   class EngineImpl {
   public:
     // Engine is a singleton. There doesn't seem to be a compelling reason
-    // to support more than one.
+    // to support more than one, and making it a singleton
     static EngineImpl *get() { return instance_; }
 
     EngineImpl(int sampleRate,
