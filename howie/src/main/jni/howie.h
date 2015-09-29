@@ -22,12 +22,14 @@ typedef enum HowieError_t {
   HOWIE_ERROR_IO,
   HOWIE_ERROR_INVALID_OBJECT,
   HOWIE_ERROR_ENGINE_NOT_INITIALIZED,
+  HOWIE_ERROR_AGAIN, // the current operation would block
 } HowieError;
 #define HOWIE_SUCCEEDED(result) (result == HOWIE_SUCCESS)
 
 typedef enum HowieDirection_t {
-  HOWIE_DIRECTION_RECORD,
-  HOWIE_DIRECTION_PLAYBACK
+  HOWIE_DIRECTION_RECORD    = 0x01,
+  HOWIE_DIRECTION_PLAYBACK  = 0x02,
+  HOWIE_DIRECTION_BOTH      = 0x03,
 } HowieDirection;
 
 typedef struct AudioDeviceCharacteristics_t {
@@ -83,26 +85,96 @@ typedef struct HowieBuffer_t {
 // is changed. This callback will always be called at least once per
 // stream, and the first call to this callback will always occur before
 // the first call to the process callback.
+//
+// This call runs on a user thread. It is safe to call blocking operations,
+// including memory allocation/deallocation, within this function.
 typedef HowieError (*HowieDeviceChangedCallback)(
-    const HowieDeviceCharacteristics *);
+    const HowieDeviceCharacteristics *,
+    const HowieBuffer *state,
+    const HowieBuffer *params);
 
 // Called by the Howie system to allow the application to process samples
 // for the specified stream. The application is responsible for processing
 // the entire buffer, including inserting silence if necessary.
+//
+// This call runs on the audio thread. It is NOT safe to call blocking
+// operations within this function. Examples of unsafe operations include,
+// but are not limited to:
+// * Memory allocation / deallocation
+// * File access
+// * Locking (including mutex/futex acquisition)
+// * JNI calls
+// * Access to memory outside of the provided buffers (input, output, state,
+//   params)
 typedef HowieError (*HowieProcessCallback)(
-    HowieStream *stream,
+    const HowieStream *stream,
     const HowieBuffer *input,
-    const HowieBuffer *output);
+    const HowieBuffer *output,
+    const HowieBuffer *state,
+    const HowieBuffer *params);
 
-// Creates a stream
- HowieError HowieCreateStream(
-    HowieDirection direction,
-    HowieDeviceChangedCallback deviceChangedCallback,
-    HowieProcessCallback processCallback,
-    HowieStream **out_stream );
+// Called by the Howie system when a stream is destroyed, so that any
+// dynamically allocated state can be cleaned up.
+//
+// This call runs on a user thread. It is safe to call blocking operations,
+// including memory allocation/deallocation, within this function.
+typedef HowieError (*HowieCleanupCallback)(
+    const HowieStream *stream,
+    const HowieBuffer *state );
+
+// Create a stream
+typedef struct HowieStreamCreationParams_ {
+  size_t version;
+  // Determines which buffers the stream will present for processing.
+  // RECORD implies the "input" buffer will be valid, PLAY implies
+  // that the "output" buffer will be valid. BOTH implies that both
+  // buffers are valid.
+  HowieDirection direction;
+
+  // Called when the device is changed.
+  HowieDeviceChangedCallback deviceChangedCallback;
+
+  // Called to process incoming and outgoing buffers.
+  HowieProcessCallback processCallback;
+
+  // Called when the stream is destroyed
+  HowieCleanupCallback cleanupCallback;
+
+  // Size of the memory to be reserved for processing state. This memory
+  // is intended to store all user-defined state between calls to
+  // the process callback. The stream implementation guarantees that
+  // this block of memory can be accessed without locking from the
+  // process function. Accessing state outside this block is strongly
+  // discouraged, as it can lead to concurrency issues.
+  size_t sizeofStateBlock;
+
+  // Size of the memory to be reserved for processing parameters. The stream
+  // facilitates thread-safe exchange of parameter data between user threads
+  // and the audio thread. Exchanging data between the two threads in any other
+  // way is discouraged, as it can lead to concurrency issues.
+  size_t sizeofParameterBlock;
+} HowieStreamCreationParams;
+
+HowieError HowieStreamCreate(
+    const HowieStreamCreationParams *params,
+    HowieStream **out_stream);
+
 
 // Releases a previously created stream
-HowieError HowieDestroyStream(HowieStream *stream);
+HowieError HowieStreamDestroy(HowieStream *stream);
+
+// Enqueues a parameter block for the next processing cycle. The stream
+// guarantees that the parameter block will be available to the process
+// callback at the beginning of the next processing cycle. It also guarantees
+// thread safety for the parameter block. If the processing cycle is currently
+// running, the new parameter block will not become visible to the audio
+// thread until the current cycle finishes and a new cycle begins.
+HowieError HowieStreamSendParameters(
+    HowieStream* stream,
+    const void *parameters,
+    size_t size);
+
+
 
 #ifdef __cplusplus
 } // extern "C"

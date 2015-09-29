@@ -6,6 +6,7 @@ def howieLibPath = howieBasePath +
 
 def howieIncludePath = howieBasePath + "/src/main/jni"
 
+
 model {
     android{
         compileSdkVersion = 23
@@ -14,28 +15,31 @@ model {
         defaultConfig.with {
             minSdkVersion.apiLevel = 22
             targetSdkVersion.apiLevel = 22
-            applicationId = "com.example.hellolowlatencyoutput"
+            applicationId = "com.example.hellolowlatencyio"
             versionName = "3.0"
             versionCode = 3
         }
     }
 
     android.ndk {
-        moduleName += "hello_low_latency_output"
+        moduleName += "hello_low_latency_io"
         ldLibs += "OpenSLES"
         ldLibs += "log"
         ldLibs += "howie"
+        CFlags += "-I${howieIncludePath}".toString()
         cppFlags += "-I${howieIncludePath}".toString()
         stl = "gnustl_static"
     }
 
     android.buildTypes {
         release {
+            minifyEnabled = false
+            proguardFiles += file('proguard-rules.pro')
+        }
+        debug {
             ndk.with {
                 debuggable = true
             }
-            minifyEnabled = false
-            proguardFiles += file('proguard-rules.pro')
         }
     }
     android.productFlavors {
@@ -45,10 +49,11 @@ model {
                     .toString()
         }
     }
+
 }
+
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:23.0.1'
     compile project(':howie')
 }

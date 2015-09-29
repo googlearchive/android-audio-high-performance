@@ -17,11 +17,18 @@
 }
 
 #define HOWIE_CHECK_NOT_NULL(o) {   \
-  if(!(o)) return HOWIE_ERROR_NULL; \
+  if(!(o)) { \
+      __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s failed " \
+                          "null check at line %d", __func__, __LINE__); \
+    return HOWIE_ERROR_NULL; \
+  }\
 }
 
 #define HOWIE_CHECK_ENGINE_INITIALIZED() {      \
   if (!howie::EngineImpl::get()) {              \
+      __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s failed " \
+                          "because engine not initialized at line %d", \
+                          __func__, __LINE__); \
     return HOWIE_ERROR_ENGINE_NOT_INITIALIZED;  \
   }                                             \
 }
@@ -31,7 +38,7 @@ namespace howie {
   HowieError check(HowieError err);
 
   template<typename derived_t>
-  HowieError checkCast(void* obj) {
+  HowieError checkCast(const void* obj) {
     HowieError result = HOWIE_SUCCESS;
     if (!obj) {
       result = HOWIE_ERROR_NULL;

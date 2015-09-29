@@ -29,9 +29,9 @@ import com.example.android.howie.HowieEngine;
 public class MainActivity extends Activity {
 
 
-    public static native void initPlayback();
-    public static native void playTone();
-    public static native void stopPlaying();
+    public static native long initPlayback();
+    public static native void playTone(long stream);
+    public static native void stopPlaying(long stream);
 
     public static final String TAG = MainActivity.class.getName();
 
@@ -47,7 +47,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         HowieEngine.init(this);
-        initPlayback();
+        final long streamId = initPlayback();
 
         View layoutMain = findViewById(R.id.layoutMain);
         layoutMain.setOnTouchListener(new View.OnTouchListener() {
@@ -57,10 +57,10 @@ public class MainActivity extends Activity {
 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     Log.d(TAG, "Playing sound");
-                    playTone();
+                    playTone(streamId);
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     Log.d(TAG, "Stopping playback");
-                    stopPlaying();
+                    stopPlaying(streamId);
                 }
 
                 return true;

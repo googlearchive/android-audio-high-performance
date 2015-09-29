@@ -29,10 +29,9 @@ namespace howie {
 
     HowieError init();
 
-    HowieError createStream(HowieDirection direction,
-                             HowieDeviceChangedCallback deviceChangedCallback,
-                             HowieProcessCallback processCallback,
-                             HowieStream **out_stream);
+    HowieError createStream(
+        const HowieStreamCreationParams &params,
+        HowieStream **out_stream);
 
   private:
     HowieDeviceCharacteristics deviceCharacteristics;
@@ -41,6 +40,7 @@ namespace howie {
     SLEngineItf engineItf_ = NULL;
     SLObjectItf outputMixObject_ = NULL;
     static EngineImpl *instance_;
+
   };
 
 } // namespace howie

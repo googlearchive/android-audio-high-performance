@@ -1,1 +1,1 @@
-include ':howie', ':HelloLowLatencyOutput'
+include ':howie', ':HelloLowLatencyOutput', ':HelloLowLatencyIO'

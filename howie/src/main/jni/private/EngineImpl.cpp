@@ -98,24 +98,23 @@ namespace howie {
     return HOWIE_SUCCESS;
   }
 
-  HowieError EngineImpl::createStream(HowieDirection direction,
-                           HowieDeviceChangedCallback deviceChangedCallback,
-                           HowieProcessCallback processCallback,
-                           HowieStream **out_stream) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
-    HowieError result = HOWIE_ERROR_UNKNOWN;
-    StreamImpl *stream = new StreamImpl(deviceCharacteristics,
-                                 deviceChangedCallback,
-                                 processCallback);
-    if (stream) {
-      result = stream->init(engineItf_, outputMixObject_);
-    }
-
+  HowieError EngineImpl::createStream(
+      const HowieStreamCreationParams &params,
+      HowieStream **out_stream) {
+    __android_log_print(ANDROID_LOG_DEBUG, "HOWIE", "%s %d", __func__, __LINE__);
     if (out_stream) {
       *out_stream = nullptr;
-      if (HOWIE_SUCCEEDED(result)) {
-        *out_stream = stream;
-      }
+    }
+    HowieError result = HOWIE_ERROR_UNKNOWN;
+
+    StreamImpl *stream = new StreamImpl(deviceCharacteristics, params);
+    if (stream) {
+      result = stream->init(engineItf_, outputMixObject_);
+      HOWIE_CHECK(result);
+    }
+
+    if (out_stream && HOWIE_SUCCEEDED(result)) {
+      *out_stream = stream;
     }
     return result;
   }

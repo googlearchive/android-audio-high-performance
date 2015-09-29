@@ -5,36 +5,55 @@
 #include "StreamImpl.h"
 #include "howie-private.h"
 #include "EngineImpl.h"
-#include <memory>
+#include <thread>
 
 
-HowieError HowieCreateStream(
-    HowieDirection direction,
-    HowieDeviceChangedCallback deviceChangedCallback,
-    HowieProcessCallback processCallback,
-    HowieStream **out_stream ) {
-  __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+HowieError HowieStreamCreate(
+    const HowieStreamCreationParams *params,
+    HowieStream **out_stream) {
+  __android_log_print(ANDROID_LOG_DEBUG, "HOWIE", "%s %d", __func__, __LINE__);
   HOWIE_CHECK_ENGINE_INITIALIZED();
-  __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "doin' it");
 
-  return howie::EngineImpl::get()->createStream(
-      direction,
-      deviceChangedCallback,
-      processCallback,
-      out_stream);
+  HOWIE_CHECK_NOT_NULL(params)
+  HOWIE_CHECK(howie::checkCast<const HowieStreamCreationParams*>(params));
+  return howie::EngineImpl::get()->createStream(*params, out_stream);
 }
 
 // Releases a previously created stream
-HowieError HowieDestroyStream(HowieStream *stream) {
-
+HowieError HowieStreamDestroy(HowieStream *stream) {
+  __android_log_print(ANDROID_LOG_DEBUG, "HOWIE", "%s %d", __func__, __LINE__);
+  HOWIE_CHECK_ENGINE_INITIALIZED();
+  HOWIE_CHECK_NOT_NULL(stream);
+  HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
+  delete(reinterpret_cast<howie::StreamImpl*>(stream));
 }
+
+HowieError HowieStreamSendParameters(
+    HowieStream *stream,
+    const void* parameters,
+    size_t size){
+  HowieError result = HOWIE_SUCCESS;
+
+  __android_log_print(ANDROID_LOG_DEBUG, "HOWIE", "%s %d", __func__, __LINE__);
+  HOWIE_CHECK_ENGINE_INITIALIZED();
+  HOWIE_CHECK_NOT_NULL(stream);
+  HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
+  howie::StreamImpl *pStream = reinterpret_cast<howie::StreamImpl *>(stream);
+
+  if (!pStream->PushParameterBlock(parameters, size)) {
+    result = HOWIE_ERROR_AGAIN;
+  }
+  HOWIE_CHECK(result);
+  return result;
+}
+
 
 namespace howie {
   HowieError StreamImpl::lastErr_ = HOWIE_SUCCESS;
 
   HowieError StreamImpl::init(SLEngineItf engineItf,
                               SLObjectItf outputMixObject) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+    __android_log_print(ANDROID_LOG_DEBUG, "HOWIE", "%s %d", __func__, __LINE__);
     SLresult result;
 
     // configure the audio source (supply data through a buffer queue in PCM format)
@@ -108,35 +127,26 @@ namespace howie {
 
 
     // Create the buffer
-    bufferSize_ = deviceCharacteristics.framesPerPeriod
+    size_t bufferSize = deviceCharacteristics.framesPerPeriod
                  * deviceCharacteristics.bytesPerSample
                  * deviceCharacteristics.samplesPerFrame;
-    buffer_.reset(new unsigned char[bufferSize_]);
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s line %d buffer size"
-        " is %d", __func__,
-                        __LINE__, bufferSize_);
+    output_.reset(bufferSize);
+    output_.clear();
 
-    memset(buffer_.get(), 0, bufferSize_);
-
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s line %d", __func__,
-                        __LINE__);
     // set the player's state to playing
     HOWIE_CHECK((*bqPlayerItf_)->SetPlayState(bqPlayerItf_, SL_PLAYSTATE_PLAYING));
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s line %d", __func__,
-                        __LINE__);
 
     // Last thing before actually starting playback: call the deviceChanged
     // callback
-    deviceChangedCallback_(&deviceCharacteristics);
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s line %d", __func__,
-                        __LINE__);
+    HowieBuffer state { sizeof(HowieBuffer), state_.get(), state_.size() };
+    HowieBuffer params { sizeof(HowieBuffer), params_.get(), params_.size()};
+    deviceChangedCallback_(&deviceCharacteristics, &state, &params);
 
     // enqueue some silence
-    HOWIE_CHECK((*bqPlayerBufferQueue_)->Enqueue(bqPlayerBufferQueue_, buffer_.get(),
-                                           bufferSize_));
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s line %d", __func__,
-                        __LINE__);
+    HOWIE_CHECK((*bqPlayerBufferQueue_)->Enqueue(
+        bqPlayerBufferQueue_,
+        output_.get(),
+        output_.size()));
   }
 
 // this callback handler is called every time a buffer finishes playing
@@ -144,7 +154,7 @@ namespace howie {
       *context) {
 
     if (HOWIE_SUCCEEDED(lastErr_)) {
-      lastErr_ = checkCast<StreamImpl *>(context);
+      lastErr_ = checkCast<const StreamImpl *>(context);
     }
 
     if(HOWIE_SUCCEEDED(lastErr_)) {
@@ -158,16 +168,42 @@ namespace howie {
     if (bq != bqPlayerBufferQueue_) {
       return HOWIE_ERROR_INVALID_OBJECT;
     }
-    HowieBuffer buf {
-      sizeof(HowieBuffer),
-      buffer_.get(),
-      bufferSize_
-    };
-    HOWIE_CHECK(processCallback_(this, nullptr, &buf));
-    HOWIE_CHECK((*bqPlayerBufferQueue_)->Enqueue(bqPlayerBufferQueue_, buffer_.get(),
-                                                 bufferSize_));
+
+    HowieBuffer in { sizeof(HowieBuffer), input_.get(), input_.size() };
+    HowieBuffer out { sizeof(HowieBuffer), output_.get(), output_.size() };
+    HowieBuffer state { sizeof(HowieBuffer), state_.get(), state_.size() };
+
+    params_.pop(); // ignore the return value. We don't care.
+    HowieBuffer params { sizeof(HowieBuffer), params_.get(), params_.size()};
+
+
+    HOWIE_CHECK(processCallback_(this, &in, &out, &state, &params));
+
+    HOWIE_CHECK((*bqPlayerBufferQueue_)->Enqueue(
+        bqPlayerBufferQueue_,
+        output_.get(),
+        output_.size()));
     return HOWIE_SUCCESS;
   }
 
 
+  bool StreamImpl::PushParameterBlock(const void *data, size_t size) {
+    // spin, because the reader is lock-free and doesn't have a lot
+    // of work to do
+    bool result = false;
+    for ( int i = 0; i < 5 && !result; ++i) {
+      result = params_.push(data, size);
+    }
+
+    // still not finished? Try again, but with yields this time.
+    for ( int i = 0; i < 5 && !result; ++i) {
+      std::this_thread::yield();
+      result = params_.push(data, size);
+    }
+
+    // At this point we're not going to wait any longer, so the
+    // result is what it is.
+    return result;
+  }
 } // namespace howie
+
