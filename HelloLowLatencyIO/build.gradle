@@ -28,6 +28,7 @@ model {
         ldLibs += "howie"
         CFlags += "-I${howieIncludePath}".toString()
         cppFlags += "-I${howieIncludePath}".toString()
+        cppFlags += "-std=c++11"
         stl = "gnustl_static"
     }
 

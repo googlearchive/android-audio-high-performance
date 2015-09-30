@@ -44,6 +44,7 @@ JNIEXPORT void JNICALL
 Java_com_example_android_howie_HowieEngine_destroy(JNIEnv *env,
                                                    jclass type,
                                                    jlong engine) {
+  __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
   howie::EngineImpl * pEngine = reinterpret_cast<howie::EngineImpl *>(engine);
   delete pEngine;
 }
@@ -59,6 +60,7 @@ namespace howie {
                          int channelCount,
                          int samplesPerFrame,
                          int framesPerBuffer) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
     deviceCharacteristics.version = sizeof(deviceCharacteristics);
     deviceCharacteristics.sampleRate = sampleRate;
     deviceCharacteristics.bitsPerSample = bitsPerSample;
@@ -72,10 +74,12 @@ namespace howie {
   }
 
   EngineImpl::~EngineImpl() {
+    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
     instance_ = NULL;
   }
 
   HowieError EngineImpl::init() {
+    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
     SLresult result;
 
     // create EngineImpl
@@ -101,11 +105,12 @@ namespace howie {
   HowieError EngineImpl::createStream(
       const HowieStreamCreationParams &params,
       HowieStream **out_stream) {
-    __android_log_print(ANDROID_LOG_DEBUG, "HOWIE", "%s %d", __func__, __LINE__);
+    HowieError result = HOWIE_ERROR_UNKNOWN;
+
+    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
     if (out_stream) {
       *out_stream = nullptr;
     }
-    HowieError result = HOWIE_ERROR_UNKNOWN;
 
     StreamImpl *stream = new StreamImpl(deviceCharacteristics, params);
     if (stream) {

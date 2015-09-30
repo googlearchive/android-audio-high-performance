@@ -10,11 +10,19 @@
 extern"C" {
 #endif // __cplusplus
 
-JNIEXPORT void JNICALL
-Java_com_example_ilewis_hellolowlatencyio_MainActivity_init(
+JNIEXPORT jlong JNICALL
+Java_com_example_ilewis_hellolowlatencyio_MainActivity_initStream(
     JNIEnv *env,
     jobject instance);
 
+JNIEXPORT void JNICALL
+Java_com_example_ilewis_hellolowlatencyio_MainActivity_setParams(
+    JNIEnv *env,
+    jobject instance,
+    jlong stream,
+    jfloat frequency,
+    jfloat resonance,
+    jfloat gain);
 
 #ifdef __cplusplus
 } // extern "C"

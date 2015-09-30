@@ -19,10 +19,10 @@
           <task>generateDebugSources</task>
         </afterSyncTasks>
         <option name="ALLOW_USER_CONFIGURATION" value="false" />
-        <option name="MANIFEST_FILE_RELATIVE_PATH" value="$MODULE_DIR$/../../../main/AndroidManifest.xml" />
-        <option name="RES_FOLDER_RELATIVE_PATH" value="$MODULE_DIR$/../../../main/res" />
-        <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$$MODULE_DIR$/../../../main/res" />
-        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="$MODULE_DIR$/../../../main/assets" />
+        <option name="MANIFEST_FILE_RELATIVE_PATH" value="$MODULE_DIR$/../../../../main/AndroidManifest.xml" />
+        <option name="RES_FOLDER_RELATIVE_PATH" value="$MODULE_DIR$/../../../../main/res" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$$MODULE_DIR$/../../../../main/res" />
+        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="$MODULE_DIR$/../../../../main/assets" />
         <option name="LIBRARY_PROJECT" value="true" />
       </configuration>
     </facet>
