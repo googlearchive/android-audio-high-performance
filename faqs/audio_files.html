@@ -1,0 +1,97 @@
+---
+layout: page
+title: Audio Files
+permalink: /faqs/audio_files.html
+site_nav_category_order: 10
+is_site_nav_category2: true
+site_nav_category: faqs
+---
+<!--
+    Copyright 2015 The Android Open Source Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<p>
+Q. How do I parse a WAV file?
+</p>
+
+<p>
+A. The <a href="https://en.wikipedia.org/wiki/WAV">WAV</a>
+<a href="https://en.wikipedia.org/wiki/Audio_file_format">audio file format</a>
+is known for being easy to parse in restricted environments with your
+own content, but it can be tricky to correctly implement for unusual
+variations, and for arbitrary files found in the wild.
+<p>
+
+<p>
+If you are only reading your own files, go ahead and write your own parser
+based on the WAV specification.  It will be an interesting exercise.
+But if you are going to process a wide assortment of files or files
+that you did not create, then consider an open source library.
+Be sure to confirm that the license is compatible with your needs.
+</p>
+
+<p>
+Q. What audio file libraries are there in Android?
+</p>
+
+<p>
+A. The Android platform has several internal implementations of audio file parsers
+that aren't exposed as public APIs.  As Android is an open
+source platform, you are free to copy such code and import it into your
+application, but be aware that the code was not intended for application
+use and so may need some modification before use.
+</p>
+
+<p>
+One internal Android implementation that is relatively easy to
+adapt for application use is
+<a href="https://android.googlesource.com/platform/system/media/+/master/audio_utils/tinysndfile.c">tinysndfile.c</a>.
+This supports WAV files only and has Apache 2.0 license.
+</p>
+
+<p>
+Q. What other open source audio file libraries are there?
+</p>
+
+<p>
+A. See the table below:
+</p>
+<table>
+
+<tr>
+<th>Home</th>
+<th>Wikipedia</th>
+<th>License</th>
+</tr>
+
+<tr>
+<td><a href="http://www.mega-nerd.com/libsndfile/">libsndfile</a></td>
+<td><a href="https://en.wikipedia.org/wiki/Libsndfile">libsndfile</a></td>
+<td>LGPL</td>
+</tr>
+
+<tr>
+<td><a href="http://www.68k.org/~michael/audiofile/">audiofile</a></td>
+<td></td>
+<td>LGPL</td>
+</tr>
+
+<tr>
+<td><a href="http://sox.sourceforge.net/libsox.html">libsox</a></td>
+<td></td>
+<td>LGPL</td>
+</tr>
+
+</table>
