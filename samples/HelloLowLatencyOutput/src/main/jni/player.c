@@ -29,7 +29,7 @@
 // logging
 #include <android/log.h>
 #include <string.h>
-#include "../../../../howie/src/main/jni/howie.h"
+#include "howie.h"
 
 #define APPNAME "HelloLowLatencyOutput"
 

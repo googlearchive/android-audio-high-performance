@@ -16,3 +16,5 @@
  */
 
 include ':howie', ':HelloLowLatencyOutput', ':HelloLowLatencyIO'
+project(':HelloLowLatencyOutput').projectDir = new File(settingsDir, "./samples/HelloLowLatencyOutput")
+project(':HelloLowLatencyIO').projectDir = new File(settingsDir, "./samples/HelloLowLatencyIO")
