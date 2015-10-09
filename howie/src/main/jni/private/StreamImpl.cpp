@@ -116,11 +116,11 @@ namespace howie {
    * Delete SL Recorder and Player objects
    */
   HowieError StreamImpl::cleanupObjects(void) {
-    if (direction_ & HOWIE_DIRECTION_RECORD) {
+    if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
       HOWIE_CHECK((*recorderItf_)->SetRecordState(recorderItf_,
                                       SL_RECORDSTATE_STOPPED));
     }
-    if (direction_ & HOWIE_DIRECTION_PLAYBACK) {
+    if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
       HOWIE_CHECK((*playerItf_)->SetPlayState(playerItf_,
                                               SL_PLAYSTATE_STOPPED));
     }

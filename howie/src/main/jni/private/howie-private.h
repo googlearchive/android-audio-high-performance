@@ -48,6 +48,9 @@
   }                                             \
 }
 
+#define HOWIE_LOG_FN() __android_log_print( \
+  ANDROID_LOG_VERBOSE, "HOWIE", __func__)
+
 namespace howie {
   HowieError check(SLresult code);
   HowieError check(HowieError err);
