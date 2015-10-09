@@ -48,6 +48,8 @@ namespace howie {
       version = sizeof(*this);
     }
 
+    ~StreamImpl();
+
     HowieError init(SLEngineItf engineItf, SLObjectItf outputMixObject);
 
     bool PushParameterBlock(const void *data, size_t size);
@@ -104,6 +106,7 @@ namespace howie {
 
     HowieError submitRecordBuffer();
 
+    HowieError cleanupObjects(void);
     const unsigned int countFreeBuffers() const;
   };
 

@@ -72,6 +72,29 @@ namespace howie {
   HowieError StreamImpl::lastPlaybackError_ = HOWIE_SUCCESS;
   HowieError StreamImpl::lastRecordError_ = HOWIE_SUCCESS;
 
+  StreamImpl::~StreamImpl() {
+    cleanupObjects();
+  }
+
+  /**
+   * Delete SL Recorder and Player objects
+   */
+  HowieError StreamImpl::cleanupObjects(void) {
+    if (direction_ & HOWIE_DIRECTION_RECORD) {
+      HOWIE_CHECK((*recorderItf_)->SetRecordState(recorderItf_,
+                                      SL_RECORDSTATE_STOPPED));
+    }
+    if (direction_ & HOWIE_DIRECTION_PLAYBACK) {
+      HOWIE_CHECK((*playerItf_)->SetPlayState(playerItf_,
+                                              SL_PLAYSTATE_STOPPED));
+    }
+    if (cleanupCallback_) {
+      HowieBuffer state { sizeof(HowieBuffer), state_.get(), state_.size() };
+      HOWIE_CHECK(cleanupCallback_(this, &state));
+    }
+    (*recorderObject_)->Destroy(recorderObject_);
+    (*playerObject_)->Destroy(playerObject_);
+  }
 
   /**
    * Initialize the OpenSL inputs and outputs for this stream.
