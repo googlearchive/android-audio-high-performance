@@ -127,7 +127,6 @@ JNIEXPORT jlong JNICALL
 Java_com_example_hellolowlatencyoutput_MainActivity_initPlayback(JNIEnv *env,
                                                                  jclass type) {
 
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Trying to create stream");
   HowieStreamCreationParams hscp = {
       sizeof(HowieStreamCreationParams),
       HOWIE_DIRECTION_PLAYBACK,
@@ -139,7 +138,6 @@ Java_com_example_hellolowlatencyoutput_MainActivity_initPlayback(JNIEnv *env,
   };
   jlong stream;
   HowieStreamCreate(&hscp, (HowieStream**)&stream);
-  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Created stream, I think?");
   return stream;
 }
 
@@ -147,8 +145,8 @@ JNIEXPORT void JNICALL
 Java_com_example_hellolowlatencyoutput_MainActivity_playTone(
     JNIEnv* env, jclass clazz, jlong streamId){
   HowieStream* stream = (HowieStream*)(void*)streamId;
-  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Playing tone");
   struct PlayerParams params = { 1 };
+
   HowieStreamSendParameters(stream, &params, sizeof(params));
 }
 
@@ -158,7 +156,6 @@ Java_com_example_hellolowlatencyoutput_MainActivity_stopPlaying(
     jclass type,
     jlong streamId) {
   HowieStream* stream = (HowieStream*)(void*)streamId;
-  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Stopping tone");
   struct PlayerParams params = { 0 };
   HowieStreamSendParameters(stream, &params, sizeof(params));
 }
