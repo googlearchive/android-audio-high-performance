@@ -39,11 +39,16 @@ typedef enum HowieError_t {
 } HowieError;
 #define HOWIE_SUCCEEDED(result) (result == HOWIE_SUCCESS)
 
-typedef enum HowieDirection_t {
-  HOWIE_DIRECTION_RECORD    = 0x01,
-  HOWIE_DIRECTION_PLAYBACK  = 0x02,
-  HOWIE_DIRECTION_BOTH      = 0x03,
+typedef enum HowieStreamDirection_t {
+  HOWIE_STREAM_DIRECTION_RECORD = 0x01,
+  HOWIE_STREAM_DIRECTION_PLAYBACK = 0x02,
+  HOWIE_STREAM_DIRECTION_BOTH = 0x03,
 } HowieDirection;
+
+typedef enum HowieStreamState_t {
+  HOWIE_STREAM_STATE_STOPPED = 0,
+  HOWIE_STREAM_STATE_PLAYING
+} HowieStreamState;
 
 typedef struct AudioDeviceCharacteristics_t {
   size_t version;
@@ -166,6 +171,10 @@ typedef struct HowieStreamCreationParams_ {
   // and the audio thread. Exchanging data between the two threads in any other
   // way is discouraged, as it can lead to concurrency issues.
   size_t sizeofParameterBlock;
+
+  // Initial state that the stream should be in after the creation function
+  // returns.
+  HowieStreamState initialState;
 } HowieStreamCreationParams;
 
 HowieError HowieStreamCreate(
@@ -175,6 +184,9 @@ HowieError HowieStreamCreate(
 
 // Releases a previously created stream
 HowieError HowieStreamDestroy(HowieStream *stream);
+
+HowieError HowieStreamSetState(HowieStream *stream, HowieStreamState newState);
+HowieError HowieStreamGetState(HowieStream *stream, HowieStreamState *state);
 
 // Enqueues a parameter block for the next processing cycle. The stream
 // guarantees that the parameter block will be available to the process

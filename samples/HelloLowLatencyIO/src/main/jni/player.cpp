@@ -131,13 +131,13 @@ Java_com_example_ilewis_hellolowlatencyio_MainActivity_initStream(
     JNIEnv *env,
     jobject instance) {
   HowieStreamCreationParams hscp = {
-      sizeof(HowieStreamCreationParams),
-      HOWIE_DIRECTION_BOTH,
+      sizeof(HowieStreamCreationParams), HOWIE_STREAM_DIRECTION_BOTH,
       onDeviceChanged,
       onProcess,
       onCleanup,
       sizeof(State),
-      sizeof(Params)};
+      sizeof(Params),
+      HOWIE_STREAM_STATE_PLAYING};
 
   HowieStream *pStream = nullptr;
   HowieStreamCreate(&hscp, &pStream);

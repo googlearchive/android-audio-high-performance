@@ -97,7 +97,7 @@ HowieError onDeviceChanged(
   struct PlayerParams* playerParams = (struct PlayerParams*)params->data;
 
   createWaveTables(pHDC->framesPerPeriod, pHDC->channelCount, playerState);
-  playerParams->playing = 0;
+  playerParams->playing = 1;
   return HOWIE_SUCCESS;
 }
 
@@ -109,11 +109,9 @@ HowieError onProcess(
     const HowieBuffer *params) {
   struct PlayerState* playerState = (struct PlayerState*)state->data;
   struct PlayerParams* playerParams = (struct PlayerParams*)params->data;
-  if (playerParams->playing) {
-    memcpy(out->data, playerState->sineWaveBuffer, out->byteCount);
-  } else {
-    memset(out->data, 0, out->byteCount);
-  }
+    
+  memcpy(out->data, playerState->sineWaveBuffer, out->byteCount);
+  
   return HOWIE_SUCCESS;
 }
 
@@ -128,13 +126,13 @@ Java_com_example_hellolowlatencyoutput_MainActivity_initPlayback(JNIEnv *env,
                                                                  jclass type) {
 
   HowieStreamCreationParams hscp = {
-      sizeof(HowieStreamCreationParams),
-      HOWIE_DIRECTION_PLAYBACK,
+      sizeof(HowieStreamCreationParams), HOWIE_STREAM_DIRECTION_PLAYBACK,
       onDeviceChanged,
       onProcess,
       onCleanup,
       sizeof(struct PlayerState),
-      sizeof(struct PlayerParams)
+      sizeof(struct PlayerParams),
+      HOWIE_STREAM_STATE_STOPPED
   };
   jlong stream;
   HowieStreamCreate(&hscp, (HowieStream**)&stream);
@@ -145,9 +143,7 @@ JNIEXPORT void JNICALL
 Java_com_example_hellolowlatencyoutput_MainActivity_playTone(
     JNIEnv* env, jclass clazz, jlong streamId){
   HowieStream* stream = (HowieStream*)(void*)streamId;
-  struct PlayerParams params = { 1 };
-
-  HowieStreamSendParameters(stream, &params, sizeof(params));
+  HowieStreamSetState(stream, HOWIE_STREAM_STATE_PLAYING);
 }
 
 JNIEXPORT void JNICALL
@@ -156,7 +152,6 @@ Java_com_example_hellolowlatencyoutput_MainActivity_stopPlaying(
     jclass type,
     jlong streamId) {
   HowieStream* stream = (HowieStream*)(void*)streamId;
-  struct PlayerParams params = { 0 };
-  HowieStreamSendParameters(stream, &params, sizeof(params));
+  HowieStreamSetState(stream, HOWIE_STREAM_STATE_STOPPED);
 }
 

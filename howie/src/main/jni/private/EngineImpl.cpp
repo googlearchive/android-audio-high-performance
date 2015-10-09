@@ -126,7 +126,7 @@ namespace howie {
 
     StreamImpl *stream = new StreamImpl(deviceCharacteristics, params);
     if (stream) {
-      result = stream->init(engineItf_, outputMixObject_);
+      result = stream->init(engineItf_, outputMixObject_, params);
       HOWIE_CHECK(result);
     }
 

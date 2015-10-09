@@ -39,7 +39,8 @@ namespace howie {
           cleanupCallback_(params.cleanupCallback),
           state_(params.sizeofStateBlock),
           params_(params.sizeofParameterBlock),
-          direction_(params.direction) {
+          direction_(params.direction),
+          streamState_(HOWIE_STREAM_STATE_STOPPED) {
       __android_log_print(ANDROID_LOG_DEBUG,
                           "HOWIE",
                           "%s %d",
@@ -48,12 +49,16 @@ namespace howie {
       version = sizeof(*this);
     }
 
+    HowieError init(SLEngineItf engineItf,
+         SLObjectItf outputMixObject,
+         const HowieStreamCreationParams &creationParams_);
     ~StreamImpl();
-
-    HowieError init(SLEngineItf engineItf, SLObjectItf outputMixObject);
 
     bool PushParameterBlock(const void *data, size_t size);
 
+    HowieError run();
+    HowieError stop();
+    HowieStreamState getState();
 
   private:
 
@@ -108,6 +113,8 @@ namespace howie {
 
     HowieError cleanupObjects(void);
     const unsigned int countFreeBuffers() const;
+
+    HowieStreamState_t streamState_;
   };
 
 } // namespace howie

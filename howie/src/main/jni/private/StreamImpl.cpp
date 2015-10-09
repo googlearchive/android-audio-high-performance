@@ -67,6 +67,42 @@ HowieError HowieStreamSendParameters(
   return result;
 }
 
+HowieError HowieStreamSetState(HowieStream *stream,
+                               HowieStreamState newState) {
+  HowieError result = HOWIE_SUCCESS;
+  HOWIE_CHECK_ENGINE_INITIALIZED();
+  HOWIE_CHECK_NOT_NULL(stream);
+  HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
+  HOWIE_LOG_FN();
+
+  howie::StreamImpl *pStream = reinterpret_cast<howie::StreamImpl *>(stream);
+
+  switch (newState) {
+    case HOWIE_STREAM_STATE_PLAYING:
+      result = pStream->run();
+      break;
+    case HOWIE_STREAM_STATE_STOPPED:
+      result = pStream->stop();
+      break;
+  }
+  HOWIE_CHECK(result);
+  return result;
+}
+
+HowieError HowieStreamGetState(HowieStream *stream, HowieStreamState *state) {
+  HowieError result = HOWIE_SUCCESS;
+  HOWIE_CHECK_ENGINE_INITIALIZED();
+  HOWIE_CHECK_NOT_NULL(stream);
+  HOWIE_CHECK_NOT_NULL(state);
+  HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
+  HOWIE_LOG_FN();
+
+  howie::StreamImpl *pStream = reinterpret_cast<howie::StreamImpl *>(stream);
+  *state = pStream->getState();
+
+  HOWIE_CHECK(result);
+  return result;
+}
 
 namespace howie {
   HowieError StreamImpl::lastPlaybackError_ = HOWIE_SUCCESS;
@@ -100,7 +136,8 @@ namespace howie {
    * Initialize the OpenSL inputs and outputs for this stream.
    */
   HowieError StreamImpl::init(SLEngineItf engineItf,
-                              SLObjectItf outputMixObject) {
+       SLObjectItf outputMixObject,
+       const HowieStreamCreationParams &creationParams_) {
     SLresult result;
     __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
 
@@ -126,16 +163,19 @@ namespace howie {
     format_pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
 
 
-    if (direction_ & HOWIE_DIRECTION_RECORD) {
+    if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
       HOWIE_CHECK(initRecording(engineItf, format_pcm));
     }
 
-    if (direction_ & HOWIE_DIRECTION_PLAYBACK) {
+    if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
       HOWIE_CHECK(initPlayback(engineItf,
                    outputMixObject,
                    format_pcm));
     }
 
+    if (creationParams_.initialState == HOWIE_STREAM_STATE_PLAYING) {
+      run();
+    }
   }
 
   HowieError StreamImpl::initRecording(SLEngineItf engineItf,
@@ -190,7 +230,6 @@ namespace howie {
         this));
 
     // start recording
-    HOWIE_CHECK((*recorderItf_)->SetRecordState(recorderItf_, SL_RECORDSTATE_RECORDING));
     SLAndroidSimpleBufferQueueState qState;
     HOWIE_CHECK((*recorderBufferQueueItf_)->GetState(recorderBufferQueueItf_, &qState));
     __android_log_print(ANDROID_LOG_INFO, "HOWIE", "Get Recording status right after start recording: (%d, %d)", qState.count, qState.index);
@@ -199,7 +238,8 @@ namespace howie {
     input_.reset(bufferQuantum_ * nRecordBuffers_);
     input_.clear();
 
-    return submitRecordBuffer();
+    HOWIE_CHECK(submitRecordBuffer());
+    HOWIE_CHECK((*recorderItf_)->SetRecordState(recorderItf_, SL_RECORDSTATE_PAUSED));
   }
 
   HowieError StreamImpl::initPlayback(
@@ -253,6 +293,7 @@ namespace howie {
     HOWIE_CHECK((*playerObject_)->GetInterface(playerObject_, SL_IID_PLAY,
                                            &playerItf_));
 
+
     // get the buffer queue interface
     HOWIE_CHECK((*playerObject_)->GetInterface(playerObject_, SL_IID_BUFFERQUEUE,
                                            &playerBufferQueueItf_));
@@ -269,7 +310,6 @@ namespace howie {
     output_.clear();
 
     // set the player's state to playing
-    HOWIE_CHECK((*playerItf_)->SetPlayState(playerItf_, SL_PLAYSTATE_PLAYING));
 
     // Last thing before actually starting playback: call the deviceChanged
     // callback
@@ -282,6 +322,7 @@ namespace howie {
         playerBufferQueueItf_,
         output_.get(),
         output_.size()));
+    HOWIE_CHECK((*playerItf_)->SetPlayState(playerItf_, SL_PLAYSTATE_PAUSED));
   }
 
   HowieError StreamImpl::submitRecordBuffer() {
@@ -330,7 +371,7 @@ namespace howie {
     }
 
     HowieBuffer in { sizeof(HowieBuffer), nullptr, 0 };
-    if (direction_ & HOWIE_DIRECTION_RECORD) {
+    if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
       size_t inputOffset = 0;
       int recordBuffersFinished = recordBuffersFinished_.load(
           std::memory_order_acquire);
@@ -367,13 +408,13 @@ namespace howie {
 
     HOWIE_CHECK(processCallback_(this, &in, &out, &state, &params));
 
-    if (direction_ & HOWIE_DIRECTION_PLAYBACK) {
+    if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
       HOWIE_CHECK((*playerBufferQueueItf_)->Enqueue(playerBufferQueueItf_,
                                                    output_.get(),
                                                    output_.size()));
     }
 
-    if (direction_ & HOWIE_DIRECTION_RECORD) {
+    if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
       HOWIE_CHECK(submitRecordBuffer());
     }
 
@@ -413,6 +454,37 @@ namespace howie {
     unsigned int finished = recordBuffersFinished_.load(std::memory_order_acquire);
     unsigned int result = recordBuffersSubmitted_ - finished;
     return result;
+  }
+
+  HowieError StreamImpl::run() {
+    if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
+      HOWIE_CHECK((*recorderItf_)->SetRecordState(
+          recorderItf_, SL_RECORDSTATE_RECORDING));
+    }
+    if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
+      HOWIE_CHECK((*playerItf_)->SetPlayState(
+          playerItf_, SL_PLAYSTATE_PLAYING));
+    }
+    streamState_ = HOWIE_STREAM_STATE_PLAYING;
+    return HOWIE_SUCCESS;
+  }
+
+  HowieError StreamImpl::stop() {
+    if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
+      HOWIE_CHECK((*recorderItf_)->SetRecordState(
+          recorderItf_, SL_RECORDSTATE_PAUSED));
+    }
+    if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
+      HOWIE_CHECK((*playerItf_)->SetPlayState(
+          playerItf_, SL_PLAYSTATE_PAUSED));
+    }
+    streamState_ = HOWIE_STREAM_STATE_STOPPED;
+    return HOWIE_SUCCESS;
+
+  }
+
+  HowieStreamState_t StreamImpl::getState() {
+    return streamState_;
   }
 } // namespace howie
 

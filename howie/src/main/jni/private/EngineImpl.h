@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */#ifndef HELLOLOWLATENCYOUTPUT_ENGINE_H
+ */
+#ifndef HELLOLOWLATENCYOUTPUT_ENGINE_H
 #define HELLOLOWLATENCYOUTPUT_ENGINE_H
 
 #include "howie-private.h"
