@@ -1,0 +1,3 @@
+include ':app'
+include ':howie'
+project(':howie').projectDir = new File('../../howie');
