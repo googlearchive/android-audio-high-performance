@@ -21,11 +21,13 @@
 #include "../howie.h"
 #include <android/log.h>
 
+constexpr const char * kLibName = "HOWIE";
+
 
 #define HOWIE_CHECK(op) {             \
   auto op_result = howie::check((op));\
   if (!HOWIE_SUCCEEDED(op_result)) {  \
-      __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s failed " \
+      __android_log_print(ANDROID_LOG_VERBOSE, kLibName, "%s failed " \
                           "with code %d", __func__, op_result); \
       return op_result;                 \
   }                                   \
@@ -33,7 +35,7 @@
 
 #define HOWIE_CHECK_NOT_NULL(o) {   \
   if(!(o)) { \
-      __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s failed " \
+      __android_log_print(ANDROID_LOG_VERBOSE, kLibName, "%s failed " \
                           "null check at line %d", __func__, __LINE__); \
     return HOWIE_ERROR_NULL; \
   }\
@@ -41,7 +43,7 @@
 
 #define HOWIE_CHECK_ENGINE_INITIALIZED() {      \
   if (!howie::EngineImpl::get()) {              \
-      __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", "%s failed " \
+      __android_log_print(ANDROID_LOG_VERBOSE, kLibName, "%s failed " \
                           "because engine not initialized at line %d", \
                           __func__, __LINE__); \
     return HOWIE_ERROR_ENGINE_NOT_INITIALIZED;  \
@@ -49,7 +51,7 @@
 }
 
 #define HOWIE_LOG_FN() __android_log_print( \
-  ANDROID_LOG_VERBOSE, "HOWIE", __func__)
+  ANDROID_LOG_VERBOSE, kLibName, __func__)
 
 namespace howie {
   HowieError check(SLresult code);

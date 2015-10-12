@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */#include "unique_buffer.h"
+ */
+#include "unique_buffer.h"
+#include <algorithm>
 
 void unique_buffer::reset(size_t size) {
   size_ = size;

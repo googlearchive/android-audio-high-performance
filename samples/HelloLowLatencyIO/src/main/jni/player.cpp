@@ -20,7 +20,6 @@
 #include "player.h"
 #include "howie.h"
 
-const static float pi = 3.1415926;
 
 struct Params {
   // System transform
@@ -42,27 +41,27 @@ struct State {
 
 };
 
-void CookParameters(Params *params, float frequency, float resonance) {
+void CookParameters(float frequency, float resonance, Params *out_params) {
   float f = frequency;
   float q = resonance;
 
-  float g = tan(pi * f);
+  float g = tan(M_PI * f);
   float k = 2.f - q * 2.f;
   float a1 = 1.f / (1.f + g * (g + k));
   float a2 = g * a1;
   float a3 = g * a3;
 
-  params->A[0][0] = 2.f * a1 - 1.f;
-  params->A[0][1] = -2.f * a2;
-  params->A[1][0] = 2.f * a2;
-  params->A[1][1] = 1 - 2.f * a3;
+  out_params->A[0][0] = 2.f * a1 - 1.f;
+  out_params->A[0][1] = -2.f * a2;
+  out_params->A[1][0] = 2.f * a2;
+  out_params->A[1][1] = 1 - 2.f * a3;
 
-  params->B[0] = 2.f * a2;
-  params->B[1] = 2.f * a3;
+  out_params->B[0] = 2.f * a2;
+  out_params->B[1] = 2.f * a3;
 
-  params->C[0] = a3;
-  params->C[1] = a2;
-  params->C[2] = 1.f - a3;
+  out_params->C[0] = a3;
+  out_params->C[1] = a2;
+  out_params->C[2] = 1.f - a3;
 }
 
 HowieError onDeviceChanged(
@@ -75,7 +74,7 @@ HowieError onDeviceChanged(
   pState->y[0] = 0;
   pState->y[1] = 0;
 
-  CookParameters(pParams, .2f, .9f);
+  CookParameters(.2f, .9f, pParams);
 
   return HOWIE_SUCCESS;
 }
@@ -154,7 +153,7 @@ Java_com_example_ilewis_hellolowlatencyio_MainActivity_setParams(
     jfloat gain) {
   HowieStream *pStream = reinterpret_cast<HowieStream *>(stream);
   Params params;
-  CookParameters(&params, frequency, resonance);
+  CookParameters(frequency, resonance, &params);
   params.gain = gain;
-  HowieStreamSendParameters(pStream, &params, sizeof(params));
+  HowieStreamSendParameters(pStream, &params, sizeof(params), 1);
 }

@@ -177,6 +177,8 @@ typedef struct HowieStreamCreationParams_ {
   HowieStreamState initialState;
 } HowieStreamCreationParams;
 
+HowieError HowieGetDeviceCharacteristics(HowieDeviceCharacteristics *dest);
+
 HowieError HowieStreamCreate(
     const HowieStreamCreationParams *params,
     HowieStream **out_stream);
@@ -197,7 +199,8 @@ HowieError HowieStreamGetState(HowieStream *stream, HowieStreamState *state);
 HowieError HowieStreamSendParameters(
     HowieStream* stream,
     const void *parameters,
-    size_t size);
+    size_t size,
+    int timeoutMs);
 
 
 

@@ -45,8 +45,10 @@ namespace howie {
         const HowieStreamCreationParams &params,
         HowieStream **out_stream);
 
+    const HowieDeviceCharacteristics *getDeviceCharacteristics() const;
+
   private:
-    HowieDeviceCharacteristics deviceCharacteristics;
+    HowieDeviceCharacteristics deviceCharacteristics_;
 
     SLObjectItf engineObject_ = NULL;
     SLEngineItf engineItf_ = NULL;

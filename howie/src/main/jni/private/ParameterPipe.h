@@ -18,38 +18,64 @@
 #define HIGH_PERFORMANCE_STATEPIPE_H
 
 
-#include <memory>
 #include <atomic>
-#include "unique_buffer.h"
+#include <memory>
+#include <mutex>
+#include <vector>
 
-class ParameterPipe {
-private:
-  enum class State : unsigned int {
-    Free,
-    BusyWriting,
-    BusyReading,
+namespace howie {
+  class ParameterPipe {
+  public:
+    ParameterPipe(size_t maxElement, size_t margin);
+
+    // push returns the number of bytes written.
+    size_t push(const void *src, size_t srcSize);
+
+    // pop returns true on success. Failure implies that the
+    // reader found itself in contention with the writer.
+    bool pop();
+    unsigned char * top() const;
+
+    // top returns
+
+    size_t maxElementSize() const { return elementSize_; }
+
+
+  private:
+    // Track the write head. No need to track the read head, as it's
+    // always just behind the write head.
+    std::atomic<size_t> writepos_{0};
+
+    // Although this queue is lock-free to readers, writers can
+    // block each other.
+    std::vector<std::mutex> locks_;
+
+    // Size of each data element
+    size_t elementSize_;
+
+    // How many elements are in the queue. This is a margin of safety.
+    // If access to the data were serialized, one element would always
+    // suffice. Since the data is not serialized, there is a chance
+    // that the writer may wrap around and overwrite the reader's position
+    // before the reader is finished. Larger values of margin_ make this
+    // less likely.
+    size_t margin_;
+
+    // The actual data buffer. Its size is elementSize_ * margin_.
+    std::unique_ptr<unsigned char> data_;
+
+    // keep a cached element so that top() can always succeed.
+    std::unique_ptr<unsigned char> cache_;
+    std::unique_ptr<unsigned char> temp_;
+
+    // pop returns the number of bytes read, which will be zero
+    // if contention was detected during the read. In this case,
+    // the operation may be retried.
+    size_t pop (void * dest, size_t size);
+
+    size_t logicalPosToByteOffset(size_t current) const;
+
   };
-
-public:
-  ParameterPipe(size_t size)
-      : transfer_(size),
-        cache_(size),
-        currentState_(State::Free) {
-    transfer_.clear();
-    cache_.clear();
-  }
-
-  bool push(const void *src, size_t size);
-  bool pop();
-  unsigned char *get() const { return cache_.get(); }
-  size_t size() const { return cache_.size(); }
-
-private:
-  static State freeState_;
-  unique_buffer transfer_;
-  unique_buffer cache_;
-  std::atomic<State> currentState_;
-};
-
+} // namespace howie
 
 #endif //HIGH_PERFORMANCE_STATEPIPE_H

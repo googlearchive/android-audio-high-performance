@@ -34,7 +34,7 @@ JNIEXPORT jlong JNICALL
                                                       jint channelCount,
                                                       jint samplesPerFrame,
                                                       jint framesPerBuffer) {
-  __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+  HOWIE_LOG_FN();
   howie::EngineImpl *pEngine = howie::EngineImpl::get();
   if (!pEngine) {
     pEngine = new howie::EngineImpl(
@@ -56,7 +56,7 @@ JNIEXPORT void JNICALL
 Java_com_example_android_howie_HowieEngine_destroy(JNIEnv *env,
                                                    jclass type,
                                                    jlong engine) {
-  __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+  HOWIE_LOG_FN();
   howie::EngineImpl * pEngine = reinterpret_cast<howie::EngineImpl *>(engine);
   delete pEngine;
 }
@@ -72,26 +72,26 @@ namespace howie {
                          int channelCount,
                          int samplesPerFrame,
                          int framesPerBuffer) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
-    deviceCharacteristics.version = sizeof(deviceCharacteristics);
-    deviceCharacteristics.sampleRate = sampleRate;
-    deviceCharacteristics.bitsPerSample = bitsPerSample;
-    deviceCharacteristics.bytesPerSample = bytesPerSample;
-    deviceCharacteristics.sampleMask = sampleMask;
-    deviceCharacteristics.floatingPoint = floatingPoint;
-    deviceCharacteristics.samplesPerFrame = samplesPerFrame;
-    deviceCharacteristics.channelCount = channelCount;
-    deviceCharacteristics.framesPerPeriod = framesPerBuffer;
+    HOWIE_LOG_FN();
+    deviceCharacteristics_.version = sizeof(deviceCharacteristics_);
+    deviceCharacteristics_.sampleRate = sampleRate;
+    deviceCharacteristics_.bitsPerSample = bitsPerSample;
+    deviceCharacteristics_.bytesPerSample = bytesPerSample;
+    deviceCharacteristics_.sampleMask = sampleMask;
+    deviceCharacteristics_.floatingPoint = floatingPoint;
+    deviceCharacteristics_.samplesPerFrame = samplesPerFrame;
+    deviceCharacteristics_.channelCount = channelCount;
+    deviceCharacteristics_.framesPerPeriod = framesPerBuffer;
     instance_ = this;
   }
 
   EngineImpl::~EngineImpl() {
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+    HOWIE_LOG_FN();
     instance_ = NULL;
   }
 
   HowieError EngineImpl::init() {
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+    HOWIE_LOG_FN();
     SLresult result;
 
     // create EngineImpl
@@ -119,12 +119,12 @@ namespace howie {
       HowieStream **out_stream) {
     HowieError result = HOWIE_ERROR_UNKNOWN;
 
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+    HOWIE_LOG_FN();
     if (out_stream) {
       *out_stream = nullptr;
     }
 
-    StreamImpl *stream = new StreamImpl(deviceCharacteristics, params);
+    StreamImpl *stream = new StreamImpl(deviceCharacteristics_, params);
     if (stream) {
       result = stream->init(engineItf_, outputMixObject_, params);
       HOWIE_CHECK(result);
@@ -136,4 +136,7 @@ namespace howie {
     return result;
   }
 
+  const HowieDeviceCharacteristics * EngineImpl::getDeviceCharacteristics() const {
+    return &deviceCharacteristics_;
+  }
 } // namespace howie

@@ -19,7 +19,7 @@
 
 
 #include <SLES/OpenSLES_Android.h>
-#include <bits/unique_ptr.h>
+#include <memory>
 #include <android/log.h>
 #include "../howie.h"
 #include "unique_buffer.h"
@@ -29,6 +29,16 @@ namespace howie {
 
   class StreamImpl : public HowieStream {
   public:
+    // Defines the size of the parameter pipe ringbuffer. Larger
+    // values reduce the chance of contention between the audio
+    // thread and the rest of the app. Adjust this number higher
+    // if the audio thread seems to be missing a large number of
+    // parameter updates. See the documentation for ParameterPipe
+    // for more information.
+    static constexpr size_t kParameterPipeSafetyMargin = 8;
+    // This is the maximum number of times the parameter pipe read function
+    // can fail before we start to get worried.
+    static constexpr int kMaxContentions = 5;
 
     StreamImpl(
         const HowieDeviceCharacteristics &deviceCharacteristics,
@@ -38,7 +48,7 @@ namespace howie {
           processCallback_(params.processCallback),
           cleanupCallback_(params.cleanupCallback),
           state_(params.sizeofStateBlock),
-          params_(params.sizeofParameterBlock),
+          params_(params.sizeofParameterBlock, kParameterPipeSafetyMargin),
           direction_(params.direction),
           streamState_(HOWIE_STREAM_STATE_STOPPED) {
       __android_log_print(ANDROID_LOG_DEBUG,
@@ -60,7 +70,13 @@ namespace howie {
     HowieError stop();
     HowieStreamState getState();
 
+
   private:
+    // Defines the number of buffers used for recording. In the absence of
+    // predictably ordered, synchronized I/O, we use three:
+    // one to write, one to read, and one to compensate for i/o
+    // being out of phase.
+    static constexpr unsigned int kRecordBufferCount = 3;
 
     HowieDeviceCharacteristics deviceCharacteristics;
     HowieDirection direction_;
@@ -70,7 +86,6 @@ namespace howie {
     size_t bufferQuantum_ = 0;
 
     unique_buffer input_;
-    static constexpr unsigned int nRecordBuffers_ = 3; // one to write, one to read, and one to compensate for i/o being out of phase
     unsigned int recordBuffersSubmitted_ = 0;
     std::atomic<unsigned int> recordBuffersFinished_ = {0};
 
@@ -79,7 +94,6 @@ namespace howie {
 
     ParameterPipe params_;
     int paramsContentionCounter_ = 0;
-    static constexpr int maxContentions_ = 5;
 
 
     SLObjectItf playerObject_ = nullptr;
@@ -115,6 +129,7 @@ namespace howie {
     const unsigned int countFreeBuffers() const;
 
     HowieStreamState_t streamState_;
+
   };
 
 } // namespace howie

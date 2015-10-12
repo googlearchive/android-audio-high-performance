@@ -18,6 +18,18 @@
 #include "howie-private.h"
 #include "EngineImpl.h"
 #include <thread>
+#include <cstring>
+
+/**
+ * Implements the C accessor for device characteristics
+ */
+HowieError HowieGetDeviceCharacteristics(HowieDeviceCharacteristics *dest) {
+  HOWIE_CHECK_ENGINE_INITIALIZED();
+  HOWIE_CHECK_NOT_NULL(dest)
+  memcpy(dest,
+         howie::EngineImpl::get()->getDeviceCharacteristics(),
+         sizeof(HowieDeviceCharacteristics));
+}
 
 /**
  * Implements the C interface for stream creation
@@ -28,7 +40,7 @@ HowieError HowieStreamCreate(
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(params)
   HOWIE_CHECK(howie::checkCast<const HowieStreamCreationParams*>(params));
-  __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+  HOWIE_LOG_FN();
 
   return howie::EngineImpl::get()->createStream(*params, out_stream);
 }
@@ -40,7 +52,7 @@ HowieError HowieStreamDestroy(HowieStream *stream) {
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(stream);
   HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
-  __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+  HOWIE_LOG_FN();
 
   delete(reinterpret_cast<howie::StreamImpl*>(stream));
 }
@@ -51,12 +63,13 @@ HowieError HowieStreamDestroy(HowieStream *stream) {
 HowieError HowieStreamSendParameters(
     HowieStream *stream,
     const void* parameters,
-    size_t size){
+    size_t size,
+    int timeoutMs){
   HowieError result = HOWIE_SUCCESS;
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(stream);
   HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
-  __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+  HOWIE_LOG_FN();
 
   howie::StreamImpl *pStream = reinterpret_cast<howie::StreamImpl *>(stream);
 
@@ -128,8 +141,13 @@ namespace howie {
       HowieBuffer state { sizeof(HowieBuffer), state_.get(), state_.size() };
       HOWIE_CHECK(cleanupCallback_(this, &state));
     }
-    (*recorderObject_)->Destroy(recorderObject_);
-    (*playerObject_)->Destroy(playerObject_);
+
+    if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
+      (*recorderObject_)->Destroy(recorderObject_);
+    }
+    if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
+      (*playerObject_)->Destroy(playerObject_);
+    }
   }
 
   /**
@@ -139,7 +157,7 @@ namespace howie {
        SLObjectItf outputMixObject,
        const HowieStreamCreationParams &creationParams_) {
     SLresult result;
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+    HOWIE_LOG_FN();
 
     // Compute the buffer quantum
     bufferQuantum_ = deviceCharacteristics.framesPerPeriod
@@ -180,7 +198,7 @@ namespace howie {
 
   HowieError StreamImpl::initRecording(SLEngineItf engineItf,
                                        SLDataFormat_PCM& format_pcm) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+    HOWIE_LOG_FN();
     // configure audio source
     SLDataLocator_IODevice loc_dev = {SL_DATALOCATOR_IODEVICE, SL_IODEVICE_AUDIOINPUT,
                                       SL_DEFAULTDEVICEID_AUDIOINPUT, NULL};
@@ -188,8 +206,7 @@ namespace howie {
 
     // configure record buffer queue
     SLDataLocator_AndroidSimpleBufferQueue loc_bq = {
-        SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,
-        nRecordBuffers_ };
+        SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, kRecordBufferCount};
 
     SLDataSink audioSnk = {&loc_bq, &format_pcm};
 
@@ -232,10 +249,9 @@ namespace howie {
     // start recording
     SLAndroidSimpleBufferQueueState qState;
     HOWIE_CHECK((*recorderBufferQueueItf_)->GetState(recorderBufferQueueItf_, &qState));
-    __android_log_print(ANDROID_LOG_INFO, "HOWIE", "Get Recording status right after start recording: (%d, %d)", qState.count, qState.index);
 
     // Create the recording buffer and submit the first chunk
-    input_.reset(bufferQuantum_ * nRecordBuffers_);
+    input_.reset(bufferQuantum_ * kRecordBufferCount);
     input_.clear();
 
     HOWIE_CHECK(submitRecordBuffer());
@@ -247,7 +263,7 @@ namespace howie {
         SLObjectItf outputMixObject,
         SLDataFormat_PCM &format_pcm)
   {
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+    HOWIE_LOG_FN();
     SLDataLocator_AndroidSimpleBufferQueue locator_bufferqueue_source;
     SLDataSource audio_source;
 
@@ -314,7 +330,8 @@ namespace howie {
     // Last thing before actually starting playback: call the deviceChanged
     // callback
     HowieBuffer state { sizeof(HowieBuffer), state_.get(), state_.size() };
-    HowieBuffer params { sizeof(HowieBuffer), params_.get(), params_.size()};
+    HowieBuffer params { sizeof(HowieBuffer), params_.top(),
+                         params_.maxElementSize()};
     deviceChangedCallback_(&deviceCharacteristics, &state, &params);
 
     // enqueue some silence
@@ -326,8 +343,8 @@ namespace howie {
   }
 
   HowieError StreamImpl::submitRecordBuffer() {
-    while(countFreeBuffers() < nRecordBuffers_) {
-      size_t offset = (recordBuffersSubmitted_ % nRecordBuffers_) * bufferQuantum_;
+    while(countFreeBuffers() < kRecordBufferCount) {
+      size_t offset = (recordBuffersSubmitted_ % kRecordBufferCount) * bufferQuantum_;
       ++recordBuffersSubmitted_;
       HOWIE_CHECK((*recorderBufferQueueItf_)->Enqueue(recorderBufferQueueItf_,
                                                       input_.get() + offset,
@@ -380,10 +397,10 @@ namespace howie {
       if (nBuffersAvailable <= 0) {
         __android_log_write(
             ANDROID_LOG_WARN,
-            "HOWIE",
+            kLibName,
             "GLITCH: missed a record buffer");
       }
-      inputOffset = (recordBuffersFinished % nRecordBuffers_) * bufferQuantum_;
+      inputOffset = (recordBuffersFinished % kRecordBufferCount) * bufferQuantum_;
       in.data = input_.get() + inputOffset;
       in.byteCount = bufferQuantum_;
     }
@@ -394,16 +411,17 @@ namespace howie {
     if (params_.pop()) {
       paramsContentionCounter_ = 0;
     } else {
-      if (++paramsContentionCounter_ > maxContentions_) {
+      if (++paramsContentionCounter_ > kMaxContentions) {
         __android_log_print(
             ANDROID_LOG_WARN,
-            "HOWIE",
+            kLibName,
             "Read thread has missed %d parameter updates in a row. "
             "This is probably because you are making too many calls to "
             "HowieStreamSendParameters().");
       }
     }
-    HowieBuffer params { sizeof(HowieBuffer), params_.get(), params_.size()};
+    HowieBuffer params { sizeof(HowieBuffer), params_.top(),
+                         params_.maxElementSize()};
 
 
     HOWIE_CHECK(processCallback_(this, &in, &out, &state, &params));
@@ -423,23 +441,10 @@ namespace howie {
 
 
   bool StreamImpl::PushParameterBlock(const void *data, size_t size) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "HOWIE", __func__);
+    HOWIE_LOG_FN();
 
-    // spin, because the reader is lock-free and high-priority and doesn't
-    // have a lot of work to do
-    bool result = false;
-    for ( int i = 0; i < 5 && !result; ++i) {
-      result = params_.push(data, size);
-    }
+    bool result = (params_.push(data, size) > 0);
 
-    // still not finished? Try again, but with yields this time.
-    for ( int i = 0; i < 5 && !result; ++i) {
-      std::this_thread::yield();
-      result = params_.push(data, size);
-    }
-
-    // At this point we're not going to wait any longer, so the
-    // result is what it is.
     return result;
   }
 

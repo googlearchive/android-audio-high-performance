@@ -20,9 +20,6 @@ package com.example.android.howie;
 import android.content.Context;
 import android.media.AudioManager;
 
-/**
- * Created by ilewis on 9/25/15.
- */
 public class HowieEngine {
 
     public static long init(Context ctx) {
