@@ -24,13 +24,13 @@ def howieIncludePath = howieBasePath + "/src/main/jni"
 
 model {
     android {
-        compileSdkVersion=23
-        buildToolsVersion="23.0.1"
+        compileSdkVersion = 23
+        buildToolsVersion = "23.0.1"
 
         defaultConfig.with {
             applicationId = "com.google.sample.audio_echo"
             minSdkVersion.apiLevel = 22
-            targetSdkVersion.apiLevel = 23
+            targetSdkVersion.apiLevel = 22
             versionCode = 1
             versionName="1.0"
         }
