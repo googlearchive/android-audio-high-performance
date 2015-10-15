@@ -40,7 +40,7 @@ model {
         ldLibs += ["OpenSLES", "log"]
         CFlags += "-I${howieIncludePath}".toString()
         cppFlags += ["-I${howieIncludePath}".toString(), "-std=c++11"]
-        stl = "gnustl_static"
+        stl = "c++_static"
     }
 
     android.buildTypes {

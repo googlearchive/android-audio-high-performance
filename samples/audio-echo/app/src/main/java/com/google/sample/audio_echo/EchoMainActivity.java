@@ -18,11 +18,13 @@ package com.google.sample.audio_echo;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
 public class EchoMainActivity extends AppCompatActivity {
-    private         long streamId;
+    private   long streamId;
+    private   ToggleButton toggle;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -31,19 +33,28 @@ public class EchoMainActivity extends AppCompatActivity {
 
         System.loadLibrary("audio-echo");
 
-        ((ToggleButton) findViewById(R.id.toggleEcho))
-        .setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        toggle = (ToggleButton) findViewById(R.id.toggleEcho);
+        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    streamId = startEcho();
-                } else {
-                    stopEcho(streamId);
-                }
-
+                startEcho(streamId, isChecked ? true : false);
             }
         });
     }
 
-    native public long startEcho();
-    native public void stopEcho(long streamId);
+    @Override
+    protected void onPause() {
+        toggle.setChecked(false);
+        destroyStream(streamId);
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        streamId = createStream();
+    }
+
+    native public long createStream();
+    native public void destroyStream(long streamId);
+    native public void startEcho(long stream, boolean start);
 }

@@ -14,28 +14,41 @@
  * limitations under the License.
  *
  */
-#include <jni.h>
 #include <android/log.h>
+#include "echo_main.h"
+
 
 const char * MODULE_NAME="AUDIO-ECHO";
 
-extern "C" {
-JNIEXPORT  jlong JNICALL
-   Java_com_google_sample_audio_1echo_EchoMainActivity_startEcho(JNIEnv *env, jobject instance);
-JNIEXPORT void JNICALL
-        Java_com_google_sample_audio_1echo_EchoMainActivity_stopEcho(JNIEnv *env, jobject instance,
-                                                                     jlong streamId);
-}
-
 JNIEXPORT jlong JNICALL
-Java_com_google_sample_audio_1echo_EchoMainActivity_startEcho(JNIEnv *env, jobject instance) {
-
+Java_com_google_sample_audio_1echo_EchoMainActivity_createStream(
+        JNIEnv *env,
+        jobject instance) {
     __android_log_print(ANDROID_LOG_INFO, MODULE_NAME, __FUNCTION__);
     return reinterpret_cast<jlong>((void*)0);
 }
 
 JNIEXPORT void JNICALL
-Java_com_google_sample_audio_1echo_EchoMainActivity_stopEcho(JNIEnv *env, jobject instance,
-                                                             jlong streamId) {
-    __android_log_print(ANDROID_LOG_INFO, MODULE_NAME, "%s: id = %d", __FUNCTION__, streamId);
+Java_com_google_sample_audio_1echo_EchoMainActivity_destroyStream(
+        JNIEnv *env,
+        jobject instance,
+        jlong streamId) {
+    __android_log_print(ANDROID_LOG_INFO,
+                        MODULE_NAME,
+                        "%s: id = %d",
+                        __FUNCTION__,
+                        streamId);
+}
+
+JNIEXPORT void JNICALL
+Java_com_google_sample_audio_1echo_EchoMainActivity_startEcho(
+        JNIEnv *env,
+        jobject instance,
+        jlong streamId,
+        jboolean start) {
+    __android_log_print(ANDROID_LOG_INFO,
+                        MODULE_NAME,
+                        "%s : %d",
+                        (start? "start" : "stop"),
+                        streamId);
 }
