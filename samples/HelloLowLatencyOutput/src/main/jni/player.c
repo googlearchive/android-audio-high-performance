@@ -155,3 +155,10 @@ Java_com_example_hellolowlatencyoutput_MainActivity_stopPlaying(
   HowieStreamSetState(stream, HOWIE_STREAM_STATE_STOPPED);
 }
 
+JNIEXPORT void JNICALL
+Java_com_example_hellolowlatencyoutput_MainActivity_destroyPlayback(JNIEnv *env,
+                                                                    jclass type,
+                                                                    jlong stream) {
+
+  HowieStreamDestroy((HowieStream*)stream);
+}

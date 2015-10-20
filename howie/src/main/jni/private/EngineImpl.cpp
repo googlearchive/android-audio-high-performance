@@ -34,7 +34,7 @@ JNIEXPORT jlong JNICALL
                                                       jint channelCount,
                                                       jint samplesPerFrame,
                                                       jint framesPerBuffer) {
-  HOWIE_LOG_FN();
+  HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
   howie::EngineImpl *pEngine = howie::EngineImpl::get();
   if (!pEngine) {
     pEngine = new howie::EngineImpl(
@@ -56,7 +56,7 @@ JNIEXPORT void JNICALL
 Java_com_example_android_howie_HowieEngine_destroy(JNIEnv *env,
                                                    jclass type,
                                                    jlong engine) {
-  HOWIE_LOG_FN();
+  HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
   howie::EngineImpl * pEngine = reinterpret_cast<howie::EngineImpl *>(engine);
   delete pEngine;
 }
@@ -72,7 +72,7 @@ namespace howie {
                          int channelCount,
                          int samplesPerFrame,
                          int framesPerBuffer) {
-    HOWIE_LOG_FN();
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     deviceCharacteristics_.version = sizeof(deviceCharacteristics_);
     deviceCharacteristics_.sampleRate = sampleRate;
     deviceCharacteristics_.bitsPerSample = bitsPerSample;
@@ -86,12 +86,12 @@ namespace howie {
   }
 
   EngineImpl::~EngineImpl() {
-    HOWIE_LOG_FN();
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     instance_ = NULL;
   }
 
   HowieError EngineImpl::init() {
-    HOWIE_LOG_FN();
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     SLresult result;
 
     // create EngineImpl
@@ -117,16 +117,16 @@ namespace howie {
   HowieError EngineImpl::createStream(
       const HowieStreamCreationParams &params,
       HowieStream **out_stream) {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     HowieError result = HOWIE_ERROR_UNKNOWN;
 
-    HOWIE_LOG_FN();
     if (out_stream) {
       *out_stream = nullptr;
     }
 
     StreamImpl *stream = new StreamImpl(deviceCharacteristics_, params);
     if (stream) {
-      result = stream->init(engineItf_, outputMixObject_, params);
+      result = DoAsync([=]{stream->init(engineItf_, outputMixObject_, params);});
       HOWIE_CHECK(result);
     }
 
@@ -137,6 +137,16 @@ namespace howie {
   }
 
   const HowieDeviceCharacteristics * EngineImpl::getDeviceCharacteristics() const {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     return &deviceCharacteristics_;
+  }
+
+  HowieError EngineImpl::DoAsync(const Worker::work_item_t &fn) {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
+    HowieError result = HOWIE_ERROR_AGAIN;
+    if (openSLIsSlow_.push_work(fn)) {
+      result = HOWIE_SUCCESS;
+    }
+    return result;
   }
 } // namespace howie

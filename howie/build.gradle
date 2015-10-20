@@ -32,9 +32,11 @@ model {
     android.ndk {
         moduleName += "howie"
         cppFlags += "-std=c++11"
+// Uncomment this line to get more debug spew.
+//        cppFlags += "-DHOWIE_TRACE_LEVEL=1"
         ldLibs += "OpenSLES"
         ldLibs += "log"
-        stl = "gnustl_static"
+        stl = "c++_static"
     }
 
     android.buildTypes {
@@ -50,4 +52,6 @@ model {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(dir: 'src', include: ['*.c', '*.cpp', '*.h'])
+
 }

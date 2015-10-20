@@ -50,8 +50,29 @@ constexpr const char * kLibName = "HOWIE";
   }                                             \
 }
 
-#define HOWIE_LOG_FN() __android_log_print( \
-  ANDROID_LOG_VERBOSE, kLibName, __func__)
+#define HOWIE_TRACE_LEVEL_NONE        0
+#define HOWIE_TRACE_LEVEL_CALLS       1
+#define HOWIE_TRACE_LEVEL_DIAGNOSTIC  2
+#define HOWIE_TRACE_LEVEL_REALTIME    3
+#define HOWIE_TRACE_LEVEL_ALL         4
+
+#ifndef HOWIE_TRACE_LEVEL
+#define HOWIE_TRACE_LEVEL 0
+#endif
+
+#if HOWIE_TRACE_LEVEL > HOWIE_TRACE_LEVEL_NONE
+
+#define HOWIE_TRACE(L, S, ...) if (L <= HOWIE_TRACE_LEVEL) { \
+  __android_log_print( ANDROID_LOG_VERBOSE, kLibName, \
+                    "In %s line %d: " S, __FILE__, __LINE__, __VA_ARGS__)}
+
+#define HOWIE_TRACE_FN(L) if (L <= HOWIE_TRACE_LEVEL) { \
+  __android_log_print( \
+  ANDROID_LOG_VERBOSE, kLibName, __func__); }
+#else
+#define HOWIE_TRACE(L, S, ...)
+#define HOWIE_TRACE_FN(L)
+#endif
 
 namespace howie {
   HowieError check(SLresult code);

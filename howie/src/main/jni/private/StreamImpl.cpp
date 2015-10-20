@@ -24,6 +24,7 @@
  * Implements the C accessor for device characteristics
  */
 HowieError HowieGetDeviceCharacteristics(HowieDeviceCharacteristics *dest) {
+  HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(dest)
   memcpy(dest,
@@ -37,10 +38,11 @@ HowieError HowieGetDeviceCharacteristics(HowieDeviceCharacteristics *dest) {
 HowieError HowieStreamCreate(
     const HowieStreamCreationParams *params,
     HowieStream **out_stream) {
+  HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(params)
   HOWIE_CHECK(howie::checkCast<const HowieStreamCreationParams*>(params));
-  HOWIE_LOG_FN();
+
 
   return howie::EngineImpl::get()->createStream(*params, out_stream);
 }
@@ -49,12 +51,14 @@ HowieError HowieStreamCreate(
  * Implements the C interface for stream destruction
  */
 HowieError HowieStreamDestroy(HowieStream *stream) {
+  HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(stream);
   HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
-  HOWIE_LOG_FN();
 
-  delete(reinterpret_cast<howie::StreamImpl*>(stream));
+
+  howie::EngineImpl::get()->DoAsync([=]{
+    delete(reinterpret_cast<howie::StreamImpl*>(stream));});
 }
 
 /**
@@ -65,11 +69,12 @@ HowieError HowieStreamSendParameters(
     const void* parameters,
     size_t size,
     int timeoutMs){
+  HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
   HowieError result = HOWIE_SUCCESS;
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(stream);
   HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
-  HOWIE_LOG_FN();
+
 
   howie::StreamImpl *pStream = reinterpret_cast<howie::StreamImpl *>(stream);
 
@@ -82,20 +87,25 @@ HowieError HowieStreamSendParameters(
 
 HowieError HowieStreamSetState(HowieStream *stream,
                                HowieStreamState newState) {
+  HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
   HowieError result = HOWIE_SUCCESS;
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(stream);
   HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
-  HOWIE_LOG_FN();
+
 
   howie::StreamImpl *pStream = reinterpret_cast<howie::StreamImpl *>(stream);
 
   switch (newState) {
     case HOWIE_STREAM_STATE_PLAYING:
-      result = pStream->run();
+      result = howie::EngineImpl::get()->DoAsync([=] {
+          pStream->run();
+      });
       break;
     case HOWIE_STREAM_STATE_STOPPED:
-      result = pStream->stop();
+      result = howie::EngineImpl::get()->DoAsync([=] {
+        pStream->stop();
+      });
       break;
   }
   HOWIE_CHECK(result);
@@ -103,12 +113,13 @@ HowieError HowieStreamSetState(HowieStream *stream,
 }
 
 HowieError HowieStreamGetState(HowieStream *stream, HowieStreamState *state) {
+  HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
   HowieError result = HOWIE_SUCCESS;
   HOWIE_CHECK_ENGINE_INITIALIZED();
   HOWIE_CHECK_NOT_NULL(stream);
   HOWIE_CHECK_NOT_NULL(state);
   HOWIE_CHECK(howie::checkCast<const howie::StreamImpl*>(stream));
-  HOWIE_LOG_FN();
+
 
   howie::StreamImpl *pStream = reinterpret_cast<howie::StreamImpl *>(stream);
   *state = pStream->getState();
@@ -122,6 +133,7 @@ namespace howie {
   HowieError StreamImpl::lastRecordError_ = HOWIE_SUCCESS;
 
   StreamImpl::~StreamImpl() {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     cleanupObjects();
   }
 
@@ -129,14 +141,8 @@ namespace howie {
    * Delete SL Recorder and Player objects
    */
   HowieError StreamImpl::cleanupObjects(void) {
-    if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
-      HOWIE_CHECK((*recorderItf_)->SetRecordState(recorderItf_,
-                                      SL_RECORDSTATE_STOPPED));
-    }
-    if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
-      HOWIE_CHECK((*playerItf_)->SetPlayState(playerItf_,
-                                              SL_PLAYSTATE_STOPPED));
-    }
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
+    stop();
     if (cleanupCallback_) {
       HowieBuffer state { sizeof(HowieBuffer), state_.get(), state_.size() };
       HOWIE_CHECK(cleanupCallback_(this, &state));
@@ -156,8 +162,9 @@ namespace howie {
   HowieError StreamImpl::init(SLEngineItf engineItf,
        SLObjectItf outputMixObject,
        const HowieStreamCreationParams &creationParams_) {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     SLresult result;
-    HOWIE_LOG_FN();
+
 
     // Compute the buffer quantum
     bufferQuantum_ = deviceCharacteristics.framesPerPeriod
@@ -198,7 +205,7 @@ namespace howie {
 
   HowieError StreamImpl::initRecording(SLEngineItf engineItf,
                                        SLDataFormat_PCM& format_pcm) {
-    HOWIE_LOG_FN();
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     // configure audio source
     SLDataLocator_IODevice loc_dev = {SL_DATALOCATOR_IODEVICE, SL_IODEVICE_AUDIOINPUT,
                                       SL_DEFAULTDEVICEID_AUDIOINPUT, NULL};
@@ -263,7 +270,7 @@ namespace howie {
         SLObjectItf outputMixObject,
         SLDataFormat_PCM &format_pcm)
   {
-    HOWIE_LOG_FN();
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     SLDataLocator_AndroidSimpleBufferQueue locator_bufferqueue_source;
     SLDataSource audio_source;
 
@@ -343,6 +350,7 @@ namespace howie {
   }
 
   HowieError StreamImpl::submitRecordBuffer() {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_REALTIME);
     while(countFreeBuffers() < kRecordBufferCount) {
       size_t offset = (recordBuffersSubmitted_ % kRecordBufferCount) * bufferQuantum_;
       ++recordBuffersSubmitted_;
@@ -355,6 +363,7 @@ namespace howie {
 
   void StreamImpl::bqRecorderCallback(SLAndroidSimpleBufferQueueItf itf,
                                       void *context) {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_ALL);
     if (HOWIE_SUCCEEDED(lastRecordError_)) {
       lastPlaybackError_ = checkCast<const StreamImpl *>(context);
     }
@@ -369,6 +378,7 @@ namespace howie {
   // this callback handler is called every time a buffer finishes playing
   void StreamImpl::bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void
       *context) {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_ALL);
 
     if (HOWIE_SUCCEEDED(lastPlaybackError_)) {
       lastPlaybackError_ = checkCast<const StreamImpl *>(context);
@@ -382,6 +392,7 @@ namespace howie {
 
   HowieError StreamImpl::process(SLAndroidSimpleBufferQueueItf bq) {
     HOWIE_CHECK_NOT_NULL(bq);
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_REALTIME);
 
     if (bq != playerBufferQueueItf_) {
       return HOWIE_ERROR_INVALID_OBJECT;
@@ -408,7 +419,7 @@ namespace howie {
     HowieBuffer out { sizeof(HowieBuffer), output_.get(), output_.size() };
     HowieBuffer state { sizeof(HowieBuffer), state_.get(), state_.size() };
 
-    if (params_.pop()) {
+    if (params_.maxElementSize() == 0 || params_.pop()) {
       paramsContentionCounter_ = 0;
     } else {
       if (++paramsContentionCounter_ > kMaxContentions) {
@@ -441,10 +452,8 @@ namespace howie {
 
 
   bool StreamImpl::PushParameterBlock(const void *data, size_t size) {
-    HOWIE_LOG_FN();
-
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     bool result = (params_.push(data, size) > 0);
-
     return result;
   }
 
@@ -456,12 +465,14 @@ namespace howie {
    *     results, because recordBuffersSubmitted_ is not synchronized.
    */
   const unsigned int StreamImpl::countFreeBuffers() const {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_REALTIME)
     unsigned int finished = recordBuffersFinished_.load(std::memory_order_acquire);
     unsigned int result = recordBuffersSubmitted_ - finished;
     return result;
   }
 
   HowieError StreamImpl::run() {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
       HOWIE_CHECK((*recorderItf_)->SetRecordState(
           recorderItf_, SL_RECORDSTATE_RECORDING));
@@ -475,6 +486,7 @@ namespace howie {
   }
 
   HowieError StreamImpl::stop() {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
       HOWIE_CHECK((*recorderItf_)->SetRecordState(
           recorderItf_, SL_RECORDSTATE_PAUSED));
@@ -489,6 +501,7 @@ namespace howie {
   }
 
   HowieStreamState_t StreamImpl::getState() {
+    HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
     return streamState_;
   }
 } // namespace howie

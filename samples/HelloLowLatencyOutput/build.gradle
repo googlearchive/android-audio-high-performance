@@ -21,7 +21,7 @@ model {
         main {
             jni {
                 dependencies {
-                    project ":howie" linkage "static"
+                    project ":howie"
                 }
             }
         }
@@ -33,7 +33,8 @@ model {
         ldLibs += "log"
         CFlags += "-I${howieIncludePath}".toString()
         cppFlags += "-I${howieIncludePath}".toString()
-        stl = "gnustl_static"
+        cppFlags += "-std=c++11"
+        stl = "c++_static"
     }
 
     android.buildTypes {

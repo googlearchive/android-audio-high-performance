@@ -18,6 +18,7 @@
 #define HELLOLOWLATENCYOUTPUT_ENGINE_H
 
 #include "howie-private.h"
+#include "Worker.h"
 
 namespace howie {
 
@@ -25,7 +26,7 @@ namespace howie {
   class EngineImpl {
   public:
     // Engine is a singleton. There doesn't seem to be a compelling reason
-    // to support more than one, and making it a singleton
+    // to support more than one, and making it a singleton keeps things easy.
     static EngineImpl *get() { return instance_; }
 
     EngineImpl(int sampleRate,
@@ -47,6 +48,7 @@ namespace howie {
 
     const HowieDeviceCharacteristics *getDeviceCharacteristics() const;
 
+    HowieError DoAsync(const Worker::work_item_t& fn);
   private:
     HowieDeviceCharacteristics deviceCharacteristics_;
 
@@ -55,6 +57,11 @@ namespace howie {
     SLObjectItf outputMixObject_ = NULL;
     static EngineImpl *instance_;
 
+    // This number is arbitrary; it needs to be set large enough to
+    // hold the maximum number of OpenSL calls outstanding at any given
+    // time. Hopefully that won't be large.
+    static constexpr int workerQueueLen_ = 5;
+    Worker openSLIsSlow_ {workerQueueLen_};
   };
 
 } // namespace howie
