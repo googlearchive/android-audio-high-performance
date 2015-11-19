@@ -1,0 +1,99 @@
+---
+layout: page
+title: Floating-point
+permalink: /resources/floating_point.html
+site_nav_category: resources
+is_site_nav_category2: true
+site_nav_category_order: 50
+---
+
+<!--
+    Copyright 2015 The Android Open Source Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<h2>Comparison of floating-point with integer or fixed-point</h2>
+
+<p>Advantages of floating-point:</p>
+
+<ul>
+<li>wider dynamic range</li>
+<li>consistent accuracy across the dynamic range</li>
+<li>more headroom to avoid clipping during intermediate calculations and transients</li>
+</ul>
+
+<p>Disadvantages of floating-point:</p>
+
+<ul>
+<li>uses more memory</li>
+<li>surprising properties, for example addition is not associative</li>
+<li>potential loss of arithmetic precision due to rounding or numerically unstable algorithms</li>
+<li>requires greater understanding for accurate and reproducible results</li>
+</ul>
+
+<p>Formerly, floating-point was notorious for being unavailable or slow.
+This is still true on ultra low-end and embedded processors.
+But processors on modern mobile devices now have hardware
+floating-point with performance that is similar (or in some cases
+even faster) than integer.
+Modern CPUs also support <a href="http://en.wikipedia.org/wiki/SIMD">SIMD</a>
+(Single instruction, multiple data) which can improve performance further.</p>
+
+<h2>Tips and Tricks</h2>
+
+<p>A few simple tips and tricks:</p>
+
+<ul>
+<li>Use "double" for infrequent calculations, e.g. when computing filter coefficients</li>
+<li>Pay attention to the order of operations</li>
+<li>Declare explicit variables for intermediate values</li>
+<li>Use parentheses liberally</li>
+<li>If you get a NaN or infinity result, use binary search to discover where it was introduced</li>
+</ul>
+
+<h2>Application-level support for floating point audio data in Android SDK (using Java programming language)</h2>
+
+<p>The Android Developer website describes changes for
+<a href="http://developer.android.com/preview/api-overview.html#Multimedia">Audio playback</a>
+in L developer preview.  There is a new audio format encoding
+AudioFormat.ENCODING_PCM_FLOAT which is used similarly to
+ENCODING_PCM_16_BIT or ENCODING_PCM_8_BIT for specifying AudioTrack data
+formats. Corresponding there is an overloaded method AudioTrack.write()
+that takes in a float array to deliver data.</p>
+
+<p><code>
+   public int write(float[] audioData,
+        int offsetInFloats,
+        int sizeInFloats,
+        int writeMode)
+</code></p>
+
+<p>Please check the method signature in L developer preview, though actual
+use in L developer preview will result in an IllegalArgumentException
+since the Java hookup was not completed in time for the preview release.</p>
+
+<h2>Links</h2>
+
+<p>At Wikipedia:</p>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Audio_bit_depth">Audio bit depth</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Floating_point">Floating point</a></li>
+<li><a href="http://en.wikipedia.org/wiki/IEEE_floating_point">IEEE 754 floating-point</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Loss_of_significance">Loss of significance</a> (catastrophic cancellation)</li>
+<li><a href="https://en.wikipedia.org/wiki/Numerical_stability">Numerical stability</a></li>
+</ul>
+
+<p><a href="http://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html">What every computer scientist should know about floating-point arithmetic</a>
+by David Goldberg, Xerox PARC (edited reprint)</p>

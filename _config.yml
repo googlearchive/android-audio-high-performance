@@ -1,0 +1,16 @@
+# Site settings
+title: High-Performance Audio on Android
+email: your-email@domain.com
+description: > # this means to ignore newlines until "baseurl:"
+  This is the official site for high-performance audio on Android.
+baseurl: "/android-audio-high-performance" # the subpath of your site, e.g. /blog/
+url: "https://googlesamples.github.io" # the base hostname & protocol for your site
+sourceUrl:
+
+# Build settings
+markdown: kramdown
+
+# Define version numbers for library artifacts
+
+gems:
+  - octopress-autoprefixer
