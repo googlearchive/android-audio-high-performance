@@ -23,14 +23,18 @@ You can measure round-trip audio latency by creating an app which generates an a
 
 Alternatively, you can install this [latency testing app](https://play.google.com/store/apps/details?id=org.drrickorang.loopback). This performs a round-trip latency test using the [Larsen test](https://source.android.com/devices/audio/latency_measure.html#larsenTest).
 
-Since the lowest latency is achieved over audio paths with minimal signal processing you may also want to use an [Audio Loopback Dongle](https://source.android.com/devices/audio/latency_measure.html#loopback) which will allow the test to be run over the headset connector. TODO: Where can these be purchased?
+Since the lowest latency is achieved over audio paths with minimal signal processing you may also want to use an [Audio Loopback Dongle](https://source.android.com/devices/audio/latency_measure.html#loopback) which will allow the test to be run over the headset connector.
+
+<!-- TODO: Where can these be purchased? -->
 
 ## Why does using the headset result in lower latency?
 The speakers and microphones used in mobile devices generally have poor acoustics due to their small size. For this reason, signal processing is added to improve the sound quality. This signal processing introduces latency.
 
 If your app relies on low latency audio you should advise users to use the headset. For example, by displaying a "Best with headphones" screen on first run.
 
-Note that just using the headset doesn't guarantee the lowest possible latency. You may need to perform other steps to remove any unwanted signal processing from the audio path, such as by using the [VOICE_RECOGNITION](TODO) preset when recording. TODO: add link to recording tips
+Note that just using the headset doesn't guarantee the lowest possible latency. You may need to perform other steps to remove any unwanted signal processing from the audio path, such as by using the VOICE_RECOGNITION preset when recording.
+
+<!-- TODO: Add link to VOICE_RECOGNITION in OpenSL ES guide and link to recording tips -->
 
 ## What is the lowest possible round-trip audio latency?
 The lowest possible round-trip audio latency varies greatly depending on device model and Android build.
@@ -48,7 +52,9 @@ It is difficult to test audio output latency in isolation since it requires know
 If you know the round-trip audio latency you can use the rough rule of thumb: **Audio output latency is half the round trip audio latency over paths without signal processing**.
 
 ## What is the lowest possible audio input latency?
-As with output latency, input latency is difficult to measure in isolation. The best solution at this time is to measure round-trip audio and divide by two. (TODO: Really?)
+As with output latency, input latency is difficult to measure in isolation. The best solution at this time is to measure round-trip audio and divide by two.
+
+<!-- TODO: Really? -->
 
 ## How can I find the audio latency of a device at runtime?
 There is currently no API to determine audio latency over any path on an Android device at runtime. You can, however, use the following hardware feature flags to find out whether the device makes any guarantees for latency.
