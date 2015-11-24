@@ -3,9 +3,9 @@ High Performance Audio Samples
 
 This repository contains samples for creating high performance audio apps on Android. 
 
-If you've found an error in these samples, please [file an issue](https://github.com/googlesamples/android-high-performance-audio/issues/new).
+If you've found an error in these samples, please [file an issue](https://github.com/googlesamples/android-audio-high-performance/issues/new).
 
-Patches and new samples are encouraged, and may be submitted by [forking this project](https://github.com/googlesamples/android-high-performance-audio/fork) and
+Patches and new samples are encouraged, and may be submitted by [forking this project](https://github.com/googlesamples/android-audio-high-performance/fork) and
 submitting a pull request through GitHub. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 License
