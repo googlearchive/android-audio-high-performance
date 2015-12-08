@@ -34,11 +34,9 @@ model {
 
     android.ndk {
         moduleName = "hello_low_latency_output"
-        ldLibs.add("OpenSLES")
-        ldLibs.add("log")
+        ldLibs.addAll(["OpenSLES", "log"])
         CFlags.add("-I${howieIncludePath}".toString())
-        cppFlags.add("-I${howieIncludePath}".toString())
-        cppFlags.add("-std=c++11")
+        cppFlags.addAll(["-I${howieIncludePath}".toString(), "-std=c++11"])
         stl = "c++_static"
     }
 

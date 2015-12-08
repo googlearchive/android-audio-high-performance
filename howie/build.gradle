@@ -39,8 +39,7 @@ model {
         cppFlags.add("-std=c++11")
 // Uncomment this line to get more debug spew.
 //        cppFlags.add("-DHOWIE_TRACE_LEVEL=1")
-        ldLibs.add("OpenSLES")
-        ldLibs.add("log")
+        ldLibs.addAll(["OpenSLES", "log"])
         stl = "c++_static"
     }
 
