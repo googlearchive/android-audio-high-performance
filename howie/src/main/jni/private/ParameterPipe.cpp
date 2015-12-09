@@ -22,7 +22,7 @@
 namespace howie {
 
   ParameterPipe::ParameterPipe(size_t maxElement, size_t margin)
-      : elementSize_(maxElement), margin_(margin), locks_(margin) {
+      : locks_(margin), elementSize_(maxElement), margin_(margin) {
     data_.reset(new unsigned char[maxElement * margin]);
     cache_.reset(new unsigned char[maxElement]);
     temp_.reset(new unsigned char[maxElement]);

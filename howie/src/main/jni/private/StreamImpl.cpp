@@ -30,6 +30,7 @@ HowieError HowieGetDeviceCharacteristics(HowieDeviceCharacteristics *dest) {
   memcpy(dest,
          howie::EngineImpl::get()->getDeviceCharacteristics(),
          sizeof(HowieDeviceCharacteristics));
+  return HOWIE_SUCCESS;
 }
 
 /**
@@ -59,6 +60,7 @@ HowieError HowieStreamDestroy(HowieStream *stream) {
 
   howie::EngineImpl::get()->DoAsync([=]{
     delete(reinterpret_cast<howie::StreamImpl*>(stream));});
+  return HOWIE_SUCCESS;
 }
 
 /**
@@ -154,6 +156,7 @@ namespace howie {
     if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
       (*playerObject_)->Destroy(playerObject_);
     }
+    return HOWIE_SUCCESS;
   }
 
   /**
@@ -163,7 +166,6 @@ namespace howie {
        SLObjectItf outputMixObject,
        const HowieStreamCreationParams &creationParams_) {
     HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
-    SLresult result;
 
 
     // Compute the buffer quantum
@@ -201,6 +203,7 @@ namespace howie {
     if (creationParams_.initialState == HOWIE_STREAM_STATE_PLAYING) {
       run();
     }
+    return HOWIE_SUCCESS;
   }
 
   HowieError StreamImpl::initRecording(SLEngineItf engineItf,
@@ -263,6 +266,7 @@ namespace howie {
 
     HOWIE_CHECK(submitRecordBuffer());
     HOWIE_CHECK((*recorderItf_)->SetRecordState(recorderItf_, SL_RECORDSTATE_PAUSED));
+    return HOWIE_SUCCESS;
   }
 
   HowieError StreamImpl::initPlayback(
@@ -332,8 +336,6 @@ namespace howie {
     output_.reset(bufferQuantum_);
     output_.clear();
 
-    // set the player's state to playing
-
     // Last thing before actually starting playback: call the deviceChanged
     // callback
     HowieBuffer state { sizeof(HowieBuffer), state_.get(), state_.size() };
@@ -347,6 +349,7 @@ namespace howie {
         output_.get(),
         output_.size()));
     HOWIE_CHECK((*playerItf_)->SetPlayState(playerItf_, SL_PLAYSTATE_PAUSED));
+    return HOWIE_SUCCESS;
   }
 
   HowieError StreamImpl::submitRecordBuffer() {
@@ -354,10 +357,11 @@ namespace howie {
     while(countFreeBuffers() < kRecordBufferCount) {
       size_t offset = (recordBuffersSubmitted_ % kRecordBufferCount) * bufferQuantum_;
       ++recordBuffersSubmitted_;
-      HOWIE_CHECK((*recorderBufferQueueItf_)->Enqueue(recorderBufferQueueItf_,
+      HOWIE_RTCHECK((*recorderBufferQueueItf_)->Enqueue(recorderBufferQueueItf_,
                                                       input_.get() + offset,
                                                       bufferQuantum_));
     }
+    return HOWIE_SUCCESS;
   }
 
 
@@ -428,23 +432,23 @@ namespace howie {
             kLibName,
             "Read thread has missed %d parameter updates in a row. "
             "This is probably because you are making too many calls to "
-            "HowieStreamSendParameters().");
+            "HowieStreamSendParameters().", paramsContentionCounter_);
       }
     }
     HowieBuffer params { sizeof(HowieBuffer), params_.top(),
                          params_.maxElementSize()};
 
 
-    HOWIE_CHECK(processCallback_(this, &in, &out, &state, &params));
+    HOWIE_RTCHECK(processCallback_(this, &in, &out, &state, &params));
 
     if (direction_ & HOWIE_STREAM_DIRECTION_PLAYBACK) {
-      HOWIE_CHECK((*playerBufferQueueItf_)->Enqueue(playerBufferQueueItf_,
+      HOWIE_RTCHECK((*playerBufferQueueItf_)->Enqueue(playerBufferQueueItf_,
                                                    output_.get(),
                                                    output_.size()));
     }
 
     if (direction_ & HOWIE_STREAM_DIRECTION_RECORD) {
-      HOWIE_CHECK(submitRecordBuffer());
+      HOWIE_RTCHECK(submitRecordBuffer());
     }
 
     return HOWIE_SUCCESS;

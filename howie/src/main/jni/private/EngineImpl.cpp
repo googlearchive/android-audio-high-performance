@@ -92,7 +92,6 @@ namespace howie {
 
   HowieError EngineImpl::init() {
     HOWIE_TRACE_FN(HOWIE_TRACE_LEVEL_CALLS)
-    SLresult result;
 
     // create EngineImpl
     HOWIE_CHECK(slCreateEngine(&engineObject_, 0, NULL, 0, NULL, NULL));

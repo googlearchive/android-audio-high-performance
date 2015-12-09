@@ -53,12 +53,11 @@ namespace howie {
     // Size of each data element
     size_t elementSize_;
 
-    // How many elements are in the queue. This is a margin of safety.
-    // If access to the data were serialized, one element would always
-    // suffice. Since the data is not serialized, there is a chance
-    // that the writer may wrap around and overwrite the reader's position
-    // before the reader is finished. Larger values of margin_ make this
-    // less likely.
+    // How many elements are in the queue. This is a margin of safety--a
+    // lower value makes it more likely that the reader will collide
+    // with the writer, which would cause updates to be missed. (This is
+    // expected behavior in collisions, as the alternative is to block
+    // until the update is ready, and that is impermissible.)
     size_t margin_;
 
     // The actual data buffer. Its size is elementSize_ * margin_.

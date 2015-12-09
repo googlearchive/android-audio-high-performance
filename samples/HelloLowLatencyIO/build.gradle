@@ -4,6 +4,7 @@ def howieBasePath = file(project(':howie').projectDir).absolutePath
 
 def howieIncludePath = howieBasePath + "/src/main/jni"
 
+
 model {
     android{
         compileSdkVersion = 23
@@ -48,6 +49,7 @@ model {
         }
     }
 }
+
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')

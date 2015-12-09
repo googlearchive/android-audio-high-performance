@@ -44,12 +44,12 @@ namespace howie {
         const HowieDeviceCharacteristics &deviceCharacteristics,
         const HowieStreamCreationParams &params)
         : deviceCharacteristics(deviceCharacteristics),
+          direction_(params.direction),
+          state_(params.sizeofStateBlock),
+          params_(params.sizeofParameterBlock, kParameterPipeSafetyMargin),
           deviceChangedCallback_(params.deviceChangedCallback),
           processCallback_(params.processCallback),
           cleanupCallback_(params.cleanupCallback),
-          state_(params.sizeofStateBlock),
-          params_(params.sizeofParameterBlock, kParameterPipeSafetyMargin),
-          direction_(params.direction),
           streamState_(HOWIE_STREAM_STATE_STOPPED) {
       __android_log_print(ANDROID_LOG_DEBUG,
                           "HOWIE",

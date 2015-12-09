@@ -23,15 +23,43 @@
 
 constexpr const char * kLibName = "HOWIE";
 
+#define HOWIE_TRACE_LEVEL_NONE        0
+#define HOWIE_TRACE_LEVEL_CALLS       1
+#define HOWIE_TRACE_LEVEL_DIAGNOSTIC  2
+#define HOWIE_TRACE_LEVEL_REALTIME    3
+#define HOWIE_TRACE_LEVEL_ALL         4
 
-#define HOWIE_CHECK(op) {             \
+#ifndef HOWIE_TRACE_LEVEL
+#define HOWIE_TRACE_LEVEL 0
+#endif
+
+#if HOWIE_TRACE_LEVEL > HOWIE_TRACE_LEVEL_NONE
+
+#define HOWIE_TRACE(L, S, ...) if (L <= HOWIE_TRACE_LEVEL) { \
+  __android_log_print( ANDROID_LOG_VERBOSE, kLibName, \
+                    "In %s line %d: " S, __FILE__, __LINE__, __VA_ARGS__);}
+
+#define HOWIE_TRACE_FN(L) if (L <= HOWIE_TRACE_LEVEL) { \
+  __android_log_print( \
+  ANDROID_LOG_VERBOSE, kLibName, __func__); }
+#else
+#define HOWIE_TRACE(L, S, ...)
+#define HOWIE_TRACE_FN(L)
+#endif
+
+#define HOWIE_CHECK_L(op, L) {             \
+  HOWIE_TRACE(L, "checking %s", #op); \
   auto op_result = howie::check((op));\
   if (!HOWIE_SUCCEEDED(op_result)) {  \
+      HOWIE_TRACE(L, "check failed: %s ", #op); \
       __android_log_print(ANDROID_LOG_VERBOSE, kLibName, "%s failed " \
                           "with code %d", __func__, op_result); \
       return op_result;                 \
   }                                   \
 }
+
+#define HOWIE_CHECK(op) HOWIE_CHECK_L(op, HOWIE_TRACE_LEVEL_DIAGNOSTIC)
+#define HOWIE_RTCHECK(op) HOWIE_CHECK_L(op, HOWIE_TRACE_LEVEL_REALTIME)
 
 #define HOWIE_CHECK_NOT_NULL(o) {   \
   if(!(o)) { \
@@ -50,29 +78,6 @@ constexpr const char * kLibName = "HOWIE";
   }                                             \
 }
 
-#define HOWIE_TRACE_LEVEL_NONE        0
-#define HOWIE_TRACE_LEVEL_CALLS       1
-#define HOWIE_TRACE_LEVEL_DIAGNOSTIC  2
-#define HOWIE_TRACE_LEVEL_REALTIME    3
-#define HOWIE_TRACE_LEVEL_ALL         4
-
-#ifndef HOWIE_TRACE_LEVEL
-#define HOWIE_TRACE_LEVEL 0
-#endif
-
-#if HOWIE_TRACE_LEVEL > HOWIE_TRACE_LEVEL_NONE
-
-#define HOWIE_TRACE(L, S, ...) if (L <= HOWIE_TRACE_LEVEL) { \
-  __android_log_print( ANDROID_LOG_VERBOSE, kLibName, \
-                    "In %s line %d: " S, __FILE__, __LINE__, __VA_ARGS__)}
-
-#define HOWIE_TRACE_FN(L) if (L <= HOWIE_TRACE_LEVEL) { \
-  __android_log_print( \
-  ANDROID_LOG_VERBOSE, kLibName, __func__); }
-#else
-#define HOWIE_TRACE(L, S, ...)
-#define HOWIE_TRACE_FN(L)
-#endif
 
 namespace howie {
   HowieError check(SLresult code);
