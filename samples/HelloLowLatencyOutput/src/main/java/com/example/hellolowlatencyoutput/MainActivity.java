@@ -18,7 +18,6 @@
 package com.example.hellolowlatencyoutput;
 
 import android.app.Activity;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -30,50 +29,67 @@ import com.example.android.howie.HowieEngine;
 public class MainActivity extends Activity {
 
 
-    private long streamId;
+  private long streamId;
 
-    public static native long initPlayback();
-    public static native void playTone(long stream);
-    public static native void stopPlaying(long stream);
-    public static native void destroyPlayback(long stream);
+  public static native long initPlayback();
 
-    public static final String TAG = MainActivity.class.getName();
+  public static native void playTone(long stream);
 
-    private TextView textLog;
+  public static native void stopTone(long stream);
 
-    static {
-        System.loadLibrary("hello_low_latency_output");
-    }
+  public static native void startStream(long stream);
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+  public static native void stopStream(long stream);
 
-        HowieEngine.init(this);
-        streamId = initPlayback();
+  public static native void destroyPlayback(long stream);
 
-        View layoutMain = findViewById(R.id.layoutMain);
-        layoutMain.setOnTouchListener(new View.OnTouchListener() {
+  public static final String TAG = MainActivity.class.getName();
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    Log.d(TAG, "Playing sound");
-                    playTone(streamId);
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    Log.d(TAG, "Stopping playback");
-                    stopPlaying(streamId);
-                }
+  private TextView textLog;
 
-                return true;
-            }
-        });
-    }
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    System.loadLibrary("hello_low_latency_output");
 
-    private void log(String message){
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
 
-        Log.d(TAG, message);
-        textLog.setText(textLog.getText() + "\n" + message);
-    }
+    HowieEngine.init(this);
+    streamId = initPlayback();
+
+    View layoutMain = findViewById(R.id.layoutMain);
+    layoutMain.setOnTouchListener(new View.OnTouchListener() {
+
+      @Override
+      public boolean onTouch(View v, MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+          Log.d(TAG, "Playing sound");
+          playTone(streamId);
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+          Log.d(TAG, "Stopping playback");
+          stopTone(streamId);
+        }
+
+        return true;
+      }
+    });
+  }
+
+  @Override
+  protected void onPause() {
+    super.onPause();
+    stopStream(streamId);
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    startStream(streamId);
+  }
+
+  private void log(String message) {
+
+    Log.d(TAG, message);
+    textLog.setText(textLog.getText() + "\n" + message);
+  }
 }

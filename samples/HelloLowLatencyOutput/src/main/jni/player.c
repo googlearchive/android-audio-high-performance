@@ -97,7 +97,7 @@ HowieError onDeviceChanged(
   struct PlayerParams* playerParams = (struct PlayerParams*)params->data;
 
   createWaveTables(pHDC->framesPerPeriod, pHDC->channelCount, playerState);
-  playerParams->playing = 1;
+  playerParams->playing = 0;
   return HOWIE_SUCCESS;
 }
 
@@ -109,8 +109,12 @@ HowieError onProcess(
     const HowieBuffer *params) {
   struct PlayerState* playerState = (struct PlayerState*)state->data;
   struct PlayerParams* playerParams = (struct PlayerParams*)params->data;
-    
-  memcpy(out->data, playerState->sineWaveBuffer, out->byteCount);
+
+  if (playerParams->playing) {
+    memcpy(out->data, playerState->sineWaveBuffer, out->byteCount);
+  } else {
+    memset(out->data, 0, out->byteCount);
+  }
   
   return HOWIE_SUCCESS;
 }
@@ -142,23 +146,39 @@ Java_com_example_hellolowlatencyoutput_MainActivity_initPlayback(JNIEnv *env,
 JNIEXPORT void JNICALL
 Java_com_example_hellolowlatencyoutput_MainActivity_playTone(
     JNIEnv* env, jclass clazz, jlong streamId){
+  struct PlayerParams parms = {1};
   HowieStream* stream = (HowieStream*)(void*)streamId;
-  HowieStreamSetState(stream, HOWIE_STREAM_STATE_PLAYING);
+  HowieStreamSendParameters(stream, &parms, sizeof(parms), 1);
 }
 
 JNIEXPORT void JNICALL
-Java_com_example_hellolowlatencyoutput_MainActivity_stopPlaying(
-    JNIEnv *env,
-    jclass type,
-    jlong streamId) {
-  HowieStream* stream = (HowieStream*)(void*)streamId;
-  HowieStreamSetState(stream, HOWIE_STREAM_STATE_STOPPED);
+Java_com_example_hellolowlatencyoutput_MainActivity_stopTone(JNIEnv *env, jclass type,
+                                                             jlong stream) {
+  struct PlayerParams parms;
+  parms.playing = 0;
+  HowieStream* pstream = (HowieStream*)(void*)stream;
+  HowieStreamSendParameters(pstream, &parms, sizeof(parms), 1);
 }
 
 JNIEXPORT void JNICALL
 Java_com_example_hellolowlatencyoutput_MainActivity_destroyPlayback(JNIEnv *env,
                                                                     jclass type,
                                                                     jlong stream) {
-
   HowieStreamDestroy((HowieStream*)stream);
+}
+
+
+JNIEXPORT void JNICALL
+Java_com_example_hellolowlatencyoutput_MainActivity_startStream(JNIEnv *env, jclass type,
+                                                                jlong stream) {
+    HowieStream* pstream = (HowieStream*)(void*)stream;
+    HowieStreamSetState(pstream, HOWIE_STREAM_STATE_PLAYING);
+}
+
+JNIEXPORT void JNICALL
+Java_com_example_hellolowlatencyoutput_MainActivity_stopStream(JNIEnv *env, jclass type,
+                                                               jlong stream) {
+
+    HowieStream* pstream = (HowieStream*)(void*)stream;
+    HowieStreamSetState(pstream, HOWIE_STREAM_STATE_STOPPED);
 }
