@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Audio Input Latency
+title: Audio input latency
 permalink: /guides/audio-input-latency.html
 site_nav_category_order: 110
 is_site_nav_category2: true
@@ -22,39 +22,22 @@ site_nav_category: guides
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
+{::options toc_levels="1,2,3"/}
 
-<h2 id="checklist">Checklist</h2>
+* TOC
+{:toc}
 
-<ol>
+## Checklist
 
-<li>
-You'll need to use Android native audio based on OpenSL ES.
-</li>
+- You'll need to use Android native audio based on OpenSL ES
+- If you have not already done so, install the NDK
+- Many of the same requirements for lower latency audio output also apply to lower latency input. So first read the requirements for lower latency output in the [OpenSL ES performance section]({{site.baseurl}}/guides/opensl_es.html#performance)
 
-<li>
-If you have not already done so, install the NDK.
-</li>
+<!--- Next read the requirements for lower latency input at XYZ-->
 
-<li>
-Many of the same requirements for lower latency audio output
-also apply to lower latency input.
-So first read the requirements for lower latency output at
-<NDK_install_location>/docs/opensles/index.html
-section "Performance".
-</li>
+## Dos and Don'ts
 
-<li>
-Next read the requirements for lower latency input at
-XYZ
-</li>
-
-</ol>
-
-<h3 id="do">Do's and Don'ts</h3>
-
-<ul>
-
-<li>
+<ul><li>
 Do be prepared to handle nominal sample rates of 44100 and 48000 Hz as reported by
 <a href="http://developer.android.com/reference/android/media/AudioManager.html#getProperty(java.lang.String)">getProperty(String)</a>
 for
@@ -108,12 +91,4 @@ sophisticated conversions are possible.
 
 </ul>
 
-<h2>FAQ</h2>
-
-<p>
-Q. Can I use different channel configurations for input and output (e.g. mono input and stereo output)?
-</p>
-
-<p>
-A. Yes.
-<p>
+Be sure to check the [latency section of the FAQs]({{site.baseurl}}/faqs.html#latency) for more information.

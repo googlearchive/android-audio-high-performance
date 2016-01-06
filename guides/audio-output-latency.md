@@ -1,29 +1,32 @@
 ---
 layout: page
-title: Audio Output Latency
+title: Audio output latency
 permalink: /guides/audio-output-latency.html
 site_nav_category_order: 120
 is_site_nav_category2: true
 site_nav_category: guides
 ---
 
+<!--
+    Copyright 2015 The Android Open Source Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
 {::options toc_levels="1,2,3"/}
 
 * TOC
 {:toc}
-
-## Introduction
-Many apps need to generate audio as quickly as possible following some input event (e.g. the user tapping on the screen). Common examples include:
-
-- Digital Audio Workstations (DAWs)
-- Video/Audio conferencing
-- Synthesizers
-- Drum machines
-- Karaoke apps
-- DJ mixing
-- Audio effects
-
-Whatever the purpose of your app this guide will help you achieve the lowest possible audio output latency.
 
 ## Prerequisites
 Low latency audio is currently only supported using OpenSL ES and the Android NDK.
@@ -131,3 +134,5 @@ Example code to create a buffer of silence:
     for (i = 0; i < numSamples; i++) silenceBuffer[i] = 0;
 
 Note: Constantly outputting audio incurs significant power consumption. Ensure you stop the output in the onPause() method. Also consider pausing the silent output after some period of user inactivity.
+
+Be sure to check the [latency section of the FAQs]({{site.baseurl}}/faqs.html#latency) for more information.

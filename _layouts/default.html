@@ -28,5 +28,11 @@
       ga('send', 'pageview');
 
     </script>
+    <!-- Hack to fix anchor tags which MDL v1 breaks -->
+    <script>
+      window.setTimeout(function() {
+         document.querySelector('.mdl-layout').scrollTop = document.querySelector(document.location.hash || 'body').offsetTop;
+    }, 300);
+    </script>
   </body>
 </html>

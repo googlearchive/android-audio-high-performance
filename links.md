@@ -1,10 +1,10 @@
 ---
 layout: page
-title: Miscellaneous
-permalink: /resources/miscellaneous.html
-site_nav_category: resources
-is_site_nav_category2: true
-site_nav_category_order: 100
+title: Links to audio resources
+permalink: /links.html
+is_site_nav_category: false
+site_nav_category: links
+site_nav_category_order: 5
 ---
 
 <!--
@@ -64,8 +64,8 @@ href="https://github.com/gkasten/high-performance-audio/tree/master/audio-buffer
 </tr>
 
 <tr>
-  <td><a href="https://github.com/dturner/SuperpoweredLatency">SuperPowered Latency Test</a></td>
-  <td>modified to disable cloud upload</td>
+  <td><a href="https://github.com/superpoweredSDK/SuperpoweredLatency">SuperPowered Latency Test</a></td>
+  <td>Tests round trip audio latency by outputting a sine wave and waiting for signal to arrive at the microphone input.</td>
 </tr>
 
 <tr>
@@ -99,7 +99,8 @@ href="https://github.com/gkasten/high-performance-audio/tree/master/audio-buffer
   <td>recommended SDK API for encoding and decoding</td>
 </tr>
 <tr>
-  <td>section "Decode audio to PCM" in<br /><em>OpenSL ES for Android</em></td>
+  <td>
+  <a href="{{site.baseurl}}/guides/opensl_es.html#decode-audio-to-pcm">Decoding audio to PCM section of OpenSL ES guide</a></td>
   <td>deprecated NDK API for decoding</td>
 </tr>
 
