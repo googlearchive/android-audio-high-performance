@@ -19,13 +19,8 @@ package com.example.ilewis.hellolowlatencyio;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Range;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import com.example.android.howie.HowieEngine;
 
