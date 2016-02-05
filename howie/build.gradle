@@ -27,11 +27,11 @@ model {
       minSdkVersion.apiLevel = 22
       targetSdkVersion.apiLevel = 22
     }
-  }
 
-  compileOptions.with {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    compileOptions.with {
+      sourceCompatibility = JavaVersion.VERSION_1_7
+      targetCompatibility = JavaVersion.VERSION_1_7
+    }
   }
 
   android.ndk {

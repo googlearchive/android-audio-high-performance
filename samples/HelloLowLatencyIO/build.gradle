@@ -1,9 +1,7 @@
 apply plugin: 'com.android.model.application'
 
 def howieBasePath = file(project(':howie').projectDir).absolutePath
-
 def howieIncludePath = howieBasePath + "/src/main/jni"
-
 
 model {
     android{
@@ -17,11 +15,11 @@ model {
             versionName = "3.0"
             versionCode = 3
         }
-    }
 
-    compileOptions.with {
-        sourceCompatibility=JavaVersion.VERSION_1_7
-        targetCompatibility=JavaVersion.VERSION_1_7
+        compileOptions.with {
+            sourceCompatibility=JavaVersion.VERSION_1_7
+            targetCompatibility=JavaVersion.VERSION_1_7
+        }
     }
 
     android.sources {
