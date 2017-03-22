@@ -1,14 +1,15 @@
 AAudio Samples
 ==============
-These samples demonstrate AAudio API:
-1. hello-aaudio sample: creates output stream
-1. echo sample: creates output and input streams, directly play captured audio
+These samples demonstrate how to use the AAudio API:
+1. hello-aaudio: creates an output stream
+1. echo: creates output and input streams, audio from the input stream is played 
+through the output stream
 
 Requirements
 -----------
-* Android Device with Android API 25 ( Andorid O )
-* A headphone( or a speaker ) plugged into Android Device
-* Support Audio Recording
+* Android device with Android API 25 (Android O)
+* A headphone (or a speaker) plugged into the Android device
+* Android device supports audio recording
 * Android Studio 2.3.0+
 
 License

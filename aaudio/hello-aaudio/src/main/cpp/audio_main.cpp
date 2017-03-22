@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <atomic>
 #include <thread>
 #include <cassert>
 #include <jni.h>
@@ -32,8 +33,8 @@ struct AAudioEngine {
     aaudio_audio_format_t sampleFormat_;
 
     AAudioStream *playStream_;
-    bool   requestStop_;
-    bool   playAudio_;
+    volatile std::atomic<bool>   requestStop_;
+    volatile std::atomic<bool>   playAudio_;
 
 };
 static AAudioEngine engine;
@@ -73,10 +74,6 @@ void PlayAudioThreadProc(void* ctx) {
     LOGW("Failed to tune up the audio buffer size,"
              "low latency audio may not be guaranteed");
   }
-  // double check the tuning result: not necessary
-  PrintAudioStreamInfo(engine.playStream_);
-
-  LOGV("=====: currentState=%d", AAudioStream_getState(eng->playStream_));
 
   // prepare for data generator
   SineGenerator sineOscLeft, sineOscRight;
@@ -113,8 +110,6 @@ void PlayAudioThreadProc(void* ctx) {
 
   AAudioStream_close(eng->playStream_);
   eng->playStream_ = nullptr;
-
-  LOGV("====Player is done");
 }
 
 /*
@@ -126,6 +121,8 @@ Java_com_google_sample_aaudio_play_MainActivity_createEngine(
         JNIEnv *env, jclass type, jint sampleRate, jint framesPerBuf) {
 
     memset(&engine, 0, sizeof(engine));
+    engine.requestStop_ = false;
+    engine.playAudio_ = false;
 
     // Initialize AAudio wrapper
     if(!InitAAudio()) {
