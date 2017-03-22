@@ -156,8 +156,10 @@ public class MainActivity extends Activity
             return;
         }
 
-        status_view.setText("This sample must be run with headphone connected\n" +
-                            " -- otherwise it is VERY DISTURBING (when it works):\n" +
+        status_view.setText("Warning:\n" +
+                            "    This sample must be run with headphone connected\n" +
+                            "     -- otherwise the sound could be pretty DISTURBING.\n" +
+                            "Info:\n" +
                             "  nativeSampleRate    = " + nativeSampleRate + "\n" +
                             "  nativeSampleBufSize = " + nativeSampleBufSize + "\n");
 
