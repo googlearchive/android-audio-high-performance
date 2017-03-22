@@ -101,7 +101,7 @@ void AudioThreadProc(void* ctx) {
       assert(frameCount == framesPerBurst);
     } else {
       memset(buf, 0, sizeof(int16_t) * framesPerBurst * samplesPerFrame);
-      frameCount = samplesPerFrame;
+      frameCount = framesPerBurst;
     }
     frameCount = AAudioStream_write(eng->playStream_,
                                 buf,
