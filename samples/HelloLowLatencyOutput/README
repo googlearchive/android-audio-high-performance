@@ -1,8 +1,0 @@
-Low Latency Audio Output
-========================
-
-This sample demonstrates how to achieve the lowest possible output latency on an Android device. 
-
-TODO
----
-- App crashes on orientation change
