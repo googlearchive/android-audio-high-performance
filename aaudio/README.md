@@ -4,6 +4,8 @@ These samples demonstrate AAudio API:
 1. hello-aaudio sample: creates an output stream
 1. echo sample: creates output and input streams, then play via loopback
 
+AAudio is in its early stage of development, this [android-ndk thread](https://groups.google.com/forum/#!topic/android-ndk/Ox7L8V5ZF5s) addresses some of the possible questions surrounding the new API.
+
 Pre-requisites
 -----------
 * Android Device with recording capability, running Android API 25( Android O )
