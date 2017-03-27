@@ -18,32 +18,26 @@
 #define AAUDIO_STREAM_BIULDER_H
 #include <cassert>
 
-//Replace this include with NDK's AAudio.h when available
+// Replace this include with NDK's AAudio.h when available
 #include <include/AAudio_Wrapper.h>
 
 class StreamBuilder {
 public:
-    StreamBuilder() :
-        sampleRate_(0),
-        samplesPerFrame_(0),
-        format_(AAUDIO_FORMAT_PCM_I16),
-        sharing_(AAUDIO_SHARING_MODE_SHARED),
-        direction_(AAUDIO_DIRECTION_OUTPUT),
-        stream_(nullptr) {
-      aaudio_result_t result = AAudio_createStreamBuilder(&builder_);
-      assert(result == AAUDIO_OK && builder_);
-    };
-    StreamBuilder(
-                  int32_t sampleRate,
-                  int32_t samplesPerFrame,
-                  aaudio_audio_format_t format,
-                  aaudio_sharing_mode_t sharing,
-                  aaudio_direction_t dir) :
-          sampleRate_(sampleRate),
-          samplesPerFrame_(samplesPerFrame),
-          format_(format),
-          sharing_(sharing),
-          direction_(dir) {
+    /*
+     * purposely left the deviceID and bufferSize as default
+     * expecting AAudio will pick up the right one for us
+     */
+    explicit StreamBuilder(
+                           int32_t sampleRate,
+                           int32_t samplesPerFrame,
+                           aaudio_audio_format_t format,
+                           aaudio_sharing_mode_t sharing,
+                           aaudio_direction_t dir) :
+                 sampleRate_(sampleRate),
+                 samplesPerFrame_(samplesPerFrame),
+                 format_(format),
+                 sharing_(sharing),
+                 direction_(dir) {
       aaudio_result_t  result = AAudio_createStreamBuilder(&builder_);
       assert(result == AAUDIO_OK && builder_);
       AAudioStreamBuilder_setSampleRate(builder_, sampleRate_);
@@ -64,7 +58,9 @@ public:
     }
     void SampleRate(int32_t rate) { sampleRate_ = rate; }
     int32_t SampleRate(void) const { return sampleRate_; }
-    void SamplesPerFrame(int32_t samplesPerFrame) { samplesPerFrame_ = samplesPerFrame; }
+    void SamplesPerFrame(int32_t samplesPerFrame) {
+             samplesPerFrame_ = samplesPerFrame;
+    }
     int32_t SamplesPerFrame(void) { return samplesPerFrame_; }
     void Format(aaudio_audio_format_t format) { format_ = format; }
     aaudio_audio_format_t Format(void)  const { return format_; }

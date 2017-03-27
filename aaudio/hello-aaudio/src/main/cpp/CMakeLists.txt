@@ -21,14 +21,17 @@ get_filename_component(AAUDIO_COMMON_PATH "../../../../third_party/aaudio" ABSOL
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 
 add_library(hello-aaudio SHARED
-            ${AAUDIO_COMMON_PATH}/wrapper/src/aaudio_wrapper.c
-            audio_common.cpp
             audio_main.cpp
-            debug_utils.cpp)
+            ${AAUDIO_COMMON_PATH}/utils/audio_common.cpp
+            ${AAUDIO_COMMON_PATH}/utils/debug_utils.cpp
+            ${AAUDIO_COMMON_PATH}/wrapper/src/aaudio_wrapper.c)
 
-target_include_directories(hello-aaudio PRIVATE ${AAUDIO_COMMON_PATH}/wrapper)
+target_include_directories(hello-aaudio PRIVATE
+                           ${AAUDIO_COMMON_PATH}/wrapper
+                           ${AAUDIO_COMMON_PATH}/utils
+                           ${AAUDIO_COMMON_PATH}/../android)
 
-# include libraries needed for aaudio play lib
+# include libraries needed for hello-aaudio
 target_link_libraries(hello-aaudio
                       android
                       atomic
