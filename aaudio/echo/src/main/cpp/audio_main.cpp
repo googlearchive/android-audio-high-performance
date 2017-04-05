@@ -167,7 +167,7 @@ Java_com_google_sample_aaudio_echo_MainActivity_createEngine(
   assert(engine.recordingStream_);
   PrintAudioStreamInfo(engine.recordingStream_);
 
-  aaudio_stream_state_t result = AAudioStream_requestStart(engine.playStream_);
+  aaudio_result_t result = AAudioStream_requestStart(engine.playStream_);
   if (result != AAUDIO_OK) {
     assert(result == AAUDIO_OK);
     return JNI_FALSE;
