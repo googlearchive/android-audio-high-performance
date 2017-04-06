@@ -26,7 +26,6 @@
  */
 struct AAudioEngine {
     uint32_t     sampleRate_;
-    uint32_t     framesPerBuf_;
     uint16_t     sampleChannels_;
     uint16_t     bitsPerSample_;
     aaudio_audio_format_t sampleFormat_;
@@ -44,7 +43,7 @@ static AAudioEngine engine;
 extern "C" {
   JNIEXPORT jboolean JNICALL
   Java_com_google_sample_aaudio_play_MainActivity_createEngine(
-            JNIEnv *env, jclass, jint, jint);
+            JNIEnv *env, jclass);
   JNIEXPORT void JNICALL
   Java_com_google_sample_aaudio_play_MainActivity_deleteEngine(
             JNIEnv *env, jclass type);
@@ -123,7 +122,7 @@ void PlayAudioThreadProc(void* ctx) {
  */
 JNIEXPORT jboolean JNICALL
 Java_com_google_sample_aaudio_play_MainActivity_createEngine(
-        JNIEnv *env, jclass type, jint sampleRate, jint framesPerBuf) {
+        JNIEnv *env, jclass type) {
 
     memset(&engine, 0, sizeof(engine));
 
@@ -133,23 +132,21 @@ Java_com_google_sample_aaudio_play_MainActivity_createEngine(
       return JNI_FALSE;
     }
 
-    engine.sampleRate_   = sampleRate;
-    engine.framesPerBuf_ = static_cast<uint32_t>(framesPerBuf);
     engine.sampleChannels_   = AUDIO_SAMPLE_CHANNELS;
     engine.sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
-    engine.bitsPerSample_    = SampleFormatToBpp(engine.sampleFormat_);
+    engine.bitsPerSample_ = SampleFormatToBpp(engine.sampleFormat_);
 
-    StreamBuilder builder(engine.sampleRate_,
-                  engine.sampleChannels_,
-                  engine.sampleFormat_,
-                  AAUDIO_SHARING_MODE_SHARED,
-                  AAUDIO_DIRECTION_OUTPUT);
+    // Create an Output Stream
+    StreamBuilder builder;
+    engine.playStream_ = builder.CreateStream(engine.sampleFormat_,
+                                            engine.sampleChannels_,
+                                            AAUDIO_SHARING_MODE_SHARED);
+    if (!engine.playStream_) {
+      assert(false);
+      return JNI_FALSE;
+    }
 
-    engine.playStream_ = builder.Stream();
-    assert(engine.playStream_);
-
-    PrintAudioStreamInfo(engine.playStream_);
-
+    engine.sampleRate_ = AAudioStream_getSampleRate(engine.playStream_);
     aaudio_result_t result = AAudioStream_requestStart(engine.playStream_);
     if (result != AAUDIO_OK) {
       assert(result == AAUDIO_OK);
@@ -158,7 +155,7 @@ Java_com_google_sample_aaudio_play_MainActivity_createEngine(
 
     std::thread t(PlayAudioThreadProc, &engine);
     t.detach();
-   return JNI_TRUE;
+    return JNI_TRUE;
 }
 
 /*
