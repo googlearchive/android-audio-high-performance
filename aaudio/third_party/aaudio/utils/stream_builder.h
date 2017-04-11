@@ -19,7 +19,7 @@
 #include <cassert>
 
 // Replace this include with NDK's AAudio.h when available
-#include <include/AAudio_Wrapper.h>
+#include <aaudio/AAudio.h>
 #define INVALID_AUDIO_PARAM 0
 
 class StreamBuilder {

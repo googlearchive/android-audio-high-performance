@@ -133,12 +133,6 @@ Java_com_google_sample_aaudio_echo_MainActivity_createEngine(
 
   memset(&engine, 0, sizeof(engine));
 
-  // Initialize AAudio wrapper
-  if(!InitAAudio()) {
-    LOGE("AAudio is not supported on your platform, cannot proceed");
-    return JNI_FALSE;
-  }
-
   engine.sampleChannels_   = AUDIO_SAMPLE_CHANNELS;
   engine.sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
   engine.bitsPerSample_  = SampleFormatToBpp(engine.sampleFormat_);
