@@ -19,7 +19,7 @@
 #define AAUDIO_AUDIO_COMMON_H
 
 #include <chrono>
-#include <include/AAudio_Wrapper.h>
+#include <aaudio/AAudio.h>
 
 #include "android_debug.h"
 #include "debug_utils.h"

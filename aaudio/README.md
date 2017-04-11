@@ -10,7 +10,9 @@ Pre-requisites
 -----------
 * Android Device with recording capability, running Android API 25( Android O )
 * An external headphone (with a microphone) plugged into Android Device
+* NDK-r15 [Beta1](https://developer.android.com/ndk/downloads/index.html) and above
 * [Android Studio 2.3.0+](https://developer.android.com/studio/index.html)
+* [AAudio Guide](https://developer.android.com/ndk/guides/audio/aaudio/aaudio.html)
 
 Getting Started
 ---------------
@@ -18,7 +20,7 @@ Getting Started
 1. Launch Android Studio
 1. Import project: File --> New --> Import Project; browse to aaudio/build.gradle; and "OK"
 1. Open *File/Project Structure...*
-  - Click *Download* or *Select NDK location*.
+  - Click *Download* or *Select NDK location*: make sure to use ndk-r15-beta1+
 1. Click *Tools/Android/Sync Project with Gradle Files*.
 1. Click *Run/Run 'app'*.
 
