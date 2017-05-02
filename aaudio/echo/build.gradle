@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId 'com.google.sample.com.google.sample.aaudio.echo'
-        minSdkVersion 24
+        minSdkVersion 25
         targetSdkVersion 25
         versionCode 1
         versionName '1.0'
@@ -15,10 +15,8 @@ android {
         }
         externalNativeBuild {
             cmake {
-                // With android studio 2.2.0 +cmake, app needs to pack shared lib to
-                // into APK. Refer to CMakeLists.txt for details
                 arguments '-DANDROID_STL=c++_shared', '-DANDROID_TOOLCHAIN=clang',
-                          '-DANDROID_PLATFORM=android-24'
+                          '-DANDROID_PLATFORM=android-26'
             }
         }
     }

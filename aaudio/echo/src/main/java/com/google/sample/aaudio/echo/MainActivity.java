@@ -39,8 +39,6 @@ public class MainActivity extends Activity
 
     TextView status_view;
     Button   commandButton;
-    String   nativeSampleRate;
-    String   nativeSampleBufSize;
     boolean  supportRecording;
     boolean  isPlaying;
     boolean  nativeAAudioInitialized;
@@ -101,8 +99,7 @@ public class MainActivity extends Activity
             return;
 
         if (!nativeAAudioInitialized) {
-            supportRecording = createEngine(Integer.parseInt(nativeSampleRate),
-                                            Integer.parseInt(nativeSampleBufSize));
+            supportRecording = createEngine();
             nativeAAudioInitialized = true;
         }
 
@@ -136,13 +133,18 @@ public class MainActivity extends Activity
     }
 
     private void queryNativeAudioParameters() {
-        AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        nativeSampleRate  =  myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-        nativeSampleBufSize =myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+        AudioManager myAudioMgr = (AudioManager)
+                getSystemService(Context.AUDIO_SERVICE);
+        String nativeSampleRate  =  myAudioMgr.
+                getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+        String nativeSampleBufSize =myAudioMgr.
+                getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
         int recBufSize = AudioRecord.getMinBufferSize(
                 Integer.parseInt(nativeSampleRate),
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
+        // This could be done from native side too: input stream creation would fail
+        // if not the system does not support recording. Just do it here for convenience
         supportRecording = true;
         if (recBufSize == AudioRecord.ERROR ||
             recBufSize == AudioRecord.ERROR_BAD_VALUE) {
@@ -156,10 +158,9 @@ public class MainActivity extends Activity
             return;
         }
 
-        status_view.setText("This sample must be run with headphone connected\n" +
-                            " -- otherwise it is VERY DISTURBING (when it works):\n" +
-                            "  nativeSampleRate    = " + nativeSampleRate + "\n" +
-                            "  nativeSampleBufSize = " + nativeSampleBufSize + "\n");
+        status_view.setText("Warning:\n" +
+                            "    This sample must be run with headphone connected\n" +
+                            "     -- otherwise the sound could be pretty DISTURBING.\n");
 
     }
     @Override
@@ -214,7 +215,7 @@ public class MainActivity extends Activity
     /*
      * jni function implementations...
      */
-    public static native boolean createEngine(int rate, int framesPerBuf);
+    public static native boolean createEngine();
     public static native void deleteEngine();
 
     public static native boolean start();

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <atomic>
 #include <cassert>
 #include <cstring>
 #include <jni.h>
@@ -25,7 +24,6 @@
 
 struct AAudioEcho {
     uint32_t     sampleRate_;
-    uint32_t     framesPerBuf_;
     uint16_t     sampleChannels_;
     uint16_t     bitsPerSample_;
     aaudio_audio_format_t sampleFormat_;
@@ -33,8 +31,8 @@ struct AAudioEcho {
     AAudioStream *playStream_;
     AAudioStream *recordingStream_;
 
-    volatile std::atomic<bool>   requestStop_;
-    volatile std::atomic<bool>   playAudio_;
+    bool   requestStop_;
+    bool   playAudio_;
 };
 static AAudioEcho engine;
 
@@ -42,7 +40,7 @@ static AAudioEcho engine;
 extern "C" {
   JNIEXPORT jboolean JNICALL
   Java_com_google_sample_aaudio_echo_MainActivity_createEngine(
-      JNIEnv *env, jclass, jint, jint);
+      JNIEnv *env, jclass);
   JNIEXPORT void JNICALL
   Java_com_google_sample_aaudio_echo_MainActivity_deleteEngine(
       JNIEnv *env, jclass type);
@@ -73,6 +71,8 @@ void AudioThreadProc(void* ctx) {
     LOGW("Failed to tune up the audio buffer size,"
              "low latency audio may not be guaranteed");
   }
+  // double check the tuning result: not necessary
+  PrintAudioStreamInfo(engine.playStream_);
 
   // prepare for data generator
   int32_t framesPerBurst = AAudioStream_getFramesPerBurst(eng->playStream_);
@@ -102,16 +102,11 @@ void AudioThreadProc(void* ctx) {
       memset(buf, 0, sizeof(int16_t) * framesPerBurst * samplesPerFrame);
       frameCount = framesPerBurst;
     }
-    if (frameCount) {
-      frameCount = AAudioStream_write(eng->playStream_,
-                                      buf,
-                                      frameCount,
-                                      timeoutInNano);
-      if (frameCount <= 0) {
-        LOGE("Write Frame Failed with: %s", AAudio_convertResultToText(frameCount));
-        break;
-      }
-    }
+    frameCount = AAudioStream_write(eng->playStream_,
+                                buf,
+                                frameCount,
+                                timeoutInNano);
+    assert(frameCount > 0);
   }
 
   delete [] buf;
@@ -134,54 +129,44 @@ void AudioThreadProc(void* ctx) {
  */
 JNIEXPORT jboolean JNICALL
 Java_com_google_sample_aaudio_echo_MainActivity_createEngine(
-    JNIEnv *env, jclass type, jint sampleRate, jint framesPerBuf) {
+    JNIEnv *env, jclass type) {
 
   memset(&engine, 0, sizeof(engine));
-  engine.requestStop_ = false;
-  engine.playAudio_ = false;
 
-  // Initialize AAudio wrapper
-  if(!InitAAudio()) {
-    LOGE("AAudio is not supported on your platform, cannot proceed");
-    return JNI_FALSE;
-  }
-
-  engine.sampleRate_   = sampleRate;
-  engine.framesPerBuf_ = static_cast<uint32_t>(framesPerBuf);
   engine.sampleChannels_   = AUDIO_SAMPLE_CHANNELS;
   engine.sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
-  engine.bitsPerSample_    = SampleFormatToBpp(engine.sampleFormat_);
+  engine.bitsPerSample_  = SampleFormatToBpp(engine.sampleFormat_);
 
-  StreamBuilder builder(engine.sampleRate_,
-                        engine.sampleChannels_,
-                        engine.sampleFormat_,
-                        AAUDIO_SHARING_MODE_SHARED,
-                        AAUDIO_DIRECTION_OUTPUT);
+  // Create an Output Stream
+  StreamBuilder builder;
+  engine.playStream_ = builder.CreateStream(engine.sampleFormat_,
+                                            engine.sampleChannels_,
+                                            AAUDIO_SHARING_MODE_SHARED);
+  if (!engine.playStream_) {
+    assert(false);
+    return JNI_FALSE;
+  }
+  engine.sampleRate_ = AAudioStream_getSampleRate(engine.playStream_);
 
-  engine.playStream_ = builder.Stream();
-  assert(engine.playStream_);
+  // Create an Input Stream that matches the output stream
+  engine.recordingStream_ = builder.CreateStream(engine.sampleFormat_,
+                                                 engine.sampleChannels_,
+                                                 AAUDIO_SHARING_MODE_SHARED,
+                                                 AAUDIO_DIRECTION_INPUT,
+                                                 engine.sampleRate_);
+  if(!engine.recordingStream_) {
+     return JNI_FALSE;
+  }
 
-  PrintAudioStreamInfo(engine.playStream_);
-
-  StreamBuilder recBuilder(engine.sampleRate_,
-                        engine.sampleChannels_,
-                        engine.sampleFormat_,
-                        AAUDIO_SHARING_MODE_SHARED,
-                        AAUDIO_DIRECTION_INPUT);
-
-  engine.recordingStream_ = recBuilder.Stream();
-  assert(engine.recordingStream_);
-  PrintAudioStreamInfo(engine.recordingStream_);
-
-  aaudio_stream_state_t result = AAudioStream_requestStart(engine.playStream_);
+  aaudio_result_t result = AAudioStream_requestStart(engine.playStream_);
   if (result != AAUDIO_OK) {
-    assert(result == AAUDIO_OK);
+    assert(false);
     return JNI_FALSE;
   }
 
   result = AAudioStream_requestStart(engine.recordingStream_);
   if (result != AAUDIO_OK) {
-    assert(result == AAUDIO_OK);
+    assert(false);
     AAudioStream_requestStop(engine.playStream_);
     return JNI_FALSE;
   }
@@ -289,9 +274,6 @@ bool TunePlayerForLowLatency(AAudioStream* stream) {
     return false;
   }
 
-  // starting from the smallest buffer size (which is framesPerBurst)
-  // increase the buffer size until we get zero underruns. At this point
-  // we know we have the minimum possible buffer size for reliable audio playback
   int32_t framesPerBurst = AAudioStream_getFramesPerBurst(stream);
   int32_t orgSize = AAudioStream_getBufferSizeInFrames(stream);
 
@@ -316,15 +298,15 @@ bool TunePlayerForLowLatency(AAudioStream* stream) {
       break;
     }
 
-    // check whether AAudio is really setting our buffer size value
-    // AAudio might have already reached its optimized state
+    // check whether we are really setting to our value
+    // AAudio might already reached its optimized state
     // so we set-get-compare, then act accordingly
     bufSize = AAudioStream_getBufferSizeInFrames(stream);
     if (bufSize == prevBufSize) {
       // AAudio refuses to go up, tuning is complete
       break;
     }
-    // remember the current buffer size so we could continue for next round tuning up
+    // remember the current buf size so we could continue for next round tuning up
     prevBufSize = bufSize;
     result = AAudioStream_write(stream, buf, bufCap, timeoutInNano);
 
@@ -344,8 +326,8 @@ bool TunePlayerForLowLatency(AAudioStream* stream) {
 
   delete [] buf;
   if (trainingError) {
-    // we are being conservative here: if anything is wrong, restore to default
-    // size when engine was created
+    // we are playing conservative here: if anything wrong, we restore to default
+    // size WHEN engine was created
     AAudioStream_setBufferSizeInFrames(stream, orgSize);
     return false;
   }

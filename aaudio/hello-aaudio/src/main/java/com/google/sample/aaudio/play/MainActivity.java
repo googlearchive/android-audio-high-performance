@@ -26,8 +26,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 
 public class MainActivity extends Activity {
-    String  nativeSampleRate;
-    String  nativeSampleBufSize;
     boolean engineCreated = false;
     /*
      * Hook to user control to start / stop audio playback:
@@ -55,11 +53,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        queryNativeAudioParameters();
-
         // initialize native audio system
-        engineCreated = createEngine(Integer.parseInt(nativeSampleRate),
-                Integer.parseInt(nativeSampleBufSize));
+        engineCreated = createEngine();
     }
     @Override
     protected void onDestroy() {
@@ -90,15 +85,6 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void queryNativeAudioParameters() {
-        AudioManager myAudioMgr = (AudioManager)
-                getSystemService(Context.AUDIO_SERVICE);
-        nativeSampleRate  =  myAudioMgr.
-                getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-        nativeSampleBufSize = myAudioMgr.
-                getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-    }
-
     /*
      * Loading Native lib(s)
      */
@@ -109,7 +95,7 @@ public class MainActivity extends Activity {
     /*
      * jni function implementations...
      */
-    public static native boolean createEngine(int rate, int framesPerBuf);
+    public static native boolean createEngine();
     public static native void deleteEngine();
 
     public static native boolean start();
