@@ -43,6 +43,14 @@ void (*AAudioStreamBuilder_setDirection )(AAudioStreamBuilder* builder,
 void (*AAudioStreamBuilder_setBufferCapacityInFrames )(AAudioStreamBuilder* builder,
                                                    int32_t frames);
 
+void (*AAudioStreamBuilder_setDataCallback)(AAudioStreamBuilder* builder,
+                                            AAudioStream_dataCallback callback,
+                                            void *userData);
+void (*AAudioStreamBuilder_setFramesPerDataCallback)(AAudioStreamBuilder* builder,
+                                                     int32_t numFrames);
+void (*AAudioStreamBuilder_setErrorCallback)(AAudioStreamBuilder* builder,
+                                                        AAudioStream_errorCallback callback,
+                                                        void *userData);
 aaudio_result_t  (*AAudioStreamBuilder_openStream )(AAudioStreamBuilder* builder,
                                                 AAudioStream** stream);
 aaudio_result_t  (*AAudioStreamBuilder_delete )(AAudioStreamBuilder* builder);
@@ -75,13 +83,7 @@ aaudio_result_t (*AAudioStream_write )(AAudioStream* stream,
                                    const void *buffer,
                                    int32_t numFrames,
                                    int64_t timeoutNanoseconds);
-aaudio_result_t (*AAudioStream_createThread)(AAudioStream* stream,
-                                          int64_t periodNanoseconds,
-                                          aaudio_audio_thread_proc_t threadProc,
-                                          void *arg);
-aaudio_result_t (*AAudioStream_joinThread )(AAudioStream* stream,
-                                        void **returnArg,
-                                        int64_t timeoutNanoseconds);
+
 // ============================================================
 // Stream - queries
 // ============================================================
@@ -92,7 +94,7 @@ int32_t (*AAudioStream_getBufferSizeInFrames )(AAudioStream* stream);
 
 int32_t (*AAudioStream_getFramesPerBurst )(AAudioStream* stream);
 int32_t (*AAudioStream_getBufferCapacityInFrames )(AAudioStream* stream);
-
+int32_t (*AAudioStream_getFramesPerDataCallback)(AAudioStream* stream);
 int32_t (*AAudioStream_getXRunCount )(AAudioStream* stream);
 int32_t (*AAudioStream_getSampleRate )(AAudioStream* stream);
 int32_t (*AAudioStream_getSamplesPerFrame )(AAudioStream* stream);
@@ -129,6 +131,9 @@ int32_t InitAAudio(void) {
   GET_PROC(AAudioStreamBuilder_setSharingMode);
   GET_PROC(AAudioStreamBuilder_setDirection);
   GET_PROC(AAudioStreamBuilder_setBufferCapacityInFrames);
+  GET_PROC(AAudioStreamBuilder_setDataCallback);
+  GET_PROC(AAudioStreamBuilder_setFramesPerDataCallback);
+  GET_PROC(AAudioStreamBuilder_setErrorCallback);
   GET_PROC(AAudioStreamBuilder_openStream);
   GET_PROC(AAudioStreamBuilder_delete);
   GET_PROC(AAudioStream_close);
@@ -142,14 +147,14 @@ int32_t InitAAudio(void) {
   GET_PROC(AAudioStream_waitForStateChange);
   GET_PROC(AAudioStream_read);
   GET_PROC(AAudioStream_write);
-  GET_PROC(AAudioStream_createThread);
-  GET_PROC(AAudioStream_joinThread);
-  
+
   GET_PROC(AAudioStream_setBufferSizeInFrames);
   GET_PROC(AAudioStream_getBufferSizeInFrames);
 
   GET_PROC(AAudioStream_getFramesPerBurst);
   GET_PROC(AAudioStream_getBufferCapacityInFrames);
+
+  GET_PROC(AAudioStream_getFramesPerDataCallback);
 
   GET_PROC(AAudioStream_getXRunCount);
   GET_PROC(AAudioStream_getSampleRate);
@@ -175,6 +180,9 @@ int32_t InitAAudio(void) {
       AAudioStreamBuilder_setSharingMode &&
       AAudioStreamBuilder_setDirection &&
       AAudioStreamBuilder_setBufferCapacityInFrames &&
+      AAudioStreamBuilder_setDataCallback &&
+      AAudioStreamBuilder_setFramesPerDataCallback &&
+      AAudioStreamBuilder_setErrorCallback &&
       AAudioStreamBuilder_openStream &&
       AAudioStreamBuilder_delete &&
       AAudioStream_close &&
@@ -186,12 +194,11 @@ int32_t InitAAudio(void) {
       AAudioStream_waitForStateChange &&
       AAudioStream_read &&
       AAudioStream_write &&
-      AAudioStream_createThread &&
-      AAudioStream_joinThread &&
       AAudioStream_setBufferSizeInFrames &&
       AAudioStream_getBufferSizeInFrames &&
       AAudioStream_getFramesPerBurst &&
       AAudioStream_getBufferCapacityInFrames &&
+      AAudioStream_getFramesPerDataCallback &&
       AAudioStream_getXRunCount &&
       AAudioStream_getSampleRate &&
       AAudioStream_getSamplesPerFrame &&

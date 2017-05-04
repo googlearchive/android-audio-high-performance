@@ -24,12 +24,7 @@ add_library(echo SHARED
             ${AAUDIO_COMMON_PATH}/utils/debug_utils.cpp)
 
 target_include_directories(echo PRIVATE
-                           ${AAUDIO_COMMON_PATH}/utils
-                           ${AAUDIO_COMMON_PATH}/../android)
+            ${AAUDIO_COMMON_PATH}/utils
+            ${AAUDIO_COMMON_PATH}/../android)
 
-# include libraries needed for echo lib
-target_link_libraries(echo
-                      aaudio
-                      android
-                      atomic
-                      log)
+target_link_libraries(echo android atomic log aaudio)
