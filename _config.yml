@@ -13,4 +13,5 @@ markdown: kramdown
 # Define version numbers for library artifacts
 
 gems:
+  - jekyll-redirect-from
   - octopress-autoprefixer
