@@ -1,9 +1,2 @@
-.gradle
-local.properties
-.idea
-.DS_Store
-build
-captures
-*.iml
-.externalNativeBuild
-
+_site
+.sass-cache
