@@ -20,7 +20,6 @@
 
 #include <chrono>
 #include <aaudio/AAudio.h>
-
 #include "android_debug.h"
 #include "debug_utils.h"
 

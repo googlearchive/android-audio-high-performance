@@ -1,16 +1,16 @@
 AAudio Samples
 ==============
-These samples demonstrate AAudio API:
+These samples demonstrate how to use AAudio API:
 1. hello-aaudio sample: creates an output stream
 1. echo sample: creates output and input streams, then play via loopback
 
-AAudio is in its early stage of development, this [android-ndk thread](https://groups.google.com/forum/#!topic/android-ndk/Ox7L8V5ZF5s) addresses some of the possible questions surrounding the new API.
+[AAudio](https://android-dot-devsite.googleplex.com/ndk/guides/audio/aaudio/aaudio.html) is still in its early stage of development, this [android-ndk thread](https://groups.google.com/forum/#!topic/android-ndk/Ox7L8V5ZF5s) addresses some of the possible questions surrounding the new API.
 
 Pre-requisites
 -----------
-* Android Device with recording capability, running Android API 25( Android O )
+* Android Device with recording capability, running Android O DP2 or above (Developer's Preivew) API
 * An external headphone (with a microphone) plugged into Android Device
-* NDK-r15 [Beta1](https://developer.android.com/ndk/downloads/index.html) and above
+* NDK-r15 [Beta2](https://developer.android.com/ndk/downloads/index.html) and above
 * [Android Studio 2.3.0+](https://developer.android.com/studio/index.html)
 * [AAudio Guide](https://developer.android.com/ndk/guides/audio/aaudio/aaudio.html)
 
@@ -59,3 +59,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
 License for the specific language governing permissions and limitations under
 the License.
 
+Version History
+---------------
+1) 03/22/2017:  initial release for Android - O DP1. Directly reading & writing to audio streams
+2) 05/17/2017:  updated for Android-O-DP2 release, using AAudio callback interface

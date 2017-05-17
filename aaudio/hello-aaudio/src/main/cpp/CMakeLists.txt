@@ -26,12 +26,8 @@ add_library(hello-aaudio SHARED
             ${AAUDIO_COMMON_PATH}/utils/debug_utils.cpp)
 
 target_include_directories(hello-aaudio PRIVATE
-                           ${AAUDIO_COMMON_PATH}/utils
-                           ${AAUDIO_COMMON_PATH}/../android)
+            ${AAUDIO_COMMON_PATH}/utils
+            ${AAUDIO_COMMON_PATH}/../android)
 
 # include libraries needed for hello-aaudio
-target_link_libraries(hello-aaudio
-                      aaudio
-                      android
-                      atomic
-                      log)
+target_link_libraries(hello-aaudio android atomic log aaudio)

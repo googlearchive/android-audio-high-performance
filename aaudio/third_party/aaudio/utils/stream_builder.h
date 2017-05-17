@@ -26,7 +26,9 @@ class StreamBuilder {
 public:
     explicit StreamBuilder() {
       aaudio_result_t  result = AAudio_createStreamBuilder(&builder_);
-      assert(result == AAUDIO_OK && builder_);
+      if (result != AAUDIO_OK && !builder_) {
+          assert(false);
+      }
     }
     ~StreamBuilder() {
       if (builder_)
@@ -46,7 +48,9 @@ public:
             int32_t samplesPerFrame,
             aaudio_sharing_mode_t sharing,
             aaudio_direction_t dir = AAUDIO_DIRECTION_OUTPUT,
-            int32_t sampleRate = INVALID_AUDIO_PARAM) {
+            int32_t sampleRate = INVALID_AUDIO_PARAM,
+            AAudioStream_dataCallback  callback = nullptr,
+            void    *userData = nullptr) {
 
       AAudioStreamBuilder_setFormat(builder_, format);
       AAudioStreamBuilder_setSharingMode(builder_, sharing);
@@ -56,6 +60,8 @@ public:
       if (sampleRate != INVALID_AUDIO_PARAM) {
         AAudioStreamBuilder_setSampleRate(builder_, sampleRate);
       }
+      AAudioStreamBuilder_setDataCallback(builder_, callback, userData);
+
       AAudioStream* stream;
       aaudio_result_t result = AAudioStreamBuilder_openStream(builder_, &stream);
       if (result != AAUDIO_OK) {
@@ -64,6 +70,7 @@ public:
       }
       return stream;
     }
+
 private:
     AAudioStreamBuilder* builder_;
 };
