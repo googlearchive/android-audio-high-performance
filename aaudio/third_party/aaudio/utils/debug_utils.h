@@ -28,7 +28,7 @@
  */
 class Lock {
 public:
-    explicit Lock(std::recursive_mutex* mtx) {
+    explicit Lock(std::mutex* mtx) {
         mutex_ = mtx;
         mutex_->lock();
     }
@@ -36,7 +36,7 @@ public:
         mutex_->unlock();
     }
 private:
-    std::recursive_mutex  *mutex_;
+    std::mutex  *mutex_;
 };
 class AndroidLog {
 public:
@@ -53,7 +53,7 @@ private:
     FILE*   fp_;
     FILE*   openFile();
     uint64_t prevTick_;    //Tick in milisecond
-    std::recursive_mutex  mutex_;
+    std::mutex  mutex_;
     std::string  fileName_;
 };
 

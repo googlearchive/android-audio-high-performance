@@ -22,8 +22,6 @@ static const int32_t audioFormatEnum[] = {
     AAUDIO_FORMAT_UNSPECIFIED,
     AAUDIO_FORMAT_PCM_I16,
     AAUDIO_FORMAT_PCM_FLOAT,
-    AAUDIO_FORMAT_PCM_I8_24,
-    AAUDIO_FORMAT_PCM_I32
 };
 static const int32_t audioFormatCount = sizeof(audioFormatEnum)/
                                         sizeof(audioFormatEnum[0]);
@@ -33,8 +31,6 @@ static const uint32_t sampleFormatBPP[] = {
     0xffff,
     16, //I16
     32, //FLOAT
-    24, //I8_24
-    32,
 };
 uint16_t SampleFormatToBpp(aaudio_audio_format_t format) {
     for (int32_t i = 0; i < audioFormatCount; ++i) {
@@ -48,8 +44,6 @@ static const char * audioFormatStr[] = {
     "AAUDIO_FORMAT_UNSPECIFIED", // = 0,
     "AAUDIO_FORMAT_PCM_I16",
     "AAUDIO_FORMAT_PCM_FLOAT",
-    "AAUDIO_FORMAT_PCM_I8_24",
-    "AAUDIO_FORMAT_PCM_I32",
 };
 const char* FormatToString(aaudio_audio_format_t format) {
     for (int32_t i = 0; i < audioFormatCount; ++i) {
@@ -63,7 +57,7 @@ void PrintAudioStreamInfo(const AAudioStream * stream) {
 #define STREAM_CALL(c) AAudioStream_##c((AAudioStream*)stream)
     LOGI("StreamID: %p", stream);
 
-    LOGW("BufferCapacity: %d", STREAM_CALL(getBufferCapacityInFrames));
+    LOGI("BufferCapacity: %d", STREAM_CALL(getBufferCapacityInFrames));
     LOGI("BufferSize: %d", STREAM_CALL(getBufferSizeInFrames));
     LOGI("FramesPerBurst: %d", STREAM_CALL(getFramesPerBurst));
     LOGI("XRunCount: %d", STREAM_CALL(getXRunCount));
