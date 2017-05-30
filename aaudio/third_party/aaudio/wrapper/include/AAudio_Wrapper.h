@@ -223,7 +223,7 @@ extern AAUDIO_API void (*AAudioStreamBuilder_setSamplesPerFrame)(AAudioStreamBui
  * @param format Most common formats are AAUDIO_FORMAT_PCM_FLOAT and AAUDIO_FORMAT_PCM_I16.
  */
 extern AAUDIO_API void (*AAudioStreamBuilder_setFormat)(AAudioStreamBuilder* builder,
-                                                   aaudio_audio_format_t format);
+                                                   aaudio_format_t format);
 
 /**
  * Request a mode for sharing the device.
@@ -684,7 +684,7 @@ extern AAUDIO_API int32_t (*AAudioStream_getDeviceId)(AAudioStream* stream);
  * @param stream reference provided by AAudioStreamBuilder_openStream()
  * @return actual data format
  */
-extern AAUDIO_API aaudio_audio_format_t (*AAudioStream_getFormat)(AAudioStream* stream);
+extern AAUDIO_API aaudio_format_t (*AAudioStream_getFormat)(AAudioStream* stream);
 
 /**
  * Provide actual sharing mode.
