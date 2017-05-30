@@ -28,7 +28,7 @@
  */
 #define AUDIO_SAMPLE_CHANNELS               1
 
-uint16_t SampleFormatToBpp(aaudio_audio_format_t format);
+uint16_t SampleFormatToBpp(aaudio_format_t format);
 /*
  * GetSystemTicks(void):  return the time in micro sec
  */

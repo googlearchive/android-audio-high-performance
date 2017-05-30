@@ -28,7 +28,7 @@ struct HelloAAudioEngine {
   uint32_t sampleRate_;
   uint16_t sampleChannels_;
   uint16_t bitsPerSample_;
-  aaudio_audio_format_t sampleFormat_;
+  aaudio_format_t sampleFormat_;
 
   SineGenerator *sineOscLeft;
   SineGenerator *sineOscRight;
