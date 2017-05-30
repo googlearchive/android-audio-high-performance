@@ -7,8 +7,9 @@ These samples demonstrate how to use AAudio API:
 [AAudio](https://android-dot-devsite.googleplex.com/ndk/guides/audio/aaudio/aaudio.html) is still in its early stage of development, this [android-ndk thread](https://groups.google.com/forum/#!topic/android-ndk/Ox7L8V5ZF5s) addresses some of the possible questions surrounding the new API.
 
 Pre-requisites
------------
-* Android Device with recording capability, running Android O DP2 or above (Developer's Preivew) API
+-------------
+* Android Device with recording capability
+* Android O DP2 or above (Developer's Preivew) API
 * An external headphone (with a microphone) plugged into Android Device
 * NDK-r15 [Beta2](https://developer.android.com/ndk/downloads/index.html) and above
 * [Android Studio 2.3.0+](https://developer.android.com/studio/index.html)
