@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 'android-O'
     buildToolsVersion '25.0.2'
 
     defaultConfig {
         applicationId 'com.google.sample.com.google.sample.aaudio.play'
-        minSdkVersion 25
-        targetSdkVersion 25
+        minSdkVersion 'android-O'
+        targetSdkVersion 'android-O'
         versionCode 1
         versionName '1.0'
         ndk {

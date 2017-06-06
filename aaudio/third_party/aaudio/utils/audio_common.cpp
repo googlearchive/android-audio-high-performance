@@ -32,7 +32,7 @@ static const uint32_t sampleFormatBPP[] = {
     16, //I16
     32, //FLOAT
 };
-uint16_t SampleFormatToBpp(aaudio_audio_format_t format) {
+uint16_t SampleFormatToBpp(aaudio_format_t format) {
     for (int32_t i = 0; i < audioFormatCount; ++i) {
       if (audioFormatEnum[i] == format)
         return sampleFormatBPP[i];
@@ -45,7 +45,7 @@ static const char * audioFormatStr[] = {
     "AAUDIO_FORMAT_PCM_I16",
     "AAUDIO_FORMAT_PCM_FLOAT",
 };
-const char* FormatToString(aaudio_audio_format_t format) {
+const char* FormatToString(aaudio_format_t format) {
     for (int32_t i = 0; i < audioFormatCount; ++i) {
         if (audioFormatEnum[i] == format)
             return audioFormatStr[i];

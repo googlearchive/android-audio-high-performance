@@ -44,7 +44,7 @@ public:
      * as default, expecting that AAudio will pick up the right one for us
      */
     AAudioStream *CreateStream(
-            aaudio_audio_format_t format,
+            aaudio_format_t format,
             int32_t samplesPerFrame,
             aaudio_sharing_mode_t sharing,
             aaudio_direction_t dir = AAUDIO_DIRECTION_OUTPUT,
