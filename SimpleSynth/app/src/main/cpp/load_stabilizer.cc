@@ -36,7 +36,7 @@ LoadStabilizer::LoadStabilizer(AudioRenderer *audio_renderer, int64_t callback_p
 
 int LoadStabilizer::render(int num_samples, int16_t *audio_buffer) {
 
-  Trace::beginSection("render start");
+  Trace::beginSection("LoadStabilizer::render start");
   int rendered_samples = 0;
 
   if (is_stabilization_enabled_){
@@ -76,7 +76,6 @@ int LoadStabilizer::render(int num_samples, int16_t *audio_buffer) {
     }
 
     callback_count_++;
-    Trace::endSection();
 
   } else {
 
@@ -85,6 +84,8 @@ int LoadStabilizer::render(int num_samples, int16_t *audio_buffer) {
     rendered_samples = audio_renderer_->render(num_samples, audio_buffer);
     Trace::endSection();
   }
+
+  Trace::endSection();
 
   return rendered_samples;
 }
