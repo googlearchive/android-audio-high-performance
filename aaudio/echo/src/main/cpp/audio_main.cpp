@@ -159,7 +159,7 @@ Java_com_google_sample_aaudio_echo_MainActivity_createEngine(JNIEnv *env,
   // create an input Stream that matches the output stream
   engine.recordingStream_ = builder.CreateStream(
       engine.sampleFormat_, engine.sampleChannels_, AAUDIO_SHARING_MODE_SHARED,
-      AAUDIO_DIRECTION_INPUT, engine.sampleRate_);
+      AAUDIO_PERFORMANCE_MODE_LOW_LATENCY, AAUDIO_DIRECTION_INPUT, engine.sampleRate_);
   if (!engine.recordingStream_ ||
       engine.sampleFormat_ != AAudioStream_getFormat(engine.recordingStream_)) {
     assert(false);
