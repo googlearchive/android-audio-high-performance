@@ -140,7 +140,8 @@ Java_com_google_sample_aaudio_echo_MainActivity_createEngine(JNIEnv *env,
   StreamBuilder builder;
   engine.playStream_ = builder.CreateStream(
       engine.sampleFormat_, engine.sampleChannels_, AAUDIO_SHARING_MODE_SHARED,
-      AAUDIO_DIRECTION_OUTPUT, INVALID_AUDIO_PARAM, dataCallback, &engine);
+      AAUDIO_PERFORMANCE_MODE_LOW_LATENCY, AAUDIO_DIRECTION_OUTPUT,
+      INVALID_AUDIO_PARAM, dataCallback, &engine);
   // this sample only supports PCM_I16 format
   if (!engine.playStream_ ||
       engine.sampleFormat_ != AAudioStream_getFormat(engine.playStream_)) {

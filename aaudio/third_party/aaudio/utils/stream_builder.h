@@ -47,6 +47,7 @@ public:
             aaudio_format_t format,
             int32_t samplesPerFrame,
             aaudio_sharing_mode_t sharing,
+            aaudio_performance_mode_t performanceMode = AAUDIO_PERFORMANCE_MODE_NONE,
             aaudio_direction_t dir = AAUDIO_DIRECTION_OUTPUT,
             int32_t sampleRate = INVALID_AUDIO_PARAM,
             AAudioStream_dataCallback  callback = nullptr,
@@ -54,6 +55,7 @@ public:
 
       AAudioStreamBuilder_setFormat(builder_, format);
       AAudioStreamBuilder_setSharingMode(builder_, sharing);
+      AAudioStreamBuilder_setPerformanceMode(builder_, performanceMode);
       AAudioStreamBuilder_setDirection(builder_, dir);
       AAudioStreamBuilder_setSampleRate(builder_, sampleRate);
       AAudioStreamBuilder_setSamplesPerFrame(builder_, samplesPerFrame);
