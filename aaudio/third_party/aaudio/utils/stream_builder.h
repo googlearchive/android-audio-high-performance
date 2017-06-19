@@ -24,17 +24,8 @@
 
 class StreamBuilder {
 public:
-    explicit StreamBuilder() {
-      aaudio_result_t  result = AAudio_createStreamBuilder(&builder_);
-      if (result != AAUDIO_OK && !builder_) {
-          assert(false);
-      }
-    }
-    ~StreamBuilder() {
-      if (builder_)
-        AAudioStreamBuilder_delete(builder_);
-      builder_ = nullptr;
-    };
+    explicit StreamBuilder() {}
+    ~StreamBuilder() {};
 
     /*
      * purposely left
@@ -53,6 +44,12 @@ public:
             AAudioStream_dataCallback  callback = nullptr,
             void    *userData = nullptr) {
 
+      AAudioStreamBuilder* builder_;
+      aaudio_result_t  result = AAudio_createStreamBuilder(&builder_);
+      if (result != AAUDIO_OK && !builder_) {
+        assert(false);
+      }
+
       AAudioStreamBuilder_setFormat(builder_, format);
       AAudioStreamBuilder_setSharingMode(builder_, sharing);
       AAudioStreamBuilder_setPerformanceMode(builder_, performanceMode);
@@ -65,16 +62,16 @@ public:
       AAudioStreamBuilder_setDataCallback(builder_, callback, userData);
 
       AAudioStream* stream;
-      aaudio_result_t result = AAudioStreamBuilder_openStream(builder_, &stream);
+      result = AAudioStreamBuilder_openStream(builder_, &stream);
       if (result != AAUDIO_OK) {
         assert(false);
         stream = nullptr;
       }
+
+      AAudioStreamBuilder_delete(builder_);
+
       return stream;
     }
-
-private:
-    AAudioStreamBuilder* builder_;
 };
 
 #endif //AAUDIO_STREAM_BIULDER_H
