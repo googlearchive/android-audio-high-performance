@@ -24,17 +24,8 @@
 
 class StreamBuilder {
 public:
-    explicit StreamBuilder() {
-      aaudio_result_t  result = AAudio_createStreamBuilder(&builder_);
-      if (result != AAUDIO_OK && !builder_) {
-          assert(false);
-      }
-    }
-    ~StreamBuilder() {
-      if (builder_)
-        AAudioStreamBuilder_delete(builder_);
-      builder_ = nullptr;
-    };
+    explicit StreamBuilder() {}
+    ~StreamBuilder() {};
 
     /*
      * purposely left
@@ -53,28 +44,34 @@ public:
             AAudioStream_dataCallback  callback = nullptr,
             void    *userData = nullptr) {
 
-      AAudioStreamBuilder_setFormat(builder_, format);
-      AAudioStreamBuilder_setSharingMode(builder_, sharing);
-      AAudioStreamBuilder_setPerformanceMode(builder_, performanceMode);
-      AAudioStreamBuilder_setDirection(builder_, dir);
-      AAudioStreamBuilder_setSampleRate(builder_, sampleRate);
-      AAudioStreamBuilder_setSamplesPerFrame(builder_, samplesPerFrame);
-      if (sampleRate != INVALID_AUDIO_PARAM) {
-        AAudioStreamBuilder_setSampleRate(builder_, sampleRate);
+      AAudioStreamBuilder* builder;
+      aaudio_result_t  result = AAudio_createStreamBuilder(&builder);
+      if (result != AAUDIO_OK && !builder) {
+        assert(false);
       }
-      AAudioStreamBuilder_setDataCallback(builder_, callback, userData);
+
+      AAudioStreamBuilder_setFormat(builder, format);
+      AAudioStreamBuilder_setSharingMode(builder, sharing);
+      AAudioStreamBuilder_setPerformanceMode(builder, performanceMode);
+      AAudioStreamBuilder_setDirection(builder, dir);
+      AAudioStreamBuilder_setSampleRate(builder, sampleRate);
+      AAudioStreamBuilder_setSamplesPerFrame(builder, samplesPerFrame);
+      if (sampleRate != INVALID_AUDIO_PARAM) {
+        AAudioStreamBuilder_setSampleRate(builder, sampleRate);
+      }
+      AAudioStreamBuilder_setDataCallback(builder, callback, userData);
 
       AAudioStream* stream;
-      aaudio_result_t result = AAudioStreamBuilder_openStream(builder_, &stream);
+      result = AAudioStreamBuilder_openStream(builder, &stream);
       if (result != AAUDIO_OK) {
         assert(false);
         stream = nullptr;
       }
+
+      AAudioStreamBuilder_delete(builder);
+
       return stream;
     }
-
-private:
-    AAudioStreamBuilder* builder_;
 };
 
 #endif //AAUDIO_STREAM_BIULDER_H
