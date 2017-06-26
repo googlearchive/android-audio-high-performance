@@ -18,9 +18,7 @@
 #define AAUDIO_STREAM_BIULDER_H
 #include <cassert>
 
-// Replace this include with NDK's AAudio.h when available
 #include <aaudio/AAudio.h>
-#define INVALID_AUDIO_PARAM 0
 
 class StreamBuilder {
 public:
@@ -40,9 +38,10 @@ public:
             aaudio_sharing_mode_t sharing,
             aaudio_performance_mode_t performanceMode = AAUDIO_PERFORMANCE_MODE_NONE,
             aaudio_direction_t dir = AAUDIO_DIRECTION_OUTPUT,
-            int32_t sampleRate = INVALID_AUDIO_PARAM,
+            int32_t sampleRate = AAUDIO_UNSPECIFIED,
             AAudioStream_dataCallback  callback = nullptr,
-            void    *userData = nullptr) {
+            void    *userData = nullptr,
+            int32_t deviceId = AAUDIO_UNSPECIFIED) {
 
       AAudioStreamBuilder* builder;
       aaudio_result_t  result = AAudio_createStreamBuilder(&builder);
@@ -56,10 +55,11 @@ public:
       AAudioStreamBuilder_setDirection(builder, dir);
       AAudioStreamBuilder_setSampleRate(builder, sampleRate);
       AAudioStreamBuilder_setSamplesPerFrame(builder, samplesPerFrame);
-      if (sampleRate != INVALID_AUDIO_PARAM) {
+      if (sampleRate != AAUDIO_UNSPECIFIED) {
         AAudioStreamBuilder_setSampleRate(builder, sampleRate);
       }
       AAudioStreamBuilder_setDataCallback(builder, callback, userData);
+      AAudioStreamBuilder_setDeviceId(builder, deviceId);
 
       AAudioStream* stream;
       result = AAudioStreamBuilder_openStream(builder, &stream);

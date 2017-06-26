@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,15 +58,18 @@ static AAudioEchoEngine engine;
 
 extern "C" {
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_MainActivity_createEngine(JNIEnv *env,
-                                                             jclass);
+Java_com_google_sample_aaudio_echo_EchoManager_native_1createEngine(JNIEnv *env,
+                                                                    jclass,
+                                                                    jint inputDeviceId,
+                                                                    jint outputDeviceId);
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_echo_MainActivity_deleteEngine(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoManager_native_1native_1deleteEngine(JNIEnv *env,
                                                              jclass type);
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_MainActivity_start(JNIEnv *env, jclass type);
+Java_com_google_sample_aaudio_echo_EchoManager_native_1start(JNIEnv *env,
+                                                             jclass type);
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_MainActivity_stop(JNIEnv *env, jclass type);
+Java_com_google_sample_aaudio_echo_EchoManager_native_1stop(JNIEnv *env, jclass type);
 }
 
 aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
@@ -130,8 +133,10 @@ aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
  * silent audio is playing so no sound is generated
  */
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_MainActivity_createEngine(JNIEnv *env,
-                                                             jclass type) {
+Java_com_google_sample_aaudio_echo_EchoManager_native_1createEngine(JNIEnv *env,
+                                                                    jclass type,
+                                                                    jint inputDeviceId,
+                                                                    jint outputDeviceId) {
   engine.sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
   engine.sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
   engine.bitsPerSample_ = SampleFormatToBpp(engine.sampleFormat_);
@@ -141,7 +146,7 @@ Java_com_google_sample_aaudio_echo_MainActivity_createEngine(JNIEnv *env,
   engine.playStream_ = builder.CreateStream(
       engine.sampleFormat_, engine.sampleChannels_, AAUDIO_SHARING_MODE_SHARED,
       AAUDIO_PERFORMANCE_MODE_LOW_LATENCY, AAUDIO_DIRECTION_OUTPUT,
-      INVALID_AUDIO_PARAM, dataCallback, &engine);
+      AAUDIO_UNSPECIFIED, dataCallback, &engine, outputDeviceId);
   // this sample only supports PCM_I16 format
   if (!engine.playStream_ ||
       engine.sampleFormat_ != AAudioStream_getFormat(engine.playStream_)) {
@@ -150,6 +155,28 @@ Java_com_google_sample_aaudio_echo_MainActivity_createEngine(JNIEnv *env,
   }
   engine.sampleRate_ = AAudioStream_getSampleRate(engine.playStream_);
   engine.framesPerBurst_ = AAudioStream_getFramesPerBurst(engine.playStream_);
+  LOGD("Frames per burst %d", engine.framesPerBurst_);
+
+  int perfMode = AAudioStream_getPerformanceMode(engine.playStream_);
+
+  std::string performanceMode;
+  switch (perfMode){
+    case AAUDIO_PERFORMANCE_MODE_LOW_LATENCY:
+      performanceMode = "LOW_LATENCY";
+      break;
+    case AAUDIO_PERFORMANCE_MODE_POWER_SAVING:
+      performanceMode = "POWER_SAVING";
+      break;
+    case AAUDIO_PERFORMANCE_MODE_NONE:
+      performanceMode = "NONE";
+      break;
+    default:
+      performanceMode = "UNKNOWN";
+      break;
+  }
+
+  LOGD("Performance mode: %s", performanceMode.c_str());
+
   engine.defaultBufSizeInFrames_ =
       AAudioStream_getBufferSizeInFrames(engine.playStream_);
   AAudioStream_setBufferSizeInFrames(engine.playStream_,
@@ -182,7 +209,7 @@ Java_com_google_sample_aaudio_echo_MainActivity_createEngine(JNIEnv *env,
  *   start to play audio from the input stream.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_MainActivity_start(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoManager_native_1start(JNIEnv *env,
                                                       jclass type) {
   aaudio_result_t result = AAUDIO_OK;
   // acquire lock to synchronize start() and stop()
@@ -209,7 +236,7 @@ Java_com_google_sample_aaudio_echo_MainActivity_start(JNIEnv *env,
  *   stop playing audio from the input stream.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_MainActivity_stop(JNIEnv *env, jclass type) {
+Java_com_google_sample_aaudio_echo_EchoManager_native_1stop(JNIEnv *env, jclass type) {
   aaudio_result_t result = AAUDIO_OK;
   Lock lock(&engine.mutex_);
   if (engine.playStream_ && engine.recordingStream_) {
@@ -247,7 +274,7 @@ Java_com_google_sample_aaudio_echo_MainActivity_stop(JNIEnv *env, jclass type) {
  * delete(): close streams
  */
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_echo_MainActivity_deleteEngine(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoManager_native_1deleteEngine(JNIEnv *env,
                                                              jclass type) {
   // streams could be closed from any state, so no need to stop before closing
   if (engine.playStream_) {
