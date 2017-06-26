@@ -25,9 +25,9 @@
  * This Sample's Engine Structure
  */
 struct HelloAAudioEngine {
-  uint32_t sampleRate_;
-  uint16_t sampleChannels_;
-  uint16_t bitsPerSample_;
+  int32_t sampleRate_;
+  int16_t sampleChannels_;
+  int16_t bitsPerSample_;
   aaudio_format_t sampleFormat_;
 
   SineGenerator *sineOscLeft;
@@ -48,16 +48,22 @@ static HelloAAudioEngine engine;
  */
 extern "C" {
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_play_MainActivity_createEngine(JNIEnv *env,
+Java_com_google_sample_aaudio_play_PlaybackEngine_native_1createOutputStream(JNIEnv *env,
+                                                                   jclass,
+                                                                   jint deviceId);
+JNIEXPORT jboolean JNICALL
+Java_com_google_sample_aaudio_play_PlaybackEngine_createEngine(JNIEnv *env,
                                                              jclass);
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_play_MainActivity_deleteEngine(JNIEnv *env,
+Java_com_google_sample_aaudio_play_PlaybackEngine_deleteEngine(JNIEnv *env,
                                                              jclass type);
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_play_MainActivity_start(JNIEnv *env, jclass type);
+Java_com_google_sample_aaudio_play_PlaybackEngine_start(JNIEnv *env, jclass type);
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_play_MainActivity_stop(JNIEnv *env, jclass type);
+Java_com_google_sample_aaudio_play_PlaybackEngine_stop(JNIEnv *env, jclass type);
 }
+
+bool createEngine();
 
 aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
                                            void *audioData, int32_t numFrames) {
@@ -95,9 +101,29 @@ aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
   return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
-JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_play_MainActivity_createEngine(JNIEnv *env,
-                                                             jclass type) {
+void errorCallback(AAudioStream *stream,
+                   void *userData,
+                   aaudio_result_t error){
+
+  assert(userData);
+  HelloAAudioEngine *eng = reinterpret_cast<HelloAAudioEngine *>(userData);
+  assert(stream == eng->playStream_);
+
+  LOGD("Error result: %s", AAudio_convertResultToText(error));
+
+  aaudio_stream_state_t streamState = AAudioStream_getState(eng->playStream_);
+  if (streamState == AAUDIO_STREAM_STATE_DISCONNECTED){
+    // handle disconnect
+
+  }
+
+  LOGD("errorCallback stream state: %s", AAudio_convertStreamStateToText(streamState));
+}
+
+bool createEngine(){
+
+  LOGD("Creating engine");
+
   memset(&engine, 0, sizeof(engine));
 
   engine.sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
@@ -109,15 +135,15 @@ Java_com_google_sample_aaudio_play_MainActivity_createEngine(JNIEnv *env,
   engine.playStream_ = builder.CreateStream(
       engine.sampleFormat_, engine.sampleChannels_, AAUDIO_SHARING_MODE_SHARED,
       AAUDIO_PERFORMANCE_MODE_LOW_LATENCY, AAUDIO_DIRECTION_OUTPUT,
-      INVALID_AUDIO_PARAM, dataCallback, &engine);
+      AAUDIO_UNSPECIFIED, dataCallback, errorCallback, &engine);
   // this sample only supports PCM_I16 format
   if (!engine.playStream_ ||
       engine.sampleFormat_ != AAudioStream_getFormat(engine.playStream_)) {
     assert(false);
-    return JNI_FALSE;
+    return false;
   }
 
-  PrintAudioStreamInfo(engine.playStream_);
+
   engine.sampleRate_ = AAudioStream_getSampleRate(engine.playStream_);
   engine.framesPerBurst_ = AAudioStream_getFramesPerBurst(engine.playStream_);
   engine.defaultBufSizeInFrames_ =
@@ -125,6 +151,11 @@ Java_com_google_sample_aaudio_play_MainActivity_createEngine(JNIEnv *env,
   AAudioStream_setBufferSizeInFrames(engine.playStream_,
                                      engine.framesPerBurst_);
   engine.bufSizeInFrames_ = engine.framesPerBurst_;
+
+
+  //AAudioStreamBuilder_setBufferCapacityInFrames(engine.playStream_, engine.framesPerBurst_ * 8);
+
+  PrintAudioStreamInfo(engine.playStream_);
 
   // prepare for data generator
   engine.sineOscLeft = new SineGenerator;
@@ -135,11 +166,24 @@ Java_com_google_sample_aaudio_play_MainActivity_createEngine(JNIEnv *env,
   aaudio_result_t result = AAudioStream_requestStart(engine.playStream_);
   if (result != AAUDIO_OK) {
     assert(false);
-    return JNI_FALSE;
+    return false;
   }
 
   engine.underRunCount_ = AAudioStream_getXRunCount(engine.playStream_);
-  return JNI_TRUE;
+  return true;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_google_sample_aaudio_play_PlaybackEngine_native_1createOutputStream(JNIEnv *env,
+                                                                   jclass,
+                                                                   jint deviceId){
+  return JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_google_sample_aaudio_play_PlaybackEngine_createEngine(JNIEnv *env,
+                                                             jclass type) {
+  return (createEngine()) ? JNI_TRUE : JNI_FALSE;
 }
 
 /*
@@ -147,7 +191,7 @@ Java_com_google_sample_aaudio_play_MainActivity_createEngine(JNIEnv *env,
  *   start to render sine wave audio.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_play_MainActivity_start(JNIEnv *env,
+Java_com_google_sample_aaudio_play_PlaybackEngine_start(JNIEnv *env,
                                                       jclass type) {
   if (!engine.playStream_) return JNI_FALSE;
 
@@ -160,7 +204,7 @@ Java_com_google_sample_aaudio_play_MainActivity_start(JNIEnv *env,
  *   stop rendering sine wave audio
  */
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_play_MainActivity_stop(JNIEnv *env, jclass type) {
+Java_com_google_sample_aaudio_play_PlaybackEngine_stop(JNIEnv *env, jclass type) {
   if (!engine.playStream_) return JNI_TRUE;
 
   engine.playAudio_ = false;
@@ -171,7 +215,7 @@ Java_com_google_sample_aaudio_play_MainActivity_stop(JNIEnv *env, jclass type) {
  * delete(): clean-up
  */
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_play_MainActivity_deleteEngine(JNIEnv *env,
+Java_com_google_sample_aaudio_play_PlaybackEngine_deleteEngine(JNIEnv *env,
                                                              jclass type) {
   if (!engine.playStream_) {
     return;
@@ -187,3 +231,5 @@ Java_com_google_sample_aaudio_play_MainActivity_deleteEngine(JNIEnv *env,
   engine.sineOscLeft = nullptr;
   engine.sineOscRight = nullptr;
 }
+
+
