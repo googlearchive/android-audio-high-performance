@@ -211,5 +211,4 @@ public class MainActivity extends Activity
         status_view.setText("RECORD_AUDIO permission granted, touch " +
                 getString(R.string.StartEcho) + " to begin");
 
-    }
 }
