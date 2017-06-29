@@ -145,7 +145,6 @@ aaudio_data_callback_result_t AudioEngine::dataCallback(AAudioStream *stream,
                                                         void *audioData,
                                                         int32_t numFrames) {
   assert(stream == playStream_);
-
   int32_t underRun = AAudioStream_getXRunCount(playStream_);
   if (underRun > underRunCount_) {
     underRunCount_ = underRun;
@@ -180,6 +179,7 @@ aaudio_data_callback_result_t AudioEngine::dataCallback(AAudioStream *stream,
 void AudioEngine::errorCallback(AAudioStream *stream,
                    aaudio_result_t error){
 
+  assert(stream == playStream_);
   LOGD("errorCallback result: %s", AAudio_convertResultToText(error));
 
   aaudio_stream_state_t streamState = AAudioStream_getState(playStream_);
