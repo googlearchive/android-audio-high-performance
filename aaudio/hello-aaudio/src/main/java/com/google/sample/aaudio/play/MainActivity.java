@@ -24,9 +24,20 @@ import android.support.v4.view.MotionEventCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.widget.Spinner;
+
+import com.google.sample.aaudio.common.AudioDeviceAdapter;
+import com.google.sample.aaudio.common.AudioDeviceListener;
+import com.google.sample.aaudio.common.AudioDeviceNotifier;
+import com.google.sample.aaudio.common.DeviceListEntry;
+
+import java.util.List;
 
 public class MainActivity extends Activity {
     boolean engineCreated = false;
+
+    Spinner playbackDeviceSpinner;
+
     /*
      * Hook to user control to start / stop audio playback:
      *    touch-down: start, and keeps on playing
@@ -39,11 +50,11 @@ public class MainActivity extends Activity {
         switch(action) {
             case (MotionEvent.ACTION_DOWN) :
                 if (engineCreated)
-                    start();
+                    PlaybackEngine.setToneOn(true);
                 break;
             case (MotionEvent.ACTION_UP) :
                 if (engineCreated)
-                    stop();
+                    PlaybackEngine.setToneOn(false);
                 break;
         }
         return super.onTouchEvent(event);
@@ -53,51 +64,35 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        playbackDeviceSpinner = findViewById(R.id.playbackDevicesSpinner);
+        AudioDeviceNotifier playbackDeviceNotifier = new AudioDeviceNotifier(this,
+                AudioManager.GET_DEVICES_OUTPUTS);
+
+        playbackDeviceNotifier.registerListener(new AudioDeviceListener() {
+            @Override
+            public void onDevicesUpdated(List<DeviceListEntry> deviceEntries) {
+                AudioDeviceAdapter deviceAdapter =
+                        new AudioDeviceAdapter(MainActivity.super.getBaseContext(),
+                                deviceEntries);
+                playbackDeviceSpinner.setSelection(0); // Select first item in list
+                playbackDeviceSpinner.setAdapter(deviceAdapter);
+            }
+        });
+
         // initialize native audio system
-        engineCreated = createEngine();
+        engineCreated = PlaybackEngine.createEngine();
     }
+
+    private int getPlaybackDeviceId(){
+        return ((DeviceListEntry)playbackDeviceSpinner.getSelectedItem()).getId();
+    }
+
     @Override
     protected void onDestroy() {
-        deleteEngine();
+        PlaybackEngine.deleteEngine();
         super.onDestroy();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items
-        // to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    /*
-     * Loading Native lib(s)
-     */
-    static {
-        System.loadLibrary("hello-aaudio");
-    }
-
-    /*
-     * jni function implementations...
-     */
-    public static native boolean createEngine();
-    public static native void deleteEngine();
-
-    public static native boolean start();
-    public static native void stop();
 }

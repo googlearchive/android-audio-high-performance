@@ -23,7 +23,7 @@ class SineGenerator
 {
 public:
     SineGenerator() {}
-    virtual ~SineGenerator() = default;
+    ~SineGenerator() = default;
 
     void setup(double frequency, double frameRate) {
         mFrameRate = frameRate;
