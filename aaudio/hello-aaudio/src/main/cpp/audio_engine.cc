@@ -50,7 +50,7 @@ AudioEngine::AudioEngine() {
 
   // Create the output stream. By not specifying an audio device id we are telling AAudio that
   // we want the stream to be created using the default playback audio device.
-  createOutputStream(AAUDIO_UNSPECIFIED);
+  createOutputStream();
 }
 
 AudioEngine::~AudioEngine(){
@@ -60,7 +60,16 @@ AudioEngine::~AudioEngine(){
   delete sineOscRight;
 }
 
-void AudioEngine::createOutputStream(int32_t deviceId){
+void AudioEngine::setDeviceId(int32_t deviceId){
+
+  deviceId_ = deviceId;
+
+  // If this is a different device from the one currently in use then restart the stream
+  int32_t currentDeviceId = AAudioStream_getDeviceId(playStream_);
+  if (deviceId != currentDeviceId) restartStream();
+}
+
+void AudioEngine::createOutputStream(){
 
   AAudioStreamBuilder* builder;
   aaudio_result_t  result = AAudio_createStreamBuilder(&builder);
@@ -75,6 +84,7 @@ void AudioEngine::createOutputStream(int32_t deviceId){
    * - Sample rate (can be set using AAudioStreamBuilder_setSampleRate())
    *
    */
+  AAudioStreamBuilder_setDeviceId(builder, deviceId_);
   AAudioStreamBuilder_setFormat(builder, sampleFormat_);
   AAudioStreamBuilder_setSamplesPerFrame(builder, sampleChannels_);
   AAudioStreamBuilder_setSharingMode(builder, AAUDIO_SHARING_MODE_SHARED);
@@ -82,7 +92,6 @@ void AudioEngine::createOutputStream(int32_t deviceId){
   AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_OUTPUT);
   AAudioStreamBuilder_setDataCallback(builder, ::dataCallback, this);
   AAudioStreamBuilder_setErrorCallback(builder, ::errorCallback, this);
-  AAudioStreamBuilder_setDeviceId(builder, deviceId);
 
   result = AAudioStreamBuilder_openStream(builder, &playStream_);
   if (result != AAUDIO_OK || playStream_ == nullptr) {
@@ -197,10 +206,10 @@ void AudioEngine::restartStream(){
 
   if (restartingLock_.try_lock()){
     stopOutputStream();
-    createOutputStream(AAUDIO_UNSPECIFIED);
+    createOutputStream();
     restartingLock_.unlock();
   } else {
-    LOGW("Unable to obtain restarting lock, restart operation already in progress");
+    LOGW("Restart stream operation already in progress - ignoring this request");
     // We were unable to obtain the restarting lock which means the restart operation is currently
     // active. This is probably because we received successive "stream disconnected" events.
     // Internal issue b/63087953

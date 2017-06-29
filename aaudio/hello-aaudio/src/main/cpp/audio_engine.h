@@ -26,6 +26,7 @@ class AudioEngine {
 public:
   AudioEngine();
   ~AudioEngine();
+  void setDeviceId(int32_t deviceId);
   void setToneOn(bool isToneOn);
   aaudio_data_callback_result_t dataCallback(AAudioStream *stream,
                                              void *audioData,
@@ -35,6 +36,7 @@ public:
 
 private:
 
+  int32_t deviceId_ = AAUDIO_UNSPECIFIED;
   int32_t sampleRate_;
   int16_t sampleChannels_;
   int16_t bitsPerSample_;
@@ -54,7 +56,7 @@ private:
   std::thread* streamRestartThread_;
   std::mutex restartingLock_;
 
-  void createOutputStream(int32_t deviceId);
+  void createOutputStream();
   void stopOutputStream();
   void restartStream();
 };

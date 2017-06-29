@@ -15,25 +15,9 @@ package com.google.sample.aaudio.play;
  * limitations under the License.
  */
 
-import com.google.sample.aaudio.common.AudioDeviceNotifier;
-
-/**
- * TODO: This singleton feels kind of redundant as it simply provides native methods to the MainActivity, consider removing
- *
- */
 public enum PlaybackEngine {
 
     INSTANCE;
-
-    public static boolean selectOutputDevice(int deviceId){
-
-        if (deviceId == AudioDeviceNotifier.AUTO_SELECT_DEVICE_ID){
-
-        }
-
-        return false;
-    };
-
     /*
      * Loading Native lib(s)
      */
@@ -41,13 +25,9 @@ public enum PlaybackEngine {
         System.loadLibrary("hello-aaudio");
     }
 
-    /*
-    * jni function implementations...
-    */
-    //private static native boolean native_createOutputStream();
+    // native methods
     static native boolean createEngine();
     static native void deleteEngine();
     static native void setToneOn(boolean isToneOn);
-    //public static native boolean start();
-    //public static native void stop();
+    static native void setAudioDeviceId(int deviceId);
 }

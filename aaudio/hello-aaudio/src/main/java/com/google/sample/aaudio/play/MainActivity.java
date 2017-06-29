@@ -17,13 +17,12 @@
 package com.google.sample.aaudio.play;
 
 import android.app.Activity;
-import android.content.Context;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v4.view.MotionEventCompat;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Spinner;
 
 import com.google.sample.aaudio.common.AudioDeviceAdapter;
@@ -79,6 +78,17 @@ public class MainActivity extends Activity {
             }
         });
 
+        playbackDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                PlaybackEngine.setAudioDeviceId(getPlaybackDeviceId());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         // initialize native audio system
         engineCreated = PlaybackEngine.createEngine();
     }
@@ -92,7 +102,4 @@ public class MainActivity extends Activity {
         PlaybackEngine.deleteEngine();
         super.onDestroy();
     }
-
-
-
 }

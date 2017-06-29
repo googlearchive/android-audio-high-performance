@@ -50,4 +50,15 @@ Java_com_google_sample_aaudio_play_PlaybackEngine_setToneOn(JNIEnv *env,
   engine->setToneOn(isToneOn);
 }
 
+JNIEXPORT void JNICALL
+Java_com_google_sample_aaudio_play_PlaybackEngine_setAudioDeviceId(JNIEnv *env,
+                                                            jclass, jint deviceId) {
+  if (engine == nullptr) {
+    LOGE("Engine is null, you must call createEngine before calling this method");
+    return;
+  }
+
+  engine->setDeviceId(deviceId);
+}
+
 }
