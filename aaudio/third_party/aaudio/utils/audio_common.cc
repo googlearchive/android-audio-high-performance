@@ -66,9 +66,28 @@ void PrintAudioStreamInfo(const AAudioStream * stream) {
     LOGI("DeviceId: %d", STREAM_CALL(getDeviceId));
     LOGI("Format: %s",  FormatToString(STREAM_CALL(getFormat)));
     LOGI("SharingMode: %s", (STREAM_CALL(getSharingMode)) == AAUDIO_SHARING_MODE_EXCLUSIVE ?
-             "execlusive mode" : "sharing mode");
+                          "exclusive mode" : "sharing mode");
+
+    aaudio_performance_mode_t perfMode = STREAM_CALL(getPerformanceMode);
+    std::string perfModeDescription;
+    switch (perfMode){
+      case AAUDIO_PERFORMANCE_MODE_NONE:
+        perfModeDescription = "NONE";
+        break;
+      case AAUDIO_PERFORMANCE_MODE_LOW_LATENCY:
+        perfModeDescription = "LOW_LATENCY";
+        break;
+      case AAUDIO_PERFORMANCE_MODE_POWER_SAVING:
+        perfModeDescription = "POWER_SAVING";
+        break;
+      default:
+        perfModeDescription = "UNKNOWN";
+        break;
+    }
+    LOGI("PerformanceMode: %s", perfModeDescription.c_str());
+
     aaudio_direction_t  dir = STREAM_CALL(getDirection);
-    LOGI("Direction: %d", dir);
+    LOGI("Direction: %s", (dir == AAUDIO_DIRECTION_OUTPUT ? "OUTPUT" : "INPUT"));
     if (dir == AAUDIO_DIRECTION_OUTPUT) {
         LOGI("FramesReadByDevice: %d", (int32_t)STREAM_CALL(getFramesRead));
         LOGI("FramesWriteByApp: %d", (int32_t)STREAM_CALL(getFramesWritten));
@@ -76,6 +95,6 @@ void PrintAudioStreamInfo(const AAudioStream * stream) {
         LOGI("FramesReadByApp: %d", (int32_t)STREAM_CALL(getFramesRead));
         LOGI("FramesWriteByDevice: %d", (int32_t)STREAM_CALL(getFramesWritten));
     }
-#undef SREAM_CALL
+#undef STREAM_CALL
 }
 
