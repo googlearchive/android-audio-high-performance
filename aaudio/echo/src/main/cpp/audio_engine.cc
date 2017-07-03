@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-
-#include <stream_builder.h>
+#include <assert.h>
 #include "audio_engine.h"
-
 
 /**
  * AAudio callback functions

@@ -21,9 +21,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 add_library(echo SHARED
             audio_engine.cc
             jni_bridge.cc
-            audio_main.cpp
-            ${AAUDIO_COMMON_PATH}/utils/audio_common.cpp
-            ${AAUDIO_COMMON_PATH}/utils/debug_utils.cpp)
+            ${AAUDIO_COMMON_PATH}/utils/audio_common.cc
+            ${AAUDIO_COMMON_PATH}/utils/debug_utils.cc)
 
 target_include_directories(echo PRIVATE
             ${AAUDIO_COMMON_PATH}/utils

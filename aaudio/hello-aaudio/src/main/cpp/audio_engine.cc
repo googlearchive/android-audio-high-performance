@@ -15,9 +15,7 @@
  */
 
 #include <assert.h>
-#include <stream_builder.h>
 #include "audio_engine.h"
-
 
 /**
  * AAudio callback functions
