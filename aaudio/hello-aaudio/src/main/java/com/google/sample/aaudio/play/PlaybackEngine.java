@@ -18,16 +18,15 @@ package com.google.sample.aaudio.play;
 public enum PlaybackEngine {
 
     INSTANCE;
-    /*
-     * Loading Native lib(s)
-     */
+
+    // Load native library
     static {
         System.loadLibrary("hello-aaudio");
     }
 
-    // native methods
-    static native boolean createEngine();
-    static native void deleteEngine();
+    // Native methods
+    static native boolean create();
+    static native void delete();
     static native void setToneOn(boolean isToneOn);
     static native void setAudioDeviceId(int deviceId);
 }

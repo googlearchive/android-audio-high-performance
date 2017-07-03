@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
             }
         });
         // initialize native audio system
-        engineCreated = PlaybackEngine.createEngine();
+        engineCreated = PlaybackEngine.create();
     }
 
     private int getPlaybackDeviceId(){
@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        PlaybackEngine.deleteEngine();
+        PlaybackEngine.delete();
         super.onDestroy();
     }
 }

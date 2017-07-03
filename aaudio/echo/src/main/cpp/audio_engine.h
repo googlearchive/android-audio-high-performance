@@ -19,15 +19,15 @@
 
 #include <thread>
 #include "audio_common.h"
-#include "SineGenerator.h"
 
 class AudioEngine {
 
 public:
   AudioEngine();
   ~AudioEngine();
-  void setDeviceId(int32_t deviceId);
-  void setToneOn(bool isToneOn);
+  void setRecordingDeviceId(int32_t deviceId);
+  void setPlaybackDeviceId(int32_t deviceId);
+  void setEchoOn(bool isEchoOn);
   aaudio_data_callback_result_t dataCallback(AAudioStream *stream,
                                              void *audioData,
                                              int32_t numFrames);
@@ -36,17 +36,16 @@ public:
 
 private:
 
-  int32_t deviceId_ = AAUDIO_UNSPECIFIED;
+  bool isEchoOn_ = false;
+  int32_t recordingDeviceId_ = AAUDIO_UNSPECIFIED;
+  int32_t playbackDeviceId_ = AAUDIO_UNSPECIFIED;
   int32_t sampleRate_;
   int16_t sampleChannels_;
   int16_t bitsPerSample_;
   aaudio_format_t sampleFormat_;
 
-  SineGenerator *sineOscLeft;
-  SineGenerator *sineOscRight;
-
-  AAudioStream *playStream_;
-  bool isToneOn_ = false;
+  AAudioStream *recordingStream_ = nullptr;
+  AAudioStream *playStream_ = nullptr;
 
   int32_t playStreamUnderrunCount_;
   int32_t bufSizeInFrames_;
@@ -56,9 +55,17 @@ private:
   std::thread* streamRestartThread_;
   std::mutex restartingLock_;
 
+  void createRecordingStream();
   void createPlaybackStream();
-  void stopOutputStream();
-  void restartStream();
+
+  void startStream(AAudioStream* stream);
+  void stopStream(AAudioStream* stream);
+  void closeStream(AAudioStream* stream);
+
+  void startStreams();
+  void stopStreams();
+  void restartStreams();
+  AAudioStreamBuilder* createStreamBuilder();
 };
 
 

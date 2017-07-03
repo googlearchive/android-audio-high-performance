@@ -58,7 +58,7 @@ static AAudioEchoEngine engine;
 
 extern "C" {
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_EchoManager_native_1createEngine(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoEngine_native_1createEngine(JNIEnv *env,
                                                                     jclass,
                                                                     jint inputDeviceId,
                                                                     jint outputDeviceId);
@@ -66,10 +66,10 @@ JNIEXPORT void JNICALL
 Java_com_google_sample_aaudio_echo_EchoManager_native_1native_1deleteEngine(JNIEnv *env,
                                                              jclass type);
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_EchoManager_native_1start(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoEngine_native_1start(JNIEnv *env,
                                                              jclass type);
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_EchoManager_native_1stop(JNIEnv *env, jclass type);
+Java_com_google_sample_aaudio_echo_EchoEngine_native_1stop(JNIEnv *env, jclass type);
 }
 
 aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
@@ -143,7 +143,7 @@ void errorCallback(AAudioStream *stream,
  * silent audio is playing so no sound is generated
  */
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_EchoManager_native_1createEngine(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoEngine_native_1createEngine(JNIEnv *env,
                                                                     jclass type,
                                                                     jint inputDeviceId,
                                                                     jint outputDeviceId) {
@@ -200,7 +200,7 @@ Java_com_google_sample_aaudio_echo_EchoManager_native_1createEngine(JNIEnv *env,
  *   start to play audio from the input stream.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_EchoManager_native_1start(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoEngine_native_1start(JNIEnv *env,
                                                       jclass type) {
   aaudio_result_t result = AAUDIO_OK;
   // acquire lock to synchronize start() and stop()
@@ -227,7 +227,7 @@ Java_com_google_sample_aaudio_echo_EchoManager_native_1start(JNIEnv *env,
  *   stop playing audio from the input stream.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_google_sample_aaudio_echo_EchoManager_native_1stop(JNIEnv *env, jclass type) {
+Java_com_google_sample_aaudio_echo_EchoEngine_native_1stop(JNIEnv *env, jclass type) {
   aaudio_result_t result = AAUDIO_OK;
   Lock lock(&engine.mutex_);
   if (engine.playStream_ && engine.recordingStream_) {
@@ -265,7 +265,7 @@ Java_com_google_sample_aaudio_echo_EchoManager_native_1stop(JNIEnv *env, jclass 
  * delete(): close streams
  */
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_echo_EchoManager_native_1deleteEngine(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoEngine_native_1deleteEngine(JNIEnv *env,
                                                              jclass type) {
   // streams could be closed from any state, so no need to stop before closing
   if (engine.playStream_) {

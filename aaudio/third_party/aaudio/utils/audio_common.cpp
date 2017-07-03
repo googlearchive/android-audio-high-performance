@@ -87,7 +87,7 @@ void PrintAudioStreamInfo(const AAudioStream * stream) {
     LOGI("PerformanceMode: %s", perfModeDescription.c_str());
 
     aaudio_direction_t  dir = STREAM_CALL(getDirection);
-    LOGI("Direction: %d", dir);
+    LOGI("Direction: %s", (dir == AAUDIO_DIRECTION_OUTPUT ? "OUTPUT" : "INPUT"));
     if (dir == AAUDIO_DIRECTION_OUTPUT) {
         LOGI("FramesReadByDevice: %d", (int32_t)STREAM_CALL(getFramesRead));
         LOGI("FramesWriteByApp: %d", (int32_t)STREAM_CALL(getFramesWritten));

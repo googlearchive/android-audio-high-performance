@@ -25,6 +25,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -38,46 +39,37 @@ import com.google.sample.aaudio.common.DeviceListEntry;
 import java.util.List;
 
 /**
- * TODO: Working on using errorCallback to handle disconnects - think it might be called twice. Also update b/63061699.
- * TODO: When connecting headphones, sometimes no audio is produced
- *
- *
- * TODO: Remove xml for settings menu
- * TODO: Update member variable names
- * TODO: Update variable names to be consistent
+ * TODO: Update README.md and go through and comment sample
  */
-
 public class MainActivity extends Activity
         implements ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final String TAG = MainActivity.class.getName();
     private static final int AUDIO_ECHO_REQUEST = 0;
 
-    private TextView status_view;
+    private TextView statusText;
     private Button toggleEchoButton;
-    private EchoManager echoManager;
     private Spinner recordingDeviceSpinner;
     private Spinner playbackDeviceSpinner;
+    private boolean isPlaying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        echoManager = EchoManager.getInstance(this);
-
-        status_view = (TextView) findViewById(R.id.statusView);
-        toggleEchoButton = (Button) findViewById(R.id.button_start_capture);
+        statusText = findViewById(R.id.status_view_text);
+        toggleEchoButton = findViewById(R.id.button_toggle_echo);
         toggleEchoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 toggleEcho();
             }
         });
-        toggleEchoButton.setText(getString(R.string.StartEcho));
+        toggleEchoButton.setText(getString(R.string.start_echo));
 
-        recordingDeviceSpinner = findViewById(R.id.recordingDevicesSpinner);
-        playbackDeviceSpinner = findViewById(R.id.playbackDevicesSpinner);
+        recordingDeviceSpinner = findViewById(R.id.recording_devices_spinner);
+        playbackDeviceSpinner = findViewById(R.id.playback_devices_spinner);
 
         AudioDeviceNotifier recordingDeviceNotifier = new AudioDeviceNotifier(this,
                 AudioManager.GET_DEVICES_INPUTS);
@@ -106,40 +98,68 @@ public class MainActivity extends Activity
             }
         });
 
-        // initialize native audio system
-        updateNativeAudioUI();
+        recordingDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                EchoEngine.setRecordingDeviceId(getRecordingDeviceId());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                // Do nothing
+            }
+        });
+
+        playbackDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                EchoEngine.setPlaybackDeviceId(getPlaybackDeviceId());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                // Do nothing
+            }
+        });
+
+        EchoEngine.create();
     }
 
     @Override
     protected void onDestroy() {
-        echoManager.destroy();
+        EchoEngine.delete();
         super.onDestroy();
     }
 
     public void toggleEcho() {
 
-        if (echoManager.isPlaying()) {
+        if (isPlaying) {
             Log.d(TAG, "Playing, attempting to stop");
-            // currently echoing, asking to stop
-            echoManager.stop();
-            updateNativeAudioUI();
-            toggleEchoButton.setText(R.string.StartEcho);
-
+            EchoEngine.setEchoOn(false);
+            resetStatusView();
+            toggleEchoButton.setText(R.string.start_echo);
+            isPlaying = false;
+            setSpinnersEnabled(true);
         } else {
             Log.d(TAG, "Attempting to start");
 
-            if (checkPermissions()) return;
-
-            if (echoManager.start(getRecordingDeviceId(), getPlaybackDeviceId())){
-                status_view.setText("Engine Echoing ....");
-                toggleEchoButton.setText(R.string.StopEcho);
-            } else {
-                status_view.setText("Failed to start");
+            if (!isRecordPermissionGranted()){
+                requestRecordPermission();
+                return;
             }
+
+            setSpinnersEnabled(false);
+            EchoEngine.setEchoOn(true);
+            statusText.setText(R.string.status_echoing);
+            toggleEchoButton.setText(R.string.stop_echo);
+            isPlaying = true;
         }
     }
 
-    // TODO: Add start after permissions granted
+    private void setSpinnersEnabled(boolean isEnabled){
+        recordingDeviceSpinner.setEnabled(isEnabled);
+        playbackDeviceSpinner.setEnabled(isEnabled);
+    }
 
     private int getRecordingDeviceId(){
         return ((DeviceListEntry)recordingDeviceSpinner.getSelectedItem()).getId();
@@ -149,37 +169,25 @@ public class MainActivity extends Activity
         return ((DeviceListEntry)playbackDeviceSpinner.getSelectedItem()).getId();
     }
 
-    private boolean checkPermissions() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
-                PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    AUDIO_ECHO_REQUEST);
-            return true;
-        }
-        return false;
+    private boolean isRecordPermissionGranted() {
+        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED);
     }
 
-    private void updateNativeAudioUI() {
-
-        if (!echoManager.isRecordingSupported()){
-            toggleEchoButton.setEnabled(false);
-            status_view.setText("Error: Audio recording is not supported");
-        }
-
-        status_view.setText("Warning:\n" +
-                "    This sample must be run with headphone connected\n" +
-                "     -- otherwise the sound could be pretty DISTURBING.\n");
-
+    private void requestRecordPermission(){
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{Manifest.permission.RECORD_AUDIO},
+                AUDIO_ECHO_REQUEST);
+    }
+    private void resetStatusView() {
+        statusText.setText(R.string.status_warning);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        /*
-         * if any permission failed, the sample could not play
-         */
+
         if (AUDIO_ECHO_REQUEST != requestCode) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
             return;
@@ -187,28 +195,17 @@ public class MainActivity extends Activity
 
         if (grantResults.length != 1 ||
                 grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-            /*
-             * When user denied the permission, throw a Toast to prompt that RECORD_AUDIO
-             * is necessary; on UI, we display the current status as permission was denied so
-             * user know what is going on.
-             * This application go back to the original state: it behaves as if the button
-             * was not clicked. The assumption is that user will re-click the "start" button
-             * (to retry), or shutdown the app in normal way.
-             */
-            status_view.setText("Error: Permission for RECORD_AUDIO was denied");
+
+            // User denied the permission, without this we cannot record audio
+            // Show a toast and update the status accordingly
+            statusText.setText(R.string.status_record_audio_denied);
             Toast.makeText(getApplicationContext(),
-                    getString(R.string.NeedRecordAudioPermission),
+                    getString(R.string.need_record_audio_permission),
                     Toast.LENGTH_SHORT)
                     .show();
-            return;
+        } else {
+            // Permission was granted, start echoing
+            toggleEcho();
         }
-
-        /*
-         * When permissions are granted, we prompt the user the status. User would
-         * re-try the "start" button to perform the normal operation. This saves us the extra
-         * logic in code for async processing of the button listener.
-         */
-        status_view.setText("RECORD_AUDIO permission granted, touch " +
-                getString(R.string.StartEcho) + " to begin");
     }
 }

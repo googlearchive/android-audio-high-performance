@@ -15,25 +15,25 @@ package com.google.sample.aaudio.echo;
  * limitations under the License.
  */
 
-class DeviceListEntry {
+import android.content.Context;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.util.Log;
 
-    private int mId;
-    private String mName;
+public enum EchoEngine {
 
-    DeviceListEntry(int deviceId, String deviceName){
-        mId = deviceId;
-        mName = deviceName;
+    INSTANCE;
+
+    // Load native library
+    static {
+        System.loadLibrary("echo");
     }
 
-    public int getId() {
-        return mId;
-    }
-
-    public String getName(){
-        return mName;
-    }
-
-    public String toString(){
-        return getName();
-    }
+    // Native methods
+    static native boolean create();
+    static native void delete();
+    static native void setEchoOn(boolean isEchoOn);
+    static native void setRecordingDeviceId(int deviceId);
+    static native void setPlaybackDeviceId(int deviceId);
 }

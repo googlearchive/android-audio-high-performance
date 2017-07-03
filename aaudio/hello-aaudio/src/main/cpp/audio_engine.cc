@@ -50,7 +50,7 @@ AudioEngine::AudioEngine() {
 
   // Create the output stream. By not specifying an audio device id we are telling AAudio that
   // we want the stream to be created using the default playback audio device.
-  createOutputStream();
+  createPlaybackStream();
 }
 
 AudioEngine::~AudioEngine(){
@@ -69,7 +69,7 @@ void AudioEngine::setDeviceId(int32_t deviceId){
   if (deviceId != currentDeviceId) restartStream();
 }
 
-void AudioEngine::createOutputStream(){
+void AudioEngine::createPlaybackStream(){
 
   AAudioStreamBuilder* builder;
   aaudio_result_t  result = AAudio_createStreamBuilder(&builder);
@@ -128,7 +128,7 @@ void AudioEngine::createOutputStream(){
     LOGE("Error starting stream. %s", AAudio_convertResultToText(result));
   }
 
-  underRunCount_ = AAudioStream_getXRunCount(playStream_);
+  playStreamUnderrunCount_ = AAudioStream_getXRunCount(playStream_);
 }
 
 void AudioEngine::stopOutputStream(){
@@ -155,8 +155,8 @@ aaudio_data_callback_result_t AudioEngine::dataCallback(AAudioStream *stream,
                                                         int32_t numFrames) {
   assert(stream == playStream_);
   int32_t underRun = AAudioStream_getXRunCount(playStream_);
-  if (underRun > underRunCount_) {
-    underRunCount_ = underRun;
+  if (underRun > playStreamUnderrunCount_) {
+    playStreamUnderrunCount_ = underRun;
 
     aaudio_result_t actSize = AAudioStream_setBufferSizeInFrames(
         stream, bufSizeInFrames_ + framesPerBurst_);
@@ -206,7 +206,7 @@ void AudioEngine::restartStream(){
 
   if (restartingLock_.try_lock()){
     stopOutputStream();
-    createOutputStream();
+    createPlaybackStream();
     restartingLock_.unlock();
   } else {
     LOGW("Restart stream operation already in progress - ignoring this request");

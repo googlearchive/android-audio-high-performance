@@ -1,33 +1,37 @@
 AAudio Samples
 ==============
-These samples demonstrate how to use AAudio API:
-1. hello-aaudio sample: creates an output stream
-1. echo sample: creates output and input streams, then play via loopback
+These samples demonstrate how to use the AAudio API:
 
-[AAudio](https://android-dot-devsite.googleplex.com/ndk/guides/audio/aaudio/aaudio.html) is still in its early stage of development, this [android-ndk thread](https://groups.google.com/forum/#!topic/android-ndk/Ox7L8V5ZF5s) addresses some of the possible questions surrounding the new API.
+1. hello-aaudio: creates an output (playback) stream and plays a
+sine wave when you tap the screen
+1. echo: creates input (recording) and output (playback) streams,
+then "echos" the recorded audio to the playback stream.
+
+[Official AAudio documentation](https://developer.android.com/ndk/guides/audio/aaudio/aaudio.html)
+
 
 Pre-requisites
 -------------
 * Android Device with recording capability
 * [Android O DP3](https://android-developers.googleblog.com/2017/06/android-o-apis-are-final-get-your-apps.html) (Developer's Preivew) API (android-26) and above
-* An external headphone (with a microphone) plugged into Android Device
-* [NDK-r15](https://developer.android.com/ndk/downloads/index.html) and above
+* [NDK-r15](https://developer.android.com/ndk/downloads/index.html) or above
 * [Android Studio 2.3.0+](https://developer.android.com/studio/index.html)
-* [AAudio Guide](https://developer.android.com/ndk/guides/audio/aaudio/aaudio.html)
 
 Getting Started
 ---------------
-1. [Download Android Studio](https://developer.android.com/studio/index.html)
-1. Launch Android Studio
-1. Import project: File --> New --> Import Project; browse to aaudio/build.gradle; and "OK"
-1. Open *File/Project Structure...*
-  - Click *Download* or *Select NDK location*: make sure to use ndk-r15+
-1. Click *Tools/Android/Sync Project with Gradle Files*.
-1. Click *Run/Run 'app'*.
+1. [Install Android Studio](https://developer.android.com/studio/index.html)
+1. Clone this sample repository
+1. Import the sample project into Android Studio
+    - File -> New -> Import Project
+    - Browse to aaudio/build.gradle
+    - Click "OK"
+1. Click Run -> Run, choose the sample you wish to run
 
 Screenshots
 -----------
-![screenshot](screenshot.png)
+![hello-aaudio-screenshot](hello-aaudio-screenshot.png)
+![echo-screenshot](echo-screenshot.png)
+
 
 Support
 -------
@@ -62,5 +66,6 @@ the License.
 
 Version History
 ---------------
-1) 03/22/2017:  initial release for Android - O DP1. Directly reading & writing to audio streams
-2) 05/17/2017:  updated for Android-O-DP2 release, using AAudio callback interface
+1. 22nd March 2017: Initial release for Android - O DP1. Directly reading & writing to audio streams
+2. 17th May 2017: Updated for Android-O-DP2 release, using AAudio callback interface
+3. 3rd July 2017: Allow different audio devices (e.g. USB headphones) to be selected and handle stream disconnection
