@@ -18,12 +18,13 @@
 #define SINE_GENERATOR_H
 
 #include <math.h>
+#include <cstdint>
 
 class SineGenerator
 {
 public:
     SineGenerator() {}
-    virtual ~SineGenerator() = default;
+    ~SineGenerator() = default;
 
     void setup(double frequency, double frameRate) {
         mFrameRate = frameRate;
