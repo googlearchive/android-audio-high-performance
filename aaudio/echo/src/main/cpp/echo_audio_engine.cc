@@ -65,6 +65,7 @@ EchoAudioEngine::EchoAudioEngine() {
   sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
   sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
   bitsPerSample_ = SampleFormatToBpp(sampleFormat_);
+  audioEffect_ = new AudioEffect();
 }
 
 EchoAudioEngine::~EchoAudioEngine() {
@@ -322,6 +323,9 @@ aaudio_data_callback_result_t EchoAudioEngine::dataCallback(AAudioStream *stream
     if (recordingStream_ != nullptr) {
       frameCount = AAudioStream_read(recordingStream_, audioData, numFrames,
                                      static_cast<int64_t>(0));
+
+      audioEffect_->process(static_cast<int16_t *>(audioData), samplesPerFrame, frameCount);
+
       if (frameCount < 0) {
         LOGE("****AAudioStream_read() returns %s",
              AAudio_convertResultToText(frameCount));

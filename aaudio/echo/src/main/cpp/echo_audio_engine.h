@@ -19,6 +19,7 @@
 
 #include <thread>
 #include "audio_common.h"
+#include "audio_effect.h"
 
 class EchoAudioEngine {
 
@@ -54,6 +55,7 @@ private:
 
   std::thread* streamRestartThread_;
   std::mutex restartingLock_;
+  AudioEffect *audioEffect_;
 
   void createRecordingStream();
   void createPlaybackStream();
@@ -70,6 +72,7 @@ private:
   void setupRecordingStreamParameters(AAudioStreamBuilder *builder);
   void setupPlaybackStreamParameters(AAudioStreamBuilder *builder);
   void setupCommonStreamParameters(AAudioStreamBuilder *builder);
+
 
 };
 
