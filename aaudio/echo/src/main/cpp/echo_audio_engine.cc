@@ -86,7 +86,7 @@ void EchoAudioEngine::setPlaybackDeviceId(int32_t deviceId) {
 
 void EchoAudioEngine::setEchoOn(bool isEchoOn) {
 
-  if (isEchoOn != isEchoOn_){
+  if (isEchoOn != isEchoOn_) {
     isEchoOn_ = isEchoOn;
 
     if (isEchoOn) {
@@ -292,8 +292,8 @@ void EchoAudioEngine::closeStream(AAudioStream *stream) {
  * @see the C method dataCallback at the top of this file
  */
 aaudio_data_callback_result_t EchoAudioEngine::dataCallback(AAudioStream *stream,
-                                                        void *audioData,
-                                                        int32_t numFrames) {
+                                                            void *audioData,
+                                                            int32_t numFrames) {
   if (isEchoOn_) {
     // Tuning the buffer size for low latency...
     int32_t underRun = AAudioStream_getXRunCount(playStream_);
@@ -321,6 +321,14 @@ aaudio_data_callback_result_t EchoAudioEngine::dataCallback(AAudioStream *stream
     aaudio_result_t frameCount = 0;
 
     if (recordingStream_ != nullptr) {
+
+      // If this is the first data callback we want to drain the recording buffer so we're getting
+      // the most up to date data
+      if (isFirstDataCallback_) {
+        drainRecordingStream(audioData, numFrames);
+        isFirstDataCallback_ = false;
+      }
+
       frameCount = AAudioStream_read(recordingStream_, audioData, numFrames,
                                      static_cast<int64_t>(0));
 
@@ -350,10 +358,27 @@ aaudio_data_callback_result_t EchoAudioEngine::dataCallback(AAudioStream *stream
 }
 
 /**
+ * Drain the recording stream of any existing data by reading from it until it's empty. This is
+ * usually run to clear out any stale data before performing an actual read operation, thereby
+ * obtaining the most recently recorded data and the best possbile recording latency.
+ *
+ * @param audioData A buffer which the existing data can be read into
+ * @param numFrames The number of frames to read in a single read operation, this is typically the
+ * size of `audioData`.
+ */
+void EchoAudioEngine::drainRecordingStream(void *audioData, int32_t numFrames) {
+
+  aaudio_result_t clearedFrames = 0;
+  do {
+    clearedFrames = AAudioStream_read(recordingStream_, audioData, numFrames, 0);
+  } while (clearedFrames > 0);
+}
+
+/**
  * See the C method errorCallback at the top of this file
  */
 void EchoAudioEngine::errorCallback(AAudioStream *stream,
-                                aaudio_result_t error) {
+                                    aaudio_result_t error) {
 
   LOGI("errorCallback has result: %s", AAudio_convertResultToText(error));
   aaudio_stream_state_t streamState = AAudioStream_getState(stream);

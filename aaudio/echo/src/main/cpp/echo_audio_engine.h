@@ -38,6 +38,7 @@ public:
 private:
 
   bool isEchoOn_ = false;
+  bool isFirstDataCallback_ = true;
   int32_t recordingDeviceId_ = AAUDIO_UNSPECIFIED;
   int32_t playbackDeviceId_ = AAUDIO_UNSPECIFIED;
   int32_t sampleRate_;
@@ -58,6 +59,7 @@ private:
   AudioEffect *audioEffect_;
 
   void createRecordingStream();
+  void drainRecordingStream(void *audioData, int32_t numFrames);
   void createPlaybackStream();
 
   void startStream(AAudioStream* stream);
