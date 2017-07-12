@@ -15,11 +15,11 @@ package com.google.sample.aaudio.common;
  * limitations under the License.
  */
 
-import android.content.Context;
 import android.content.res.Resources;
 import android.media.AudioDeviceCallback;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
+import android.util.Log;
 
 import java.util.List;
 import java.util.Vector;
@@ -37,7 +37,7 @@ public class AudioDeviceNotifier extends AudioDeviceCallback {
      * which is used the same way. This is why we set AUTO_SELECT_DEVICE_ID to 0.
      */
     private static final int AUTO_SELECT_DEVICE_ID = 0;
-
+    private static final String TAG = AudioDeviceNotifier.class.getSimpleName();
     private String mAutoSelectDeviceDescription;
     private AudioDeviceListener mListener;
     private AudioManager mAudioManager;
@@ -79,7 +79,6 @@ public class AudioDeviceNotifier extends AudioDeviceCallback {
     }
 
     private void updateListener() {
-
         if (mListener != null){
             List<AudioDeviceListEntry> deviceList = getDeviceList();
             mListener.onDevicesUpdated(deviceList);
@@ -88,6 +87,8 @@ public class AudioDeviceNotifier extends AudioDeviceCallback {
 
     private List<AudioDeviceListEntry> getDeviceList(){
 
+        Log.d(TAG, "Obtaining " + ((mDeviceDirectionType == AudioManager.GET_DEVICES_INPUTS) ?
+                "input" : "output") + " devices");
         AudioDeviceInfo[] devices = mAudioManager.getDevices(mDeviceDirectionType);
         List<AudioDeviceListEntry> listEntries = new Vector<>();
 
@@ -97,10 +98,12 @@ public class AudioDeviceNotifier extends AudioDeviceCallback {
 
         for (AudioDeviceInfo info : devices) {
 
+            Log.d(TAG, AudioDeviceInfoConverter.toString(info));
+
             listEntries.add(new AudioDeviceListEntry(
                     info.getId(),
                     info.getProductName() + " " +
-                            AudioDeviceInfoConverter.toReadableString(info.getType())));
+                            AudioDeviceInfoConverter.typeToString(info.getType())));
         }
 
         return listEntries;

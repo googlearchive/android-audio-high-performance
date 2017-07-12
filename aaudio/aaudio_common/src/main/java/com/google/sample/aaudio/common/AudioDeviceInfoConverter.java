@@ -20,13 +20,75 @@ import android.media.AudioDeviceInfo;
 class AudioDeviceInfoConverter {
 
     /**
+     * Converts an {@link AudioDeviceInfo} object into a human readable representation
+     *
+     * @param adi The AudioDeviceInfo object to be converted to a String
+     * @return String containing all the information from the AudioDeviceInfo object
+     */
+    static String toString(AudioDeviceInfo adi){
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Id: ");
+        sb.append(adi.getId());
+
+        sb.append("\nProduct name: ");
+        sb.append(adi.getProductName());
+
+        sb.append("\nType: ");
+        sb.append(typeToString(adi.getType()));
+
+        sb.append("\nIs source: ");
+        sb.append((adi.isSource() ? "Yes" : "No"));
+
+        sb.append("\nIs sink: ");
+        sb.append((adi.isSink() ? "Yes" : "No"));
+
+        sb.append("\nChannel counts: ");
+        int[] channelCounts = adi.getChannelCounts();
+        sb.append(intArrayToString(channelCounts));
+
+        sb.append("\nChannel masks: ");
+        int[] channelMasks = adi.getChannelMasks();
+        sb.append(intArrayToString(channelMasks));
+
+        sb.append("\nChannel index masks: ");
+        int[] channelIndexMasks = adi.getChannelIndexMasks();
+        sb.append(intArrayToString(channelIndexMasks));
+
+        sb.append("\nEncodings: ");
+        int[] encodings = adi.getEncodings();
+        sb.append(intArrayToString(encodings));
+
+        sb.append("\nSample Rates: ");
+        int[] sampleRates = adi.getSampleRates();
+        sb.append(intArrayToString(sampleRates));
+
+        return sb.toString();
+    }
+
+    /**
+     * Converts an integer array into a string where each int is separated by a space
+     *
+     * @param integerArray the integer array to convert to a string
+     * @return string containing all the integer values separated by spaces
+     */
+    private static String intArrayToString(int[] integerArray){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < integerArray.length; i++){
+            sb.append(integerArray[i]);
+            if (i != integerArray.length -1) sb.append(" ");
+        }
+        return sb.toString();
+    }
+
+    /**
      * Converts the value from {@link AudioDeviceInfo#getType()} into a human
      * readable string
      * @param type One of the {@link AudioDeviceInfo}.TYPE_* values
      *             e.g. AudioDeviceInfo.TYPE_BUILT_IN_SPEAKER
      * @return string which describes the type of audio device
      */
-    static String toReadableString(int type){
+    static String typeToString(int type){
         switch (type) {
             case AudioDeviceInfo.TYPE_AUX_LINE:
                 return "auxiliary line-level connectors";
@@ -73,8 +135,6 @@ class AudioDeviceInfoConverter {
             default:
             case AudioDeviceInfo.TYPE_UNKNOWN:
                 return "unknown";
-
         }
-
     }
 }
