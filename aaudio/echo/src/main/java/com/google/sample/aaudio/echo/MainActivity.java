@@ -135,14 +135,9 @@ public class MainActivity extends Activity
     }
 
     @Override
-    protected void onStop(){
+    protected void onDestroy() {
         mRecordingDeviceNotifier.unregisterListener();
         mPlaybackDeviceNotifier.unregisterListener();
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
         EchoEngine.delete();
         super.onDestroy();
     }
