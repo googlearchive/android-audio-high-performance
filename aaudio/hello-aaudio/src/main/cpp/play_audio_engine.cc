@@ -179,7 +179,10 @@ void PlayAudioEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder
   AAudioStreamBuilder_setDeviceId(builder, playbackDeviceId_);
   AAudioStreamBuilder_setFormat(builder, sampleFormat_);
   AAudioStreamBuilder_setSamplesPerFrame(builder, sampleChannels_);
-  AAudioStreamBuilder_setSharingMode(builder, AAUDIO_SHARING_MODE_SHARED);
+
+  // We request EXCLUSIVE mode since this will give us the lowest possible latency.
+  // If EXCLUSIVE mode isn't available the builder will fall back to SHARED mode.
+  AAudioStreamBuilder_setSharingMode(builder, AAUDIO_SHARING_MODE_EXCLUSIVE);
   AAudioStreamBuilder_setPerformanceMode(builder, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY);
   AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_OUTPUT);
   AAudioStreamBuilder_setDataCallback(builder, ::dataCallback, this);

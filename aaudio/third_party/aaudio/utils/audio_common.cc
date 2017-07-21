@@ -66,7 +66,7 @@ void PrintAudioStreamInfo(const AAudioStream * stream) {
     LOGI("DeviceId: %d", STREAM_CALL(getDeviceId));
     LOGI("Format: %s",  FormatToString(STREAM_CALL(getFormat)));
     LOGI("SharingMode: %s", (STREAM_CALL(getSharingMode)) == AAUDIO_SHARING_MODE_EXCLUSIVE ?
-                          "exclusive mode" : "sharing mode");
+                          "EXCLUSIVE" : "SHARED");
 
     aaudio_performance_mode_t perfMode = STREAM_CALL(getPerformanceMode);
     std::string perfModeDescription;
