@@ -33,6 +33,7 @@ public:
                                              int32_t numFrames);
   void errorCallback(AAudioStream *stream,
                      aaudio_result_t  __unused error);
+  double getCurrentOutputLatencyMillis();
 
 private:
 
@@ -50,6 +51,9 @@ private:
   int32_t playStreamUnderrunCount_;
   int32_t bufSizeInFrames_;
   int32_t framesPerBurst_;
+  double currentOutputLatencyMillis_ = 0;
+
+private:
 
   std::thread* streamRestartThread_;
   std::mutex restartingLock_;
@@ -61,6 +65,9 @@ private:
   AAudioStreamBuilder* createStreamBuilder();
   void setupPlaybackStreamParameters(AAudioStreamBuilder *builder);
   void prepareOscillators();
+
+  aaudio_result_t calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis);
+
 };
 
 

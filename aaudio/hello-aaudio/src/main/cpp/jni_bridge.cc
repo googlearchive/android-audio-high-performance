@@ -61,4 +61,15 @@ Java_com_google_sample_aaudio_play_PlaybackEngine_setAudioDeviceId(JNIEnv *env,
   engine->setDeviceId(deviceId);
 }
 
+JNIEXPORT jdouble JNICALL
+Java_com_google_sample_aaudio_play_PlaybackEngine_getCurrentOutputLatencyMillis(JNIEnv *env,
+                                                                            jclass) {
+  if (engine == nullptr) {
+    LOGE("Engine is null, you must call createEngine before calling this method");
+    return -1;
+  }
+  return (jdouble)engine->getCurrentOutputLatencyMillis();
+}
+
+
 }

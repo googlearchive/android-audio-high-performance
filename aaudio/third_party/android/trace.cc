@@ -20,7 +20,7 @@
 #include <cstdio>
 #include "trace.h"
 
-static const int TRACE_MAX_SECTION_NAME_LENGTH = 50;
+static const int TRACE_MAX_SECTION_NAME_LENGTH = 100;
 
 // Tracing functions
 static void *(*ATrace_beginSection)(const char *sectionName);

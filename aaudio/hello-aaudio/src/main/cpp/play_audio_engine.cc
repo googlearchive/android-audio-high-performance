@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <trace.h>
+#include <inttypes.h>
 #include "play_audio_engine.h"
 
 
@@ -243,7 +244,8 @@ aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream
    *
    * See https://developer.android.com/studio/profile/systrace-commandline.html
    */
-  Trace::beginSection("Underruns %d, buffer size %d", underRun, bufferSize);
+  Trace::beginSection("numFrames %d, Underruns %d, buffer size %d",
+                      numFrames, underRun, bufferSize);
 
   int32_t samplesPerFrame = sampleChannels_;
 
@@ -260,9 +262,65 @@ aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream
            sizeof(int16_t) * samplesPerFrame * numFrames);
   }
 
-  Trace::endSection();
+  calculateCurrentOutputLatencyMillis(stream, &currentOutputLatencyMillis_);
 
+  Trace::endSection();
   return AAUDIO_CALLBACK_RESULT_CONTINUE;
+}
+
+/**
+ * Calculate the current latency between writing a frame to the output stream and
+ * the same frame being presented to the audio hardware.
+ *
+ * Here's how the calculation works:
+ *
+ * 1) Get the time a particular frame was presented to the audio hardware
+ * @see AAudioStream_getTimestamp
+ * 2) From this extrapolate the time which the *next* audio frame written to the stream
+ * will be presented
+ * 3) Assume that the next audio frame is written at the current time
+ * 4) currentLatency = nextFramePresentationTime - nextFrameWriteTime
+ *
+ * @param stream The stream being written to
+ * @param latencyMillis pointer to a variable to receive the latency in milliseconds between
+ * writing a frame to the stream and that frame being presented to the audio hardware.
+ * @return AAUDIO_OK or a negative error. It is normal to receive an error soon after a stream
+ * has started because the timestamps are not yet available.
+ */
+aaudio_result_t
+PlayAudioEngine::calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis) {
+
+  // Get the time that a known audio frame was presented for playing
+  int64_t existingFrameIndex;
+  int64_t existingFramePresentationTime;
+  aaudio_result_t result = AAudioStream_getTimestamp(stream,
+                                                     CLOCK_MONOTONIC,
+                                                     &existingFrameIndex,
+                                                     &existingFramePresentationTime);
+
+  if (result == AAUDIO_OK){
+
+    // Get the write index for the next audio frame
+    int64_t writeIndex = AAudioStream_getFramesWritten(stream);
+
+    // Calculate the number of frames between our known frame and the write index
+    int64_t frameIndexDelta = writeIndex - existingFrameIndex;
+
+    // Calculate the time which the next frame will be presented
+    int64_t frameTimeDelta = (frameIndexDelta * NANOS_PER_SECOND) / sampleRate_;
+    int64_t nextFramePresentationTime = existingFramePresentationTime + frameTimeDelta;
+
+    // Assume that the next frame will be written at the current time
+    int64_t nextFrameWriteTime = get_time_nanoseconds(CLOCK_MONOTONIC);
+
+    // Calculate the latency
+    *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)
+                           / NANOS_PER_MILLISECOND;
+  } else {
+    LOGE("Error calculating latency: %s", AAudio_convertResultToText(result));
+  }
+
+  return result;
 }
 
 /**
@@ -297,4 +355,8 @@ void PlayAudioEngine::restartStream(){
     // active. This is probably because we received successive "stream disconnected" events.
     // Internal issue b/63087953
   }
+}
+
+double PlayAudioEngine::getCurrentOutputLatencyMillis() {
+  return currentOutputLatencyMillis_;
 }

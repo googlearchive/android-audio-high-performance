@@ -23,6 +23,10 @@
 #include "android_debug.h"
 #include "debug_utils.h"
 
+// Time constants
+#define NANOS_PER_SECOND 1000000000L
+#define NANOS_PER_MILLISECOND 1000000L
+
 /*
  * Audio Sample Controls...
  */
@@ -45,4 +49,9 @@ __inline__ uint64_t GetSystemTicks(void) {
 //#define ENABLE_LOG  1
 
 void PrintAudioStreamInfo(const AAudioStream * stream);
+
+int64_t timestamp_to_nanoseconds(timespec ts);
+
+int64_t get_time_nanoseconds(clockid_t clockid);
+
 #endif // AAUDIO_AUDIO_COMMON_H

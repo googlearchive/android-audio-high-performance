@@ -25,6 +25,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.google.sample.aaudio.common.AudioDeviceAdapter;
 import com.google.sample.aaudio.common.AudioDeviceListener;
@@ -32,11 +33,17 @@ import com.google.sample.aaudio.common.AudioDeviceNotifier;
 import com.google.sample.aaudio.common.AudioDeviceListEntry;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends Activity {
 
+    private static final long UPDATE_LATENCY_EVERY_MILLIS = 1000;
     private boolean mEngineCreated = false;
     private Spinner mPlaybackDeviceSpinner;
+    private TextView mLatencyText;
+    private Timer mLatencyUpdater;
 
     /*
      * Hook to user control to start / stop audio playback:
@@ -81,6 +88,10 @@ public class MainActivity extends Activity {
 
         // initialize native audio system
         mEngineCreated = PlaybackEngine.create();
+
+        // Periodically update the UI with the output stream latency
+        mLatencyText = findViewById(R.id.latencyText);
+        setupLatencyUpdater();
     }
 
     private void setupPlaybackDeviceNotifier() {
@@ -107,8 +118,36 @@ public class MainActivity extends Activity {
         return ((AudioDeviceListEntry) mPlaybackDeviceSpinner.getSelectedItem()).getId();
     }
 
+    private void setupLatencyUpdater() {
+
+        //Update the latency every 1s
+        TimerTask latencyUpdateTask = new TimerTask() {
+            @Override
+            public void run() {
+
+                double latency = PlaybackEngine.getCurrentOutputLatencyMillis();
+                final String latencyStr;
+                if (latency >= 0){
+                    latencyStr = String.format(Locale.getDefault(), "%.2fms", latency);
+                } else {
+                    latencyStr = "Unknown";
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLatencyText.setText(getString(R.string.latency, latencyStr));
+                    }
+                });
+            }
+        };
+
+        mLatencyUpdater = new Timer();
+        mLatencyUpdater.schedule(latencyUpdateTask, 0, UPDATE_LATENCY_EVERY_MILLIS);
+    }
+
     @Override
     protected void onDestroy() {
+        if (mLatencyUpdater != null) mLatencyUpdater.cancel();
         PlaybackEngine.delete();
         super.onDestroy();
     }

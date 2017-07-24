@@ -29,4 +29,5 @@ public enum PlaybackEngine {
     static native void delete();
     static native void setToneOn(boolean isToneOn);
     static native void setAudioDeviceId(int deviceId);
+    static native double getCurrentOutputLatencyMillis();
 }

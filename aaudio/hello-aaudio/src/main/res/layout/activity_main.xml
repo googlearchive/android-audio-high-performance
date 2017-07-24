@@ -39,7 +39,16 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView"
         />
-
+    <TextView
+        android:id="@+id/latencyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:text="@string/latency"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playbackDevicesSpinner"
+        />
     <TextView android:text="@string/init_status"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
@@ -48,7 +57,7 @@
               android:layout_marginTop="@dimen/activity_vertical_margin"
               android:id="@+id/userInstructionView"
               app:layout_constraintLeft_toLeftOf="parent"
-              app:layout_constraintTop_toBottomOf="@+id/playbackDevicesSpinner"
+              app:layout_constraintTop_toBottomOf="@+id/latencyText"
               />
 
 </android.support.constraint.ConstraintLayout>

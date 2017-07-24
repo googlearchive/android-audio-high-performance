@@ -98,3 +98,13 @@ void PrintAudioStreamInfo(const AAudioStream * stream) {
 #undef STREAM_CALL
 }
 
+int64_t timestamp_to_nanoseconds(timespec ts){
+  return (ts.tv_sec * (int64_t) NANOS_PER_SECOND) + ts.tv_nsec;
+}
+
+int64_t get_time_nanoseconds(clockid_t clockid){
+  timespec ts;
+  clock_gettime(clockid, &ts);
+  return timestamp_to_nanoseconds(ts);
+}
+
