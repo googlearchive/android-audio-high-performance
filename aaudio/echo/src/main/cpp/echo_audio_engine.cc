@@ -123,11 +123,13 @@ void EchoAudioEngine::stopStreams() {
   if (recordingStream_ != nullptr) {
     stopStream(recordingStream_);
     closeStream(recordingStream_);
+    recordingStream_ = nullptr;
   }
 
   if (playStream_ != nullptr) {
     stopStream(playStream_);
     closeStream(playStream_);
+    playStream_ = nullptr;
   }
 }
 
@@ -278,7 +280,10 @@ void EchoAudioEngine::stopStream(AAudioStream *stream) {
 
 /**
  * Close the stream. After the stream is closed it is deleted and subesequent AAudioStream_* calls
- * will return an error.
+ * will return an error. AAudioStream_close() also checks and waits for any outstanding datacallback
+ * to complete before closing stream, so application does not need add redundant synchronization
+ * between databack function and the thread calling AAudioStream_close() [the closing thread is
+ * UI thread in this sample].
  * @param stream the stream to close
  */
 void EchoAudioEngine::closeStream(AAudioStream *stream) {
