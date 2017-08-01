@@ -24,14 +24,17 @@ import android.support.v4.view.MotionEventCompat;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.SimpleAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.sample.aaudio.common.AudioDeviceAdapter;
+import com.google.sample.aaudio.common.AudioDeviceListEntry;
 import com.google.sample.aaudio.common.AudioDeviceListener;
 import com.google.sample.aaudio.common.AudioDeviceNotifier;
-import com.google.sample.aaudio.common.AudioDeviceListEntry;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
@@ -39,9 +42,13 @@ import java.util.TimerTask;
 
 public class MainActivity extends Activity {
 
+    private static final String TAG = MainActivity.class.getName();
     private static final long UPDATE_LATENCY_EVERY_MILLIS = 1000;
+    private static final int[] BUFFER_SIZE_OPTIONS = {0, 1, 2, 4, 8};
+
     private boolean mEngineCreated = false;
     private Spinner mPlaybackDeviceSpinner;
+    private Spinner mBufferSizeSpinner;
     private TextView mLatencyText;
     private Timer mLatencyUpdater;
 
@@ -86,6 +93,26 @@ public class MainActivity extends Activity {
 
         setupPlaybackDeviceNotifier();
 
+        mBufferSizeSpinner = findViewById(R.id.bufferSizeSpinner);
+        mBufferSizeSpinner.setAdapter(new SimpleAdapter(
+                this,
+                createBufferSizeOptionsList(), // list of buffer size options
+                R.layout.buffer_sizes_spinner, // the xml layout
+                new String[]{getString(R.string.buffer_size_description_key)}, // field to display
+                new int[]{R.id.bufferSizeOption})); // View to show field in
+
+        mBufferSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                PlaybackEngine.setBufferSizeInBursts(getBufferSizeInBursts());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
         // initialize native audio system
         mEngineCreated = PlaybackEngine.create();
 
@@ -116,6 +143,19 @@ public class MainActivity extends Activity {
 
     private int getPlaybackDeviceId(){
         return ((AudioDeviceListEntry) mPlaybackDeviceSpinner.getSelectedItem()).getId();
+    }
+
+    private int getBufferSizeInBursts(){
+        @SuppressWarnings("unchecked")
+        HashMap<String,String> selectedOption = (HashMap<String,String>)
+                mBufferSizeSpinner.getSelectedItem();
+
+        String valueKey = getString(R.string.buffer_size_value_key);
+
+        // parseInt will throw a NumberFormatException if the string doesn't contain a valid integer
+        // representation. We don't need to worry about this because the values are derived from
+        // the BUFFER_SIZE_OPTIONS int array.
+        return Integer.parseInt(selectedOption.get(valueKey));
     }
 
     private void setupLatencyUpdater() {
@@ -150,5 +190,30 @@ public class MainActivity extends Activity {
         if (mLatencyUpdater != null) mLatencyUpdater.cancel();
         PlaybackEngine.delete();
         super.onDestroy();
+    }
+
+    /**
+     * Creates a list of buffer size options which can be used to populate a SimpleAdapter.
+     * Each option has a description and a value. The description is always equal to the value,
+     * except when the value is zero as this indicates that the buffer size should be set
+     * automatically by the audio engine
+     *
+     * @return list of buffer size options
+     */
+    private List<HashMap<String,String>> createBufferSizeOptionsList(){
+
+        ArrayList<HashMap<String,String>> bufferSizeOptions = new ArrayList<>();
+
+        for (int i : BUFFER_SIZE_OPTIONS){
+            HashMap<String,String> option = new HashMap<>();
+            String strValue = String.valueOf(i);
+            String description = (i == 0) ? getString(R.string.automatic) : strValue;
+            option.put(getString(R.string.buffer_size_description_key), description);
+            option.put(getString(R.string.buffer_size_value_key), strValue);
+
+            bufferSizeOptions.add(option);
+        }
+
+        return bufferSizeOptions;
     }
 }

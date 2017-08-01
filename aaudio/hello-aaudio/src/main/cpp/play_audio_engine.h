@@ -21,6 +21,8 @@
 #include "audio_common.h"
 #include "SineGenerator.h"
 
+#define BUFFER_SIZE_AUTOMATIC 0
+
 class PlayAudioEngine {
 
 public:
@@ -28,6 +30,7 @@ public:
   ~PlayAudioEngine();
   void setDeviceId(int32_t deviceId);
   void setToneOn(bool isToneOn);
+  void setBufferSizeInBursts(int32_t numBursts);
   aaudio_data_callback_result_t dataCallback(AAudioStream *stream,
                                              void *audioData,
                                              int32_t numFrames);
@@ -52,6 +55,7 @@ private:
   int32_t bufSizeInFrames_;
   int32_t framesPerBurst_;
   double currentOutputLatencyMillis_ = 0;
+  int32_t bufferSizeSelection_ = BUFFER_SIZE_AUTOMATIC;
 
 private:
 

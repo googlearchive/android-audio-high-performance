@@ -30,14 +30,32 @@
         android:layout_marginStart="@dimen/activity_horizontal_margin"
         android:layout_marginTop="@dimen/activity_vertical_margin"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:id="@+id/textView"/>
+        android:id="@+id/playbackDeviceTitleText"/>
     <Spinner
         android:id="@+id/playbackDevicesSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/activity_horizontal_margin"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintTop_toBottomOf="@+id/playbackDeviceTitleText"
+        />
+    <TextView
+        android:id="@+id/bufferSizeTitleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/buffer_size_title"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playbackDevicesSpinner"
+        />
+    <Spinner
+        android:id="@+id/bufferSizeSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bufferSizeTitleText"
         />
     <TextView
         android:id="@+id/latencyText"
@@ -47,7 +65,7 @@
         android:layout_marginTop="@dimen/activity_vertical_margin"
         android:text="@string/latency"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/playbackDevicesSpinner"
+        app:layout_constraintTop_toBottomOf="@+id/bufferSizeSpinner"
         />
     <TextView android:text="@string/init_status"
               android:layout_width="wrap_content"

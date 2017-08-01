@@ -61,6 +61,18 @@ Java_com_google_sample_aaudio_play_PlaybackEngine_setAudioDeviceId(JNIEnv *env,
   engine->setDeviceId(deviceId);
 }
 
+JNIEXPORT void JNICALL
+Java_com_google_sample_aaudio_play_PlaybackEngine_setBufferSizeInBursts(
+    JNIEnv *env, jclass, jint bufferSizeInBursts) {
+  if (engine == nullptr) {
+    LOGE("Engine is null, you must call createEngine before calling this method");
+    return;
+  }
+
+  engine->setBufferSizeInBursts(bufferSizeInBursts);
+}
+
+
 JNIEXPORT jdouble JNICALL
 Java_com_google_sample_aaudio_play_PlaybackEngine_getCurrentOutputLatencyMillis(JNIEnv *env,
                                                                             jclass) {

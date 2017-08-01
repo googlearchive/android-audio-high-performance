@@ -216,25 +216,41 @@ aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream
                                                         void *audioData,
                                                         int32_t numFrames) {
   assert(stream == playStream_);
-  int32_t underRun = AAudioStream_getXRunCount(playStream_);
+
+  int32_t underrunCount = AAudioStream_getXRunCount(playStream_);
   aaudio_result_t bufferSize = AAudioStream_getBufferSizeInFrames(playStream_);
+  bool hasUnderrunCountIncreased = false;
+  bool shouldChangeBufferSize = false;
 
-  /**
-   * This is a buffer size tuning algorithm. If the number of underruns (i.e. instances where
-   * we were unable to supply sufficient data to the stream) has increased since the last callback
-   * we will try to increase the buffer size, which will give us more protection against underruns
-   * in future, at the cost of additional latency.
-   */
-  if (underRun > playStreamUnderrunCount_) {
-    playStreamUnderrunCount_ = underRun;
+  if (underrunCount > playStreamUnderrunCount_){
+    playStreamUnderrunCount_ = underrunCount;
+    hasUnderrunCountIncreased = true;
+  }
 
-    bufferSize = AAudioStream_setBufferSizeInFrames(
-        stream, bufSizeInFrames_ + framesPerBurst_);
+  if (hasUnderrunCountIncreased && bufferSizeSelection_ == BUFFER_SIZE_AUTOMATIC){
+
+    /**
+     * This is a buffer size tuning algorithm. If the number of underruns (i.e. instances where
+     * we were unable to supply sufficient data to the stream) has increased since the last callback
+     * we will try to increase the buffer size by the burst size, which will give us more protection
+     * against underruns in future, at the cost of additional latency.
+     */
+    bufferSize += framesPerBurst_; // Increase buffer size by one burst
+    shouldChangeBufferSize = true;
+  } else if (bufferSizeSelection_ > 0 && (bufferSizeSelection_ * framesPerBurst_) != bufferSize){
+
+    // If the buffer size selection has changed then update it here
+    bufferSize = bufferSizeSelection_ * framesPerBurst_;
+    shouldChangeBufferSize = true;
+  }
+
+  if (shouldChangeBufferSize){
+    LOGD("Setting buffer size to %d", bufferSize);
+    bufferSize = AAudioStream_setBufferSizeInFrames(stream, bufferSize);
     if (bufferSize > 0) {
       bufSizeInFrames_ = bufferSize;
     } else {
-      LOGE("*****: Error from dataCallback  -- %s",
-           AAudio_convertResultToText(bufferSize));
+      LOGE("Error setting buffer size: %s", AAudio_convertResultToText(bufferSize));
     }
   }
 
@@ -245,7 +261,7 @@ aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream
    * See https://developer.android.com/studio/profile/systrace-commandline.html
    */
   Trace::beginSection("numFrames %d, Underruns %d, buffer size %d",
-                      numFrames, underRun, bufferSize);
+                      numFrames, underrunCount, bufferSize);
 
   int32_t samplesPerFrame = sampleChannels_;
 
@@ -359,4 +375,8 @@ void PlayAudioEngine::restartStream(){
 
 double PlayAudioEngine::getCurrentOutputLatencyMillis() {
   return currentOutputLatencyMillis_;
+}
+
+void PlayAudioEngine::setBufferSizeInBursts(int32_t numBursts) {
+  PlayAudioEngine::bufferSizeSelection_ = numBursts;
 }
