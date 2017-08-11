@@ -62,7 +62,7 @@ void PrintAudioStreamInfo(const AAudioStream * stream) {
     LOGI("FramesPerBurst: %d", STREAM_CALL(getFramesPerBurst));
     LOGI("XRunCount: %d", STREAM_CALL(getXRunCount));
     LOGI("SampleRate: %d", STREAM_CALL(getSampleRate));
-    LOGI("SamplesPerFrame: %d", STREAM_CALL(getSamplesPerFrame));
+    LOGI("SamplesPerFrame: %d", STREAM_CALL(getChannelCount));
     LOGI("DeviceId: %d", STREAM_CALL(getDeviceId));
     LOGI("Format: %s",  FormatToString(STREAM_CALL(getFormat)));
     LOGI("SharingMode: %s", (STREAM_CALL(getSharingMode)) == AAUDIO_SHARING_MODE_EXCLUSIVE ?

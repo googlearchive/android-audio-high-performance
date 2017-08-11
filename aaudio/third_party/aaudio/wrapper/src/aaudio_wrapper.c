@@ -32,8 +32,8 @@ void (*AAudioStreamBuilder_setDeviceId )(AAudioStreamBuilder* builder,
 
 void (*AAudioStreamBuilder_setSampleRate )(AAudioStreamBuilder* builder,
                                        int32_t sampleRate);
-void (*AAudioStreamBuilder_setSamplesPerFrame )(AAudioStreamBuilder* builder,
-                                            int32_t samplesPerFrame);
+void (*AAudioStreamBuilder_setChannelCount )(AAudioStreamBuilder* builder,
+                                            int32_t channelCount);
 void (*AAudioStreamBuilder_setFormat )(AAudioStreamBuilder* builder,
                                    aaudio_format_t format);
 void (*AAudioStreamBuilder_setSharingMode )(AAudioStreamBuilder* builder,
@@ -97,7 +97,7 @@ int32_t (*AAudioStream_getBufferCapacityInFrames )(AAudioStream* stream);
 int32_t (*AAudioStream_getFramesPerDataCallback)(AAudioStream* stream);
 int32_t (*AAudioStream_getXRunCount )(AAudioStream* stream);
 int32_t (*AAudioStream_getSampleRate )(AAudioStream* stream);
-int32_t (*AAudioStream_getSamplesPerFrame )(AAudioStream* stream);
+int32_t (*AAudioStream_getChannelCount )(AAudioStream* stream);
 int32_t (*AAudioStream_getDeviceId )(AAudioStream* stream);
 aaudio_format_t (*AAudioStream_getFormat )(AAudioStream* stream);
 aaudio_sharing_mode_t (*AAudioStream_getSharingMode )(AAudioStream* stream);
@@ -126,7 +126,7 @@ int32_t InitAAudio(void) {
   GET_PROC(AAudio_createStreamBuilder);
   GET_PROC(AAudioStreamBuilder_setDeviceId);
   GET_PROC(AAudioStreamBuilder_setSampleRate);
-  GET_PROC(AAudioStreamBuilder_setSamplesPerFrame);
+  GET_PROC(AAudioStreamBuilder_setChannelCount);
   GET_PROC(AAudioStreamBuilder_setFormat);
   GET_PROC(AAudioStreamBuilder_setSharingMode);
   GET_PROC(AAudioStreamBuilder_setDirection);
@@ -158,7 +158,7 @@ int32_t InitAAudio(void) {
 
   GET_PROC(AAudioStream_getXRunCount);
   GET_PROC(AAudioStream_getSampleRate);
-  GET_PROC(AAudioStream_getSamplesPerFrame);
+  GET_PROC(AAudioStream_getChannelCount);
   GET_PROC(AAudioStream_getDeviceId);
   GET_PROC(AAudioStream_getFormat);
   GET_PROC(AAudioStream_getSharingMode);
@@ -175,7 +175,7 @@ int32_t InitAAudio(void) {
       AAudio_createStreamBuilder &&
       AAudioStreamBuilder_setDeviceId &&
       AAudioStreamBuilder_setSampleRate &&
-      AAudioStreamBuilder_setSamplesPerFrame &&
+      AAudioStreamBuilder_setChannelCount &&
       AAudioStreamBuilder_setFormat &&
       AAudioStreamBuilder_setSharingMode &&
       AAudioStreamBuilder_setDirection &&
@@ -201,7 +201,7 @@ int32_t InitAAudio(void) {
       AAudioStream_getFramesPerDataCallback &&
       AAudioStream_getXRunCount &&
       AAudioStream_getSampleRate &&
-      AAudioStream_getSamplesPerFrame &&
+      AAudioStream_getChannelCount &&
       AAudioStream_getDeviceId &&
       AAudioStream_getFormat &&
       AAudioStream_getSharingMode &&

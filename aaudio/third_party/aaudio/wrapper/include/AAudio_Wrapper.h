@@ -208,8 +208,8 @@ extern AAUDIO_API void (*AAudioStreamBuilder_setSampleRate)(AAudioStreamBuilder*
  * @param builder reference provided by AAudio_createStreamBuilder()
  * @param samplesPerFrame Number of samples in one frame, ie. numChannels.
  */
-extern AAUDIO_API void (*AAudioStreamBuilder_setSamplesPerFrame)(AAudioStreamBuilder* builder,
-                                                   int32_t samplesPerFrame);
+extern AAUDIO_API void (*AAudioStreamBuilder_setChannelCount)(AAudioStreamBuilder* builder,
+                                                   int32_t channelCount);
 
 /**
  * Request a sample data format, for example AAUDIO_FORMAT_PCM_I16.
@@ -672,7 +672,7 @@ extern AAUDIO_API int32_t (*AAudioStream_getSampleRate)(AAudioStream* stream);
  * @param stream reference provided by AAudioStreamBuilder_openStream()
  * @return actual samples per frame
  */
-extern AAUDIO_API int32_t (*AAudioStream_getSamplesPerFrame)(AAudioStream* stream);
+extern AAUDIO_API int32_t (*AAudioStream_getChannelCount)(AAudioStream* stream);
 
 /**
  * @param stream reference provided by AAudioStreamBuilder_openStream()
