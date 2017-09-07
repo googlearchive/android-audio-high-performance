@@ -190,7 +190,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                     mLoadThread.start();
                 } else {
-                    if (mLoadThread != null) mLoadThread.terminate();
+                    if (mLoadThread != null){
+                        mLoadThread.terminate();
+                        mLoadThread = null;
+                    }
                 }
 
             }
