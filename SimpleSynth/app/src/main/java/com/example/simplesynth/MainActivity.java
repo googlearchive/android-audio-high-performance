@@ -19,6 +19,7 @@ package com.example.simplesynth;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
@@ -44,7 +45,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int VARIABLE_LOAD_LOW_DURATION = 2000;
     private static final int VARIABLE_LOAD_HIGH_DURATION = 2000;
     public static final int MAXIMUM_WORK_CYCLES = 500000;
-    private static final int WORK_CYCLE_STEPS = 100;
+    private static final int SEEKBAR_STEPS = 100;
+    private static final float WORK_CYCLES_PER_STEP = MAXIMUM_WORK_CYCLES / SEEKBAR_STEPS;
+    private static final String PREFERENCES_KEY_WORK_CYCLES = "work_cycles";
 
     private static int workCycles = 0;
 
@@ -55,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mDeviceInfoText, mWorkCyclesText;
     private AudioTrack mAudioTrack;
     private VariableLoadGenerator mLoadThread;
+    private SharedPreferences mSettings;
 
     // Native methods
     private static native void native_createEngine(int apiLevel);
@@ -77,6 +81,10 @@ public class MainActivity extends AppCompatActivity {
         // Lock to portrait to avoid onCreate being called more than once
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        // Load any previously saved values
+        mSettings = getPreferences(MODE_PRIVATE);
+        workCycles = mSettings.getInt(PREFERENCES_KEY_WORK_CYCLES, workCycles);
+
         initDeviceInfoUI();
         initPerformanceConfigurationUI();
 
@@ -88,6 +96,16 @@ public class MainActivity extends AppCompatActivity {
 
         // Update the UI when there are underruns
         initUnderrunUpdater();
+
+        setWorkCycles(workCycles);
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        SharedPreferences.Editor editor = mSettings.edit();
+        editor.putInt(PREFERENCES_KEY_WORK_CYCLES, workCycles);
+        editor.apply();
     }
 
     private void initDeviceInfoUI(){
@@ -210,10 +228,12 @@ public class MainActivity extends AppCompatActivity {
         mWorkCyclesText = (TextView) findViewById(R.id.workCyclesText);
 
         SeekBar workCyclesSeekBar = (SeekBar) findViewById(R.id.workCycles);
+        workCyclesSeekBar.setProgress((int)(workCycles / WORK_CYCLES_PER_STEP));
+
         workCyclesSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                workCycles = progress * (MAXIMUM_WORK_CYCLES / WORK_CYCLE_STEPS);
+                workCycles = (int)(progress * WORK_CYCLES_PER_STEP);
                 setWorkCycles(workCycles);
             }
 
