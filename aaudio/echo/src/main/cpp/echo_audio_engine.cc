@@ -72,6 +72,7 @@ EchoAudioEngine::~EchoAudioEngine() {
 
   closeStream(recordingStream_);
   closeStream(playStream_);
+  delete audioEffect_;
 }
 
 void EchoAudioEngine::setRecordingDeviceId(int32_t deviceId) {
