@@ -69,7 +69,7 @@ PlayAudioEngine::PlayAudioEngine() {
   Trace::initialize();
 
   sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
-  sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
+  sampleFormat_ = AAUDIO_FORMAT_PCM_FLOAT;
 
   // Create the output stream. By not specifying an audio device id we are telling AAudio that
   // we want the stream to be created using the default playback audio device.
@@ -129,9 +129,9 @@ void PlayAudioEngine::createPlaybackStream(){
 
     if (result == AAUDIO_OK && playStream_ != nullptr){
 
-      // check that we got PCM_I16 format
+      // check that we got PCM_FLOAT format
       if (sampleFormat_ != AAudioStream_getFormat(playStream_)) {
-        LOGW("Sample format is not PCM_I16");
+        LOGW("Sample format is not PCM_FLOAT");
       }
 
       sampleRate_ = AAudioStream_getSampleRate(playStream_);
@@ -267,15 +267,15 @@ aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream
 
   // If the tone is on we need to use our synthesizer to render the audio data for the sine waves
   if (isToneOn_) {
-    sineOscRight_->render(static_cast<int16_t *>(audioData),
+    sineOscRight_->render(static_cast<float *>(audioData),
                                       samplesPerFrame, numFrames);
     if (sampleChannels_ == 2) {
-      sineOscLeft_->render(static_cast<int16_t *>(audioData) + 1,
+      sineOscLeft_->render(static_cast<float *>(audioData) + 1,
                                        samplesPerFrame, numFrames);
     }
   } else {
     memset(static_cast<uint8_t *>(audioData), 0,
-           sizeof(int16_t) * samplesPerFrame * numFrames);
+           sizeof(float) * samplesPerFrame * numFrames);
   }
 
   calculateCurrentOutputLatencyMillis(stream, &currentOutputLatencyMillis_);

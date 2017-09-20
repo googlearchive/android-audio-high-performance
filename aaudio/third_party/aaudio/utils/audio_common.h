@@ -30,7 +30,7 @@
 /*
  * Audio Sample Controls...
  */
-#define AUDIO_SAMPLE_CHANNELS               1
+#define AUDIO_SAMPLE_CHANNELS               2
 
 uint16_t SampleFormatToBpp(aaudio_format_t format);
 /*

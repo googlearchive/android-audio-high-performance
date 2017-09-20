@@ -57,7 +57,7 @@ public:
     void render(float *buffer, int32_t channelStride, int32_t numFrames) {
         int sampleIndex = 0;
         for (int i = 0; i < numFrames; i++) {
-            buffer[sampleIndex] = sin(mPhase) * mAmplitude;
+            buffer[sampleIndex] = (float) (sin(mPhase) * mAmplitude);
             sampleIndex += channelStride;
             advancePhase();
         }
