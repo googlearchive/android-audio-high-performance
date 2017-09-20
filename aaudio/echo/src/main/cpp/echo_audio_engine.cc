@@ -63,7 +63,7 @@ void errorCallback(AAudioStream *stream,
 EchoAudioEngine::EchoAudioEngine() {
 
   sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
-  sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
+  sampleFormat_ = AAUDIO_FORMAT_PCM_FLOAT;
   bitsPerSample_ = SampleFormatToBpp(sampleFormat_);
   audioEffect_ = new AudioEffect();
 }
@@ -341,7 +341,7 @@ aaudio_data_callback_result_t EchoAudioEngine::dataCallback(AAudioStream *stream
       frameCount = AAudioStream_read(recordingStream_, audioData, numFrames,
                                      static_cast<int64_t>(0));
 
-      audioEffect_->process(static_cast<int16_t *>(audioData), samplesPerFrame, frameCount);
+      audioEffect_->process(static_cast<float *>(audioData), samplesPerFrame, frameCount);
 
       if (frameCount < 0) {
         LOGE("****AAudioStream_read() returns %s",

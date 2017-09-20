@@ -16,7 +16,7 @@
 
 #include "audio_effect.h"
 
-void AudioEffect::process(int16_t *inputBuffer, int32_t samplesPerFrame, int32_t numFrames) {
+void AudioEffect::process(float *inputBuffer, int32_t samplesPerFrame, int32_t numFrames) {
 
   for (int i = 0; i < (numFrames * samplesPerFrame); i++){
 
