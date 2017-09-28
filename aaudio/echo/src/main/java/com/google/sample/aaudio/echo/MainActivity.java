@@ -18,7 +18,6 @@ package com.google.sample.aaudio.echo;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -28,16 +27,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.sample.aaudio.common.AudioDeviceAdapter;
-import com.google.sample.aaudio.common.AudioDeviceListener;
-import com.google.sample.aaudio.common.AudioDeviceNotifier;
 import com.google.sample.aaudio.common.AudioDeviceListEntry;
-
-import java.util.List;
+import com.google.sample.aaudio.common.AudioDeviceSpinner;
 
 /**
  * TODO: Update README.md and go through and comment sample
@@ -50,11 +44,9 @@ public class MainActivity extends Activity
 
     private TextView statusText;
     private Button toggleEchoButton;
-    private Spinner recordingDeviceSpinner;
-    private Spinner playbackDeviceSpinner;
+    private AudioDeviceSpinner recordingDeviceSpinner;
+    private AudioDeviceSpinner playbackDeviceSpinner;
     private boolean isPlaying = false;
-    private AudioDeviceNotifier mPlaybackDeviceNotifier;
-    private AudioDeviceNotifier mRecordingDeviceNotifier;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,41 +64,7 @@ public class MainActivity extends Activity
         toggleEchoButton.setText(getString(R.string.start_echo));
 
         recordingDeviceSpinner = findViewById(R.id.recording_devices_spinner);
-        playbackDeviceSpinner = findViewById(R.id.playback_devices_spinner);
-
-        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-
-        mRecordingDeviceNotifier = new AudioDeviceNotifier(
-                getResources(),
-                audioManager,
-                AudioManager.GET_DEVICES_INPUTS);
-        mPlaybackDeviceNotifier = new AudioDeviceNotifier(
-                getResources(),
-                audioManager,
-                AudioManager.GET_DEVICES_OUTPUTS);
-
-        mRecordingDeviceNotifier.registerListener(new AudioDeviceListener() {
-            @Override
-            public void onDevicesUpdated(List<AudioDeviceListEntry> deviceEntries) {
-                AudioDeviceAdapter deviceAdapter =
-                        new AudioDeviceAdapter(MainActivity.super.getBaseContext(),
-                                deviceEntries);
-                recordingDeviceSpinner.setSelection(0); // Select first item in list
-                recordingDeviceSpinner.setAdapter(deviceAdapter);
-            }
-        });
-
-        mPlaybackDeviceNotifier.registerListener(new AudioDeviceListener() {
-            @Override
-            public void onDevicesUpdated(List<AudioDeviceListEntry> deviceEntries) {
-                AudioDeviceAdapter deviceAdapter =
-                        new AudioDeviceAdapter(MainActivity.super.getBaseContext(),
-                                deviceEntries);
-                playbackDeviceSpinner.setSelection(0); // Select first item in list
-                playbackDeviceSpinner.setAdapter(deviceAdapter);
-            }
-        });
-
+        recordingDeviceSpinner.setDirectionType(AudioManager.GET_DEVICES_INPUTS);
         recordingDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -119,6 +77,8 @@ public class MainActivity extends Activity
             }
         });
 
+        playbackDeviceSpinner = findViewById(R.id.playback_devices_spinner);
+        playbackDeviceSpinner.setDirectionType(AudioManager.GET_DEVICES_OUTPUTS);
         playbackDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -136,8 +96,6 @@ public class MainActivity extends Activity
 
     @Override
     protected void onDestroy() {
-        mRecordingDeviceNotifier.unregisterListener();
-        mPlaybackDeviceNotifier.unregisterListener();
         EchoEngine.delete();
         super.onDestroy();
     }

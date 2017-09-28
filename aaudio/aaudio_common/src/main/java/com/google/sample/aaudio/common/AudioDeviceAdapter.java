@@ -24,15 +24,13 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import java.util.List;
-
 /**
  * Provides views for a list of audio devices. Usually used as an Adapter for a Spinner or ListView.
  */
 public class AudioDeviceAdapter extends ArrayAdapter<AudioDeviceListEntry> {
 
-    public AudioDeviceAdapter(Context context, List<AudioDeviceListEntry> data) {
-        super(context, R.layout.audio_devices, data);
+    public AudioDeviceAdapter(Context context) {
+        super(context, R.layout.audio_devices);
     }
 
     @NonNull

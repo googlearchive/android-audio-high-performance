@@ -31,7 +31,7 @@
         android:layout_marginTop="@dimen/activity_vertical_margin"
         app:layout_constraintLeft_toLeftOf="parent"
         android:id="@+id/playbackDeviceTitleText"/>
-    <Spinner
+    <com.google.sample.aaudio.common.AudioDeviceSpinner
         android:id="@+id/playbackDevicesSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

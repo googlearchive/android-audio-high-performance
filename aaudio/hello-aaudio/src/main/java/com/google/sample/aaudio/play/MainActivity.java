@@ -17,7 +17,6 @@
 package com.google.sample.aaudio.play;
 
 import android.app.Activity;
-import android.content.Context;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v4.view.MotionEventCompat;
@@ -28,10 +27,8 @@ import android.widget.SimpleAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.google.sample.aaudio.common.AudioDeviceAdapter;
 import com.google.sample.aaudio.common.AudioDeviceListEntry;
-import com.google.sample.aaudio.common.AudioDeviceListener;
-import com.google.sample.aaudio.common.AudioDeviceNotifier;
+import com.google.sample.aaudio.common.AudioDeviceSpinner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +44,7 @@ public class MainActivity extends Activity {
     private static final int[] BUFFER_SIZE_OPTIONS = {0, 1, 2, 4, 8};
 
     private boolean mEngineCreated = false;
-    private Spinner mPlaybackDeviceSpinner;
+    private AudioDeviceSpinner mPlaybackDeviceSpinner;
     private Spinner mBufferSizeSpinner;
     private TextView mLatencyText;
     private Timer mLatencyUpdater;
@@ -79,6 +76,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         mPlaybackDeviceSpinner = findViewById(R.id.playbackDevicesSpinner);
+        mPlaybackDeviceSpinner.setDirectionType(AudioManager.GET_DEVICES_OUTPUTS);
         mPlaybackDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -90,8 +88,6 @@ public class MainActivity extends Activity {
 
             }
         });
-
-        setupPlaybackDeviceNotifier();
 
         mBufferSizeSpinner = findViewById(R.id.bufferSizeSpinner);
         mBufferSizeSpinner.setAdapter(new SimpleAdapter(
@@ -119,26 +115,6 @@ public class MainActivity extends Activity {
         // Periodically update the UI with the output stream latency
         mLatencyText = findViewById(R.id.latencyText);
         setupLatencyUpdater();
-    }
-
-    private void setupPlaybackDeviceNotifier() {
-
-        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        AudioDeviceNotifier playbackDeviceNotifier = new AudioDeviceNotifier(
-                getResources(),
-                audioManager,
-                AudioManager.GET_DEVICES_OUTPUTS);
-
-        playbackDeviceNotifier.registerListener(new AudioDeviceListener() {
-            @Override
-            public void onDevicesUpdated(List<AudioDeviceListEntry> deviceEntries) {
-                AudioDeviceAdapter deviceAdapter =
-                        new AudioDeviceAdapter(MainActivity.super.getBaseContext(),
-                                deviceEntries);
-                mPlaybackDeviceSpinner.setSelection(0); // Select first item in list
-                mPlaybackDeviceSpinner.setAdapter(deviceAdapter);
-            }
-        });
     }
 
     private int getPlaybackDeviceId(){
