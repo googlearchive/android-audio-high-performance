@@ -1,17 +1,27 @@
-High Performance Audio Samples
-==============================
+# Android High Performance Audio Samples
+![Bugdroid DJing image](djdroid-light.png "Bugdroid DJing image")
 
-This repository contains samples for creating high performance audio apps on Android. 
+Welcome to the Android high-performance audio samples repository. These samples demonstrate how to use the [AAudio](https://developer.android.com/ndk/guides/audio/aaudio/aaudio.html) and [OpenSL ES](https://developer.android.com/ndk/guides/audio/opensl/index.html) audio APIs on Android to create real-time audio apps. 
 
+If you haven't already it's worth reading the [high-performance audio guide](https://developer.android.com/ndk/guides/audio/index.html). There's also [plenty of other resources](RESOURCES.md) to help you create amazing audio apps on Android.
+
+### Sample list
+The repository is structured as follows: 
+
+- [aaudio](aaudio): This folder contains all the samples for the AAudio API
+- [SimpleSynth](SimpleSynth): Shows how to achieve optimal output latency and avoid audio glitches using OpenSL ES 
+
+Check the README in each of these subfolders for instructions on how to load the sample(s) into Android Studio. 
+
+### Issues
 If you've found an error in these samples, please [file an issue](https://github.com/googlesamples/android-audio-high-performance/issues/new).
 
+### Contributing
 Patches and new samples are encouraged, and may be submitted by [forking this project](https://github.com/googlesamples/android-audio-high-performance/fork) and
 submitting a pull request through GitHub. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
-License
--------
-
-Copyright 2015 The Android Open Source Project, Inc.
+### License
+Copyright 2017 The Android Open Source Project, Inc.
 
 Licensed to the Apache Software Foundation (ASF) under one or more contributor
 license agreements.  See the NOTICE file distributed with this work for
