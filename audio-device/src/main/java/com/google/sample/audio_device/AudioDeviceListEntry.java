@@ -15,6 +15,7 @@ package com.google.sample.audio_device;
  * limitations under the License.
  */
 
+import android.annotation.TargetApi;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 
@@ -75,6 +76,7 @@ public class AudioDeviceListEntry {
      *                      GET_DEVICES_INPUTS.
      * @return A list of AudioDeviceListEntry objects
      */
+    @TargetApi(23)
     static List<AudioDeviceListEntry> createListFrom(AudioDeviceInfo[] devices, int directionType){
 
         List<AudioDeviceListEntry> listEntries = new Vector<>();

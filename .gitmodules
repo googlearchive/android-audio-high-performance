@@ -1,0 +1,3 @@
+[submodule "oboe/hello-oboe/src/main/cpp/oboe"]
+	path = oboe/hello-oboe/src/main/cpp/oboe
+	url = sso://devrel/libraries/android/oboe

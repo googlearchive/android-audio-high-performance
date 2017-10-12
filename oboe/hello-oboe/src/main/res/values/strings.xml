@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Hello Oboe</string>
+    <string name="init_status">Touch anywhere on the screen to play audio</string>
+    <string name="action_settings">Settings</string>
+    <string name="need_record_audio_permission">"This sample needs RECORD_AUDIO permission"</string>
+    <string name="playback_device">Playback device</string>
+    <string name="latency">Latency: %s</string>
+    <string name="buffer_size_title">Buffer size</string>
+    <string name="automatic">Automatic</string>
+    <string name="buffer_size_description_key">description</string>
+    <string name="buffer_size_value_key">value</string>
+</resources>

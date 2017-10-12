@@ -15,6 +15,7 @@ package com.google.sample.audio_device;
  * limitations under the License.
  */
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources.Theme;
 import android.media.AudioDeviceCallback;
@@ -29,66 +30,77 @@ public class AudioDeviceSpinner extends Spinner {
 
     private static final int AUTO_SELECT_DEVICE_ID = 0;
     private static final String TAG = AudioDeviceSpinner.class.getName();
-    private int mDirectionType = AudioManager.GET_DEVICES_OUTPUTS;
+    private int mDirectionType;
+    private AudioDeviceAdapter mDeviceAdapter;
+    private AudioManager mAudioManager;
 
     public AudioDeviceSpinner(Context context){
         super(context);
+        setup(context);
     }
 
     public AudioDeviceSpinner(Context context, int mode){
         super(context, mode);
+        setup(context);
     }
 
     public AudioDeviceSpinner(Context context, AttributeSet attrs){
         super(context, attrs);
+        setup(context);
     }
 
     public AudioDeviceSpinner(Context context, AttributeSet attrs, int defStyleAttr){
         super(context, attrs, defStyleAttr);
+        setup(context);
     }
 
     public AudioDeviceSpinner(Context context, AttributeSet attrs, int defStyleAttr, int mode){
         super(context, attrs, defStyleAttr, mode);
+        setup(context);
     }
 
     public AudioDeviceSpinner(Context context, AttributeSet attrs, int defStyleAttr,
                               int defStyleRes, int mode){
         super(context, attrs, defStyleAttr, defStyleRes, mode);
+        setup(context);
     }
     public AudioDeviceSpinner(Context context, AttributeSet attrs, int defStyleAttr,
                               int defStyleRes, int mode, Theme popupTheme){
         super(context, attrs, defStyleAttr, defStyleRes, mode, popupTheme);
+        setup(context);
     }
 
-    public void setDirectionType(int directionType){
-        this.mDirectionType = directionType;
-        setupAdapter();
-    }
+    private void setup(Context context){
+        mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
-    private void setupAdapter(){
-
-        Context context = getContext();
-        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-
-        final AudioDeviceAdapter deviceAdapter = new AudioDeviceAdapter(context);
-        setAdapter(deviceAdapter);
+        mDeviceAdapter = new AudioDeviceAdapter(context);
+        setAdapter(mDeviceAdapter);
 
         // Add a default entry to the list and select it
-        deviceAdapter.add(new AudioDeviceListEntry(AUTO_SELECT_DEVICE_ID,
+        mDeviceAdapter.add(new AudioDeviceListEntry(AUTO_SELECT_DEVICE_ID,
                 context.getString(R.string.auto_select)));
         setSelection(0);
+    }
 
-        // Listen for changes
+    @TargetApi(23)
+    public void setDirectionType(int directionType){
+        this.mDirectionType = directionType;
+        setupAudioDeviceCallback();
+    }
+
+    @TargetApi(23)
+    private void setupAudioDeviceCallback(){
+
         // Note that we will immediately receive a call to onDevicesAdded with the list of
         // devices which are currently connected.
-        audioManager.registerAudioDeviceCallback(new AudioDeviceCallback() {
+        mAudioManager.registerAudioDeviceCallback(new AudioDeviceCallback() {
             @Override
             public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
 
                 List<AudioDeviceListEntry> deviceList =
                         AudioDeviceListEntry.createListFrom(addedDevices, mDirectionType);
                 if (deviceList.size() > 0){
-                    deviceAdapter.addAll(deviceList);
+                    mDeviceAdapter.addAll(deviceList);
                 }
             }
 
@@ -97,7 +109,7 @@ public class AudioDeviceSpinner extends Spinner {
                 List<AudioDeviceListEntry> deviceList =
                         AudioDeviceListEntry.createListFrom(removedDevices, mDirectionType);
                 for (AudioDeviceListEntry entry : deviceList){
-                    deviceAdapter.remove(entry);
+                    mDeviceAdapter.remove(entry);
                 }
             }
         }, null);
