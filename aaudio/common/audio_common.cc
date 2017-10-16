@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+#include <string>
 #include "audio_common.h"
-
+#include <logging_macros.h>
 
 static const int32_t audioFormatEnum[] = {
     AAUDIO_FORMAT_INVALID,

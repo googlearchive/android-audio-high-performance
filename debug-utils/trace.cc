@@ -15,8 +15,7 @@
  */
 
 #include <dlfcn.h>
-#include <android_debug.h>
-#include <cstring>
+#include "logging_macros.h"
 #include <cstdio>
 #include "trace.h"
 

@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <trace.h>
+#include <logging_macros.h>
 #include <inttypes.h>
 #include "play_audio_engine.h"
 

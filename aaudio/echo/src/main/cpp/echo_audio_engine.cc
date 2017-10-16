@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <logging_macros.h>
 #include <climits>
 #include <assert.h>
 #include "echo_audio_engine.h"

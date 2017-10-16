@@ -15,18 +15,24 @@
 #
 cmake_minimum_required(VERSION 3.4.1)
 
-get_filename_component(AAUDIO_COMMON_PATH "../../../../third_party/aaudio" ABSOLUTE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
+# Debug utilities
+set (DEBUG_UTILS_PATH "../../../../../debug-utils")
+set (DEBUG_UTILS_SOURCES ${DEBUG_UTILS_PATH}/trace.cc)
+
+# Code shared between AAudio samples
+set (AAUDIO_COMMON_PATH "../../../../common")
+set (AAUDIO_COMMON_SOURCES ${AAUDIO_COMMON_PATH}/audio_common.cc)
 
 add_library(echo SHARED
             echo_audio_engine.cc
             jni_bridge.cc
             audio_effect.cc
-            ${AAUDIO_COMMON_PATH}/utils/audio_common.cc
-            ${AAUDIO_COMMON_PATH}/utils/debug_utils.cc)
+            ${DEBUG_UTILS_SOURCES}
+            ${AAUDIO_COMMON_SOURCES}
+            )
 
 target_include_directories(echo PRIVATE
-            ${AAUDIO_COMMON_PATH}/utils
-            ${AAUDIO_COMMON_PATH}/../android)
+            ${AAUDIO_COMMON_PATH}
+            ${DEBUG_UTILS_PATH})
 
 target_link_libraries(echo android atomic log aaudio)

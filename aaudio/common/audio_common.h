@@ -20,8 +20,6 @@
 
 #include <chrono>
 #include <aaudio/AAudio.h>
-#include "android_debug.h"
-#include "debug_utils.h"
 
 // Time constants
 #define NANOS_PER_SECOND 1000000000L

@@ -16,6 +16,7 @@
 
 
 #include <jni.h>
+#include <logging_macros.h>
 #include "play_audio_engine.h"
 
 static PlayAudioEngine *engine = nullptr;

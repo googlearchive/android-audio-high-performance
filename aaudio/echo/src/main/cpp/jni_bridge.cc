@@ -16,6 +16,7 @@
 
 
 #include <jni.h>
+#include <logging_macros.h>
 #include "echo_audio_engine.h"
 
 static EchoAudioEngine *engine = nullptr;
