@@ -27,8 +27,8 @@ import android.widget.SimpleAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.google.sample.aaudio.common.AudioDeviceListEntry;
-import com.google.sample.aaudio.common.AudioDeviceSpinner;
+import com.google.sample.audio_device.AudioDeviceListEntry;
+import com.google.sample.audio_device.AudioDeviceSpinner;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -30,8 +30,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.sample.aaudio.common.AudioDeviceListEntry;
-import com.google.sample.aaudio.common.AudioDeviceSpinner;
+import com.google.sample.audio_device.AudioDeviceListEntry;
+import com.google.sample.audio_device.AudioDeviceSpinner;
 
 /**
  * TODO: Update README.md and go through and comment sample
