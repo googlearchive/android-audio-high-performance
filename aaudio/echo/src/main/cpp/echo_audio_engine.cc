@@ -64,9 +64,10 @@ void errorCallback(AAudioStream *stream,
 }
 
 EchoAudioEngine::~EchoAudioEngine() {
-
-  closeStream(recordingStream_);
+  stopStream(playStream_);
+  stopStream(recordingStream_);
   closeStream(playStream_);
+  closeStream(recordingStream_);
 }
 
 void EchoAudioEngine::setRecordingDeviceId(int32_t deviceId) {
@@ -114,16 +115,16 @@ void EchoAudioEngine::startStreams() {
  */
 void EchoAudioEngine::stopStreams() {
 
-  if (recordingStream_ != nullptr) {
-    stopStream(recordingStream_);
-    closeStream(recordingStream_);
-    recordingStream_ = nullptr;
-  }
-
   if (playStream_ != nullptr) {
     stopStream(playStream_);
     closeStream(playStream_);
     playStream_ = nullptr;
+  }
+
+  if (recordingStream_ != nullptr) {
+    stopStream(recordingStream_);
+    closeStream(recordingStream_);
+    recordingStream_ = nullptr;
   }
 }
 
