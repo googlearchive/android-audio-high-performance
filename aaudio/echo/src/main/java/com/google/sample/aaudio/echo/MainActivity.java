@@ -95,6 +95,12 @@ public class MainActivity extends Activity
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    }
+
+    @Override
     protected void onDestroy() {
         EchoEngine.delete();
         super.onDestroy();
