@@ -24,7 +24,6 @@
 class EchoAudioEngine {
 
 public:
-  EchoAudioEngine();
   ~EchoAudioEngine();
   void setRecordingDeviceId(int32_t deviceId);
   void setPlaybackDeviceId(int32_t deviceId);
@@ -41,22 +40,16 @@ private:
   bool isFirstDataCallback_ = true;
   int32_t recordingDeviceId_ = AAUDIO_UNSPECIFIED;
   int32_t playbackDeviceId_ = AAUDIO_UNSPECIFIED;
+  aaudio_format_t format_ = AAUDIO_FORMAT_PCM_I16;
   int32_t sampleRate_;
-  int16_t sampleChannels_;
-  int16_t bitsPerSample_;
-  aaudio_format_t sampleFormat_;
-
+  int32_t inputChannelCount_ = kMonoChannelCount;
+  int32_t outputChannelCount_ = kStereoChannelCount;
   AAudioStream *recordingStream_ = nullptr;
   AAudioStream *playStream_ = nullptr;
-
-  int32_t playStreamUnderrunCount_;
-  int32_t bufSizeInFrames_;
   int32_t framesPerBurst_;
-  int32_t defaultBufSizeInFrames_;
-
   std::thread* streamRestartThread_;
   std::mutex restartingLock_;
-  AudioEffect *audioEffect_;
+  AudioEffect audioEffect_;
 
   void createRecordingStream();
   void drainRecordingStream(void *audioData, int32_t numFrames);
@@ -71,9 +64,10 @@ private:
   void restartStreams();
   AAudioStreamBuilder* createStreamBuilder();
 
+  void setupCommonStreamParameters(AAudioStreamBuilder *builder);
   void setupRecordingStreamParameters(AAudioStreamBuilder *builder);
   void setupPlaybackStreamParameters(AAudioStreamBuilder *builder);
-  void setupCommonStreamParameters(AAudioStreamBuilder *builder);
+  void warnIfNotLowLatency(AAudioStream *stream);
 
 
 };

@@ -17,7 +17,9 @@
 #include <logging_macros.h>
 #include <climits>
 #include <assert.h>
+#include <audio_common.h>
 #include "echo_audio_engine.h"
+
 
 /**
  * Every time the playback stream requires data this method will be called.
@@ -61,19 +63,10 @@ void errorCallback(AAudioStream *stream,
   audioEngine->errorCallback(stream, error);
 }
 
-EchoAudioEngine::EchoAudioEngine() {
-
-  sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
-  sampleFormat_ = AAUDIO_FORMAT_PCM_FLOAT;
-  bitsPerSample_ = SampleFormatToBpp(sampleFormat_);
-  audioEffect_ = new AudioEffect();
-}
-
 EchoAudioEngine::~EchoAudioEngine() {
 
   closeStream(recordingStream_);
   closeStream(playStream_);
-  delete audioEffect_;
 }
 
 void EchoAudioEngine::setRecordingDeviceId(int32_t deviceId) {
@@ -111,7 +104,6 @@ void EchoAudioEngine::startStreams() {
   if (recordingStream_ != nullptr && playStream_ != nullptr) {
     startStream(recordingStream_);
     startStream(playStream_);
-    playStreamUnderrunCount_ = AAudioStream_getXRunCount(playStream_);
   } else {
     LOGE("Failed to create recording and/or playback stream");
   }
@@ -165,14 +157,8 @@ void EchoAudioEngine::createRecordingStream() {
     // Now that the parameters are set up we can open the stream
     aaudio_result_t result = AAudioStreamBuilder_openStream(builder, &recordingStream_);
     if (result == AAUDIO_OK && recordingStream_ != nullptr) {
-
-      // Check that the stream format matches what we requested
-      if (sampleFormat_ != AAudioStream_getFormat(recordingStream_)) {
-        LOGW("Recording stream format doesn't match what was requested (format: %d). "
-                 "Higher latency expected.", sampleFormat_);
-      }
+      warnIfNotLowLatency(recordingStream_);
       PrintAudioStreamInfo(recordingStream_);
-
     } else {
       LOGE("Failed to create recording stream. Error: %s", AAudio_convertResultToText(result));
     }
@@ -195,19 +181,13 @@ void EchoAudioEngine::createPlaybackStream() {
     aaudio_result_t result = AAudioStreamBuilder_openStream(builder, &playStream_);
     if (result == AAUDIO_OK && playStream_ != nullptr) {
 
-      // check that we got PCM_I16 format
-      if (sampleFormat_ != AAudioStream_getFormat(playStream_)) {
-        LOGW("Playback stream sample format is not PCM_I16, higher latency expected");
-      }
-
       sampleRate_ = AAudioStream_getSampleRate(playStream_);
       framesPerBurst_ = AAudioStream_getFramesPerBurst(playStream_);
-      defaultBufSizeInFrames_ = AAudioStream_getBufferSizeInFrames(playStream_);
 
+      warnIfNotLowLatency(playStream_);
+      
       // Set the buffer size to the burst size - this will give us the minimum possible latency
       AAudioStream_setBufferSizeInFrames(playStream_, framesPerBurst_);
-      bufSizeInFrames_ = framesPerBurst_;
-
       PrintAudioStreamInfo(playStream_);
 
     } else {
@@ -228,6 +208,7 @@ void EchoAudioEngine::setupRecordingStreamParameters(AAudioStreamBuilder *builde
   AAudioStreamBuilder_setDeviceId(builder, recordingDeviceId_);
   AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_INPUT);
   AAudioStreamBuilder_setSampleRate(builder, sampleRate_);
+  AAudioStreamBuilder_setChannelCount(builder, inputChannelCount_);
   setupCommonStreamParameters(builder);
 }
 
@@ -240,6 +221,7 @@ void EchoAudioEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder
 
   AAudioStreamBuilder_setDeviceId(builder, playbackDeviceId_);
   AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_OUTPUT);
+  AAudioStreamBuilder_setChannelCount(builder, outputChannelCount_);
 
   // The :: here indicates that the function is in the global namespace
   // i.e. *not* EchoAudioEngine::dataCallback, but dataCallback defined at the top of this class
@@ -252,9 +234,7 @@ void EchoAudioEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder
  * @param builder The playback or recording stream builder
  */
 void EchoAudioEngine::setupCommonStreamParameters(AAudioStreamBuilder *builder) {
-  AAudioStreamBuilder_setFormat(builder, sampleFormat_);
-  AAudioStreamBuilder_setChannelCount(builder, sampleChannels_);
-
+  AAudioStreamBuilder_setFormat(builder, format_);
   // We request EXCLUSIVE mode since this will give us the lowest possible latency.
   // If EXCLUSIVE mode isn't available the builder will fall back to SHARED mode.
   AAudioStreamBuilder_setSharingMode(builder, AAUDIO_SHARING_MODE_EXCLUSIVE);
@@ -305,29 +285,10 @@ aaudio_data_callback_result_t EchoAudioEngine::dataCallback(AAudioStream *stream
                                                             void *audioData,
                                                             int32_t numFrames) {
   if (isEchoOn_) {
-    // Tuning the buffer size for low latency...
-    int32_t underRun = AAudioStream_getXRunCount(playStream_);
-    if (underRun > playStreamUnderrunCount_) {
-      /* Underrun happened since last callback:
-       * try to increase the buffer size.
-       */
-      playStreamUnderrunCount_ = underRun;
 
-      aaudio_result_t actSize = AAudioStream_setBufferSizeInFrames(
-          stream, bufSizeInFrames_ + framesPerBurst_);
-      if (actSize > 0) {
-        bufSizeInFrames_ = actSize;
-      } else {
-        LOGE("***** Output stream buffer tuning error: %s",
-             AAudio_convertResultToText(actSize));
-      }
-    }
-
-    int32_t samplesPerFrame = sampleChannels_;
     // frameCount could be
     //    < 0 : error code
     //    >= 0 : actual value read from stream
-
     aaudio_result_t frameCount = 0;
 
     if (recordingStream_ != nullptr) {
@@ -342,7 +303,9 @@ aaudio_data_callback_result_t EchoAudioEngine::dataCallback(AAudioStream *stream
       frameCount = AAudioStream_read(recordingStream_, audioData, numFrames,
                                      static_cast<int64_t>(0));
 
-      audioEffect_->process(static_cast<float *>(audioData), samplesPerFrame, frameCount);
+      ConvertMonoToStereo(static_cast<int16_t *>(audioData), frameCount);
+
+      audioEffect_.process(static_cast<int16_t *>(audioData), outputChannelCount_, frameCount);
 
       if (frameCount < 0) {
         LOGE("****AAudioStream_read() returns %s",
@@ -357,8 +320,8 @@ aaudio_data_callback_result_t EchoAudioEngine::dataCallback(AAudioStream *stream
     */
     numFrames -= frameCount;
     if (numFrames > 0) {
-      memset(static_cast<int16_t *>(audioData) + frameCount * samplesPerFrame,
-             0, sizeof(int16_t) * numFrames * samplesPerFrame);
+      memset(static_cast<int16_t *>(audioData) + frameCount * outputChannelCount_,
+             0, sizeof(int16_t) * numFrames * outputChannelCount_);
     }
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 
@@ -417,5 +380,12 @@ void EchoAudioEngine::restartStreams() {
     // We were unable to obtain the restarting lock which means the restart operation is currently
     // active. This is probably because we received successive "stream disconnected" events.
     // Internal issue b/63087953
+  }
+}
+
+void EchoAudioEngine::warnIfNotLowLatency(AAudioStream *stream) {
+
+  if (AAudioStream_getPerformanceMode(stream) != AAUDIO_PERFORMANCE_MODE_LOW_LATENCY){
+    LOGW("Stream is NOT low latency. Check your requested format, sample rate and channel count");
   }
 }

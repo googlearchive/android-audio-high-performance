@@ -25,10 +25,8 @@
 #define NANOS_PER_SECOND 1000000000L
 #define NANOS_PER_MILLISECOND 1000000L
 
-/*
- * Audio Sample Controls...
- */
-#define AUDIO_SAMPLE_CHANNELS               2
+constexpr int kMonoChannelCount = 1;
+constexpr int kStereoChannelCount = 2;
 
 uint16_t SampleFormatToBpp(aaudio_format_t format);
 /*
@@ -51,5 +49,8 @@ void PrintAudioStreamInfo(const AAudioStream * stream);
 int64_t timestamp_to_nanoseconds(timespec ts);
 
 int64_t get_time_nanoseconds(clockid_t clockid);
+
+// Note: buffer must be at least double the length of numFrames to accommodate the stereo data
+void ConvertMonoToStereo(int16_t *buffer, int32_t numFrames);
 
 #endif // AAUDIO_AUDIO_COMMON_H

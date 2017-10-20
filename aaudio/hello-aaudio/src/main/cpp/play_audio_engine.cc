@@ -69,7 +69,7 @@ PlayAudioEngine::PlayAudioEngine() {
   // blocking. See https://developer.android.com/studio/profile/systrace-commandline.html
   Trace::initialize();
 
-  sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
+  sampleChannels_ = kStereoChannelCount;
   sampleFormat_ = AAUDIO_FORMAT_PCM_FLOAT;
 
   // Create the output stream. By not specifying an audio device id we are telling AAudio that

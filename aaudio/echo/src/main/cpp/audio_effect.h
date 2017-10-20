@@ -22,7 +22,7 @@
 
 class AudioEffect {
 public:
-  void process(float *inputBuffer, int32_t samplesPerFrame, int32_t numFrames);
+  void process(int16_t *inputBuffer, int32_t samplesPerFrame, int32_t numFrames);
 };
 
 

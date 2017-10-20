@@ -109,3 +109,9 @@ int64_t get_time_nanoseconds(clockid_t clockid){
   return timestamp_to_nanoseconds(ts);
 }
 
+void ConvertMonoToStereo(int16_t *buffer, int32_t numFrames) {
+    for (int i = numFrames - 1; i >= 0; i--) {
+        buffer[i*2] = buffer[i];
+        buffer[(i*2)+1] = buffer[i];
+    }
+}
