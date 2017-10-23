@@ -1,6 +1,6 @@
 Oboe Samples
 ==============
-These samples demonstrate how to use the Oboe library:
+These samples demonstrate how to use the [Oboe library](https://github.com/google/oboe):
 
 1. hello-oboe: creates an output (playback) stream and plays a
 sine wave when you tap the screen
