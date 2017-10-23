@@ -51,16 +51,16 @@ private:
   std::mutex restartingLock_;
   AudioEffect audioEffect_;
 
-  void createRecordingStream();
+  void openRecordingStream();
   void drainRecordingStream(void *audioData, int32_t numFrames);
-  void createPlaybackStream();
+  void openPlaybackStream();
 
   void startStream(AAudioStream* stream);
   void stopStream(AAudioStream* stream);
   void closeStream(AAudioStream* stream);
 
-  void startStreams();
-  void stopStreams();
+  void openAllStreams();
+  void closeAllStreams();
   void restartStreams();
   AAudioStreamBuilder* createStreamBuilder();
 

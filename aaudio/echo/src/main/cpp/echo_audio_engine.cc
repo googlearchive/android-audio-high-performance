@@ -86,22 +86,23 @@ void EchoAudioEngine::setEchoOn(bool isEchoOn) {
     isEchoOn_ = isEchoOn;
 
     if (isEchoOn) {
-      startStreams();
+      openAllStreams();
     } else {
-      stopStreams();
+      closeAllStreams();
     }
   }
 }
 
-void EchoAudioEngine::startStreams() {
+void EchoAudioEngine::openAllStreams() {
 
   // Note: The order of stream creation is important. We create the playback stream first,
   // then use properties from the playback stream (e.g. sample rate) to create the
   // recording stream. By matching the properties we should get the lowest latency path
-  createPlaybackStream();
-  createRecordingStream();
+  openPlaybackStream();
+  openRecordingStream();
 
-  // Now start the recording stream so that we can read from it during the playback dataCallback
+  // Now start the recording stream first so that we can read from it during the playback
+  // stream's dataCallback
   if (recordingStream_ != nullptr && playStream_ != nullptr) {
     startStream(recordingStream_);
     startStream(playStream_);
@@ -111,18 +112,23 @@ void EchoAudioEngine::startStreams() {
 }
 
 /**
- * Stops and closes the playback and recording streams
+ * Stops and closes the playback and recording streams.
  */
-void EchoAudioEngine::stopStreams() {
+void EchoAudioEngine::closeAllStreams() {
+
+ /**
+  * Note: The order of events is important here.
+  * The playback stream must be closed before the recording stream. If the recording stream were to
+  * be closed first the playback stream's callback may attempt to read from the recording stream
+  * which would cause the app to crash since the recording stream would be null.
+  */
 
   if (playStream_ != nullptr) {
-    stopStream(playStream_);
-    closeStream(playStream_);
+    closeStream(playStream_); // Calling close will also stop the stream
     playStream_ = nullptr;
   }
 
   if (recordingStream_ != nullptr) {
-    stopStream(recordingStream_);
     closeStream(recordingStream_);
     recordingStream_ = nullptr;
   }
@@ -146,7 +152,7 @@ AAudioStreamBuilder *EchoAudioEngine::createStreamBuilder() {
  * Creates an audio stream for recording. The audio device used will depend on recordingDeviceId_.
  * If the value is set to AAUDIO_UNSPECIFIED then the default recording device will be used.
  */
-void EchoAudioEngine::createRecordingStream() {
+void EchoAudioEngine::openRecordingStream() {
 
   // To create a stream we use a stream builder. This allows us to specify all the parameters
   // for the stream prior to opening it
@@ -173,7 +179,7 @@ void EchoAudioEngine::createRecordingStream() {
  * Creates an audio stream for playback. The audio device used will depend on playbackDeviceId_.
  * If the value is set to AAUDIO_UNSPECIFIED then the default playback device will be used.
  */
-void EchoAudioEngine::createPlaybackStream() {
+void EchoAudioEngine::openPlaybackStream() {
 
   AAudioStreamBuilder *builder = createStreamBuilder();
 
@@ -373,8 +379,8 @@ void EchoAudioEngine::restartStreams() {
   LOGI("Restarting streams");
 
   if (restartingLock_.try_lock()) {
-    stopStreams();
-    startStreams();
+    closeAllStreams();
+    openAllStreams();
     restartingLock_.unlock();
   } else {
     LOGW("Restart stream operation already in progress - ignoring this request");
