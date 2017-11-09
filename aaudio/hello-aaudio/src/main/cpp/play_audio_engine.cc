@@ -109,7 +109,7 @@ AAudioStreamBuilder* PlayAudioEngine::createStreamBuilder() {
 
   AAudioStreamBuilder *builder = nullptr;
   aaudio_result_t result = AAudio_createStreamBuilder(&builder);
-  if (result != AAUDIO_OK && !builder) {
+  if (result != AAUDIO_OK) {
     LOGE("Error creating stream builder: %s", AAudio_convertResultToText(result));
   }
   return builder;
