@@ -38,6 +38,8 @@ public:
 
     double getCurrentOutputLatencyMillis();
 
+    bool isLatencyDetectionSupported();
+
     // OboeStreamCallback methods
     oboe_data_callback_result_t
     onAudioReady(OboeStream *audioStream, void *audioData, int32_t numFrames) override;

@@ -301,3 +301,7 @@ double PlayAudioEngine::getCurrentOutputLatencyMillis() {
 void PlayAudioEngine::setBufferSizeInBursts(int32_t numBursts) {
     mBufferSizeSelection = numBursts;
 }
+
+bool PlayAudioEngine::isLatencyDetectionSupported() {
+    return mIsLatencyDetectionSupported;
+}

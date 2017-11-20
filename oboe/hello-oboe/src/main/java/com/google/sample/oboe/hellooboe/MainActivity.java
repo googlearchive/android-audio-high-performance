@@ -138,29 +138,36 @@ public class MainActivity extends Activity {
 
     private void setupLatencyUpdater() {
 
-        //Update the latency every 1s
-        TimerTask latencyUpdateTask = new TimerTask() {
-            @Override
-            public void run() {
+        if (PlaybackEngine.isLatencyDetectionSupported()){
 
-                double latency = PlaybackEngine.getCurrentOutputLatencyMillis();
-                final String latencyStr;
-                if (latency >= 0){
-                    latencyStr = String.format(Locale.getDefault(), "%.2fms", latency);
-                } else {
-                    latencyStr = "Unknown";
-                }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mLatencyText.setText(getString(R.string.latency, latencyStr));
+            //Update the latency every 1s
+            TimerTask latencyUpdateTask = new TimerTask() {
+                @Override
+                public void run() {
+
+                    double latency = PlaybackEngine.getCurrentOutputLatencyMillis();
+                    final String latencyStr;
+                    if (latency >= 0){
+                        latencyStr = String.format(Locale.getDefault(), "%.2fms", latency);
+                    } else {
+                        latencyStr = "Unknown";
                     }
-                });
-            }
-        };
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mLatencyText.setText(getString(R.string.latency, latencyStr));
+                        }
+                    });
+                }
+            };
 
-        mLatencyUpdater = new Timer();
-        mLatencyUpdater.schedule(latencyUpdateTask, 0, UPDATE_LATENCY_EVERY_MILLIS);
+            mLatencyUpdater = new Timer();
+            mLatencyUpdater.schedule(latencyUpdateTask, 0, UPDATE_LATENCY_EVERY_MILLIS);
+
+        } else {
+            mLatencyText.setText(getString(R.string.latency,
+                    getString(R.string.only_supported_on_api_26)));
+        }
     }
 
     @Override

@@ -56,6 +56,10 @@ public class PlaybackEngine {
         return native_getCurrentOutputLatencyMillis(mEngineHandle);
     }
 
+    static boolean isLatencyDetectionSupported() {
+        return mEngineHandle != 0 && native_isLatencyDetectionSupported(mEngineHandle);
+    }
+
     // Native methods
     private static native long native_createEngine();
     private static native void native_deleteEngine(long engineHandle);
@@ -63,4 +67,5 @@ public class PlaybackEngine {
     private static native void native_setAudioDeviceId(long engineHandle, int deviceId);
     private static native void native_setBufferSizeInBursts(long engineHandle, int bufferSizeInBursts);
     private static native double native_getCurrentOutputLatencyMillis(long engineHandle);
+    private static native boolean native_isLatencyDetectionSupported(long engineHandle);
 }

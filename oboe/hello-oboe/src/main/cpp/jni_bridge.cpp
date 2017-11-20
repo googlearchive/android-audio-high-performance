@@ -97,5 +97,16 @@ Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1getCurrentOutputLat
     return (jdouble) engine->getCurrentOutputLatencyMillis();
 }
 
+JNIEXPORT jboolean JNICALL
+Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1isLatencyDetectionSupported(
+        JNIEnv *env, jclass type, jlong engineHandle) {
+
+    PlayAudioEngine *engine = (PlayAudioEngine *) engineHandle;
+    if (engine == nullptr) {
+        LOGE("Engine is null, you must call createEngine before calling this method");
+        return (jboolean) false;
+    }
+    return (jboolean) engine->isLatencyDetectionSupported();
+}
 
 }
