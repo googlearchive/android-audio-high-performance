@@ -260,9 +260,8 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(OboeStream *stream, double 
 
 /**
  * If there is an error with a stream this function will be called. A common example of an error
- * is when an audio device (such as headphones) is disconnected. In this case you should not
- * restart the stream within the callback, instead use a separate thread to perform the stream
- * recreation and restart.
+ * is when an audio device (such as headphones) is disconnected. It is safe to restart the stream
+ * in this method. There is no need to create a new thread.
  *
  * @param audioStream the stream with the error
  * @param error the error which occured, a human readable string can be obtained using
@@ -270,12 +269,8 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(OboeStream *stream, double 
  *
  * @see OboeStreamCallback
  */
-void PlayAudioEngine::onError(OboeStream *audioStream, oboe_result_t error) {
-    if (error == OBOE_ERROR_DISCONNECTED) {
-        // Handle stream restart on a separate thread
-        std::function<void(void)> restartStream = std::bind(&PlayAudioEngine::restartStream, this);
-        mStreamRestartThread = new std::thread(restartStream);
-    }
+void PlayAudioEngine::onErrorAfterClose(OboeStream *oboeStream, oboe_result_t error) {
+    if (error == OBOE_ERROR_DISCONNECTED) restartStream();
 }
 
 void PlayAudioEngine::restartStream() {

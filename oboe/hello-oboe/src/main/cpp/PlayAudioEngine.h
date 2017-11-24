@@ -44,7 +44,7 @@ public:
     oboe_data_callback_result_t
     onAudioReady(OboeStream *audioStream, void *audioData, int32_t numFrames) override;
 
-    void onError(OboeStream *audioStream, oboe_result_t error) override;
+    void onErrorAfterClose(OboeStream *oboeStream, oboe_result_t error) override;
 
 private:
     int32_t mPlaybackDeviceId = OBOE_UNSPECIFIED;
@@ -57,7 +57,6 @@ private:
     bool mIsLatencyDetectionSupported = false;
     OboeStream *mPlayStream;
     OboeLatencyTuner *mLatencyTuner;
-    std::thread *mStreamRestartThread;
     std::mutex mRestartingLock;
 
     // The SineGenerators generate audio data, feel free to replace with your own audio generators
