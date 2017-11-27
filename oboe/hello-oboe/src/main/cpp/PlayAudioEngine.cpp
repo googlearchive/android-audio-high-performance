@@ -16,7 +16,6 @@
 
 #include <trace.h>
 #include <inttypes.h>
-#include <oboe/OboeUtilities.h>
 #include <common/AudioClock.h>
 
 #include "PlayAudioEngine.h"
@@ -62,12 +61,12 @@ void PlayAudioEngine::setDeviceId(int32_t deviceId) {
  */
 void PlayAudioEngine::createPlaybackStream() {
 
-    OboeStreamBuilder builder;
+    oboe::StreamBuilder builder;
     setupPlaybackStreamParameters(&builder);
 
-    oboe_result_t result = builder.openStream(&mPlayStream);
+    oboe::Result result = builder.openStream(&mPlayStream);
 
-    if (result == OBOE_OK && mPlayStream != nullptr) {
+    if (result == oboe::Result::OK && mPlayStream != nullptr) {
 
         mSampleRate = mPlayStream->getSampleRate();
         mFramesPerBurst = mPlayStream->getFramesPerBurst();
@@ -79,20 +78,21 @@ void PlayAudioEngine::createPlaybackStream() {
         // PrintAudioStreamInfo(mPlayStream);
         prepareOscillators();
 
+        // TODO: MEMORY LEAK - CLEAN THIS UP
         // Create a latency tuner which will automatically tune our buffer size.
-        mLatencyTuner = new OboeLatencyTuner(*mPlayStream);
+        mLatencyTuner = new oboe::LatencyTuner(*mPlayStream);
 
         // Start the stream - the dataCallback function will start being called
         result = mPlayStream->requestStart();
-        if (result != OBOE_OK) {
-            LOGE("Error starting stream. %s", Oboe_convertResultToText(result));
+        if (result != oboe::Result::OK) {
+            LOGE("Error starting stream. %s", oboe::convertResultToText(result));
         }
 
         mIsLatencyDetectionSupported = (mPlayStream->getTimestamp(CLOCK_MONOTONIC, 0, 0) !=
-                                        OBOE_ERROR_UNIMPLEMENTED);
+                oboe::Result::ErrorUnimplemented);
 
     } else {
-        LOGE("Failed to create stream. Error: %s", Oboe_convertResultToText(result));
+        LOGE("Failed to create stream. Error: %s", oboe::convertResultToText(result));
     }
 }
 
@@ -106,28 +106,28 @@ void PlayAudioEngine::prepareOscillators() {
  * callback class, which must be set for low latency playback.
  * @param builder The playback stream builder
  */
-void PlayAudioEngine::setupPlaybackStreamParameters(OboeStreamBuilder *builder) {
+void PlayAudioEngine::setupPlaybackStreamParameters(oboe::StreamBuilder *builder) {
     builder->setDeviceId(mPlaybackDeviceId);
     builder->setChannelCount(mSampleChannels);
 
     // We request EXCLUSIVE mode since this will give us the lowest possible latency.
     // If EXCLUSIVE mode isn't available the builder will fall back to SHARED mode.
-    builder->setSharingMode(OBOE_SHARING_MODE_EXCLUSIVE);
-    builder->setPerformanceMode(OBOE_PERFORMANCE_MODE_LOW_LATENCY);
+    builder->setSharingMode(oboe::SharingMode::Exclusive);
+    builder->setPerformanceMode(oboe::PerformanceMode::LowLatency);
     builder->setCallback(this);
 }
 
 void PlayAudioEngine::closeOutputStream() {
 
     if (mPlayStream != nullptr) {
-        oboe_result_t result = mPlayStream->requestStop();
-        if (result != OBOE_OK) {
-            LOGE("Error stopping output stream. %s", Oboe_convertResultToText(result));
+        oboe::Result result = mPlayStream->requestStop();
+        if (result != oboe::Result::OK) {
+            LOGE("Error stopping output stream. %s", oboe::convertResultToText(result));
         }
 
         result = mPlayStream->close();
-        if (result != OBOE_OK) {
-            LOGE("Error closing output stream. %s", Oboe_convertResultToText(result));
+        if (result != oboe::Result::OK) {
+            LOGE("Error closing output stream. %s", oboe::convertResultToText(result));
         }
     }
 }
@@ -145,13 +145,13 @@ void PlayAudioEngine::setToneOn(bool isToneOn) {
  * @return Either OBOE_CALLBACK_RESULT_CONTINUE if the stream should continue requesting data
  * or OBOE_CALLBACK_RESULT_STOP if the stream should stop.
  */
-oboe_data_callback_result_t
-PlayAudioEngine::onAudioReady(OboeStream *audioStream, void *audioData, int32_t numFrames) {
+oboe::DataCallbackResult
+PlayAudioEngine::onAudioReady(oboe::Stream *audioStream, void *audioData, int32_t numFrames) {
 
     int32_t bufferSize = audioStream->getBufferSizeInFrames();
 
     if (mBufferSizeSelection == kBufferSizeAutomatic){
-        mLatencyTuner->tune();
+        //mLatencyTuner->tune();
     } else if (bufferSize != (mBufferSizeSelection * mFramesPerBurst)) {
         audioStream->setBufferSizeInFrames(mBufferSizeSelection * mFramesPerBurst);
         bufferSize = audioStream->getBufferSizeInFrames();
@@ -170,7 +170,7 @@ PlayAudioEngine::onAudioReady(OboeStream *audioStream, void *audioData, int32_t 
     int32_t samplesPerFrame = mSampleChannels;
 
     // If the tone is on we need to use our synthesizer to render the audio data for the sine waves
-    if (audioStream->getFormat() == OBOE_AUDIO_FORMAT_PCM_FLOAT){
+    if (audioStream->getFormat() == oboe::AudioFormat::Float){
         if (mIsToneOn) {
             mSineOscRight.render(static_cast<float *>(audioData),
                                  samplesPerFrame, numFrames);
@@ -201,7 +201,7 @@ PlayAudioEngine::onAudioReady(OboeStream *audioStream, void *audioData, int32_t 
     }
 
     Trace::endSection();
-    return OBOE_CALLBACK_RESULT_CONTINUE;
+    return oboe::DataCallbackResult::Continue;
 }
 
 /**
@@ -223,17 +223,17 @@ PlayAudioEngine::onAudioReady(OboeStream *audioStream, void *audioData, int32_t 
  * @return OBOE_OK or a negative error. It is normal to receive an error soon after a stream
  * has started because the timestamps are not yet available.
  */
-oboe_result_t
-PlayAudioEngine::calculateCurrentOutputLatencyMillis(OboeStream *stream, double *latencyMillis) {
+oboe::Result
+PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::Stream *stream, double *latencyMillis) {
 
     // Get the time that a known audio frame was presented for playing
     int64_t existingFrameIndex;
     int64_t existingFramePresentationTime;
-    oboe_result_t result = stream->getTimestamp(CLOCK_MONOTONIC,
+    oboe::Result result = stream->getTimestamp(CLOCK_MONOTONIC,
                                                 &existingFrameIndex,
                                                 &existingFramePresentationTime);
 
-    if (result == OBOE_OK) {
+    if (result == oboe::Result::OK) {
 
         // Get the write index for the next audio frame
         int64_t writeIndex = stream->getFramesWritten();
@@ -242,17 +242,17 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(OboeStream *stream, double 
         int64_t frameIndexDelta = writeIndex - existingFrameIndex;
 
         // Calculate the time which the next frame will be presented
-        int64_t frameTimeDelta = (frameIndexDelta * OBOE_NANOS_PER_SECOND) / mSampleRate;
+        int64_t frameTimeDelta = (frameIndexDelta * oboe::kNanosPerSecond) / mSampleRate;
         int64_t nextFramePresentationTime = existingFramePresentationTime + frameTimeDelta;
 
         // Assume that the next frame will be written at the current time
-        int64_t nextFrameWriteTime = AudioClock::getNanoseconds(CLOCK_MONOTONIC);
+        int64_t nextFrameWriteTime = oboe::AudioClock::getNanoseconds(CLOCK_MONOTONIC);
 
         // Calculate the latency
         *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)
                          / kNanosPerMillisecond;
     } else {
-        LOGE("Error calculating latency: %s", Oboe_convertResultToText(result));
+        LOGE("Error calculating latency: %s", oboe::convertResultToText(result));
     }
 
     return result;
@@ -267,10 +267,10 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(OboeStream *stream, double 
  * @param error the error which occured, a human readable string can be obtained using
  * Oboe_convertResultToText(error);
  *
- * @see OboeStreamCallback
+ * @see oboe::StreamCallback
  */
-void PlayAudioEngine::onErrorAfterClose(OboeStream *oboeStream, oboe_result_t error) {
-    if (error == OBOE_ERROR_DISCONNECTED) restartStream();
+void PlayAudioEngine::onErrorAfterClose(oboe::Stream *oboeStream, oboe::Result error) {
+    if (error == oboe::Result::ErrorDisconnected) restartStream();
 }
 
 void PlayAudioEngine::restartStream() {

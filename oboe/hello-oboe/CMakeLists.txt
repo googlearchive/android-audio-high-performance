@@ -20,7 +20,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 
 # Build the Oboe library
 set (OBOE_DIR ../../../oboe)
-file (GLOB_RECURSE OBOE_SOURCES ${OBOE_DIR}/src/*)
+
+set (OBOE_SOURCES
+        ${OBOE_DIR}/src/aaudio/AAudioLoader.cpp
+        ${OBOE_DIR}/src/aaudio/StreamAAudio.cpp
+        ${OBOE_DIR}/src/common/LatencyTuner.cpp
+        ${OBOE_DIR}/src/common/Stream.cpp
+        ${OBOE_DIR}/src/common/StreamBuilder.cpp
+        ${OBOE_DIR}/src/common/Utilities.cpp
+        ${OBOE_DIR}/src/fifo/FifoBuffer.cpp
+        ${OBOE_DIR}/src/fifo/FifoController.cpp
+        ${OBOE_DIR}/src/fifo/FifoControllerBase.cpp
+        ${OBOE_DIR}/src/fifo/FifoControllerIndirect.cpp
+        ${OBOE_DIR}/src/opensles/OpenSLESUtilities.cpp
+        ${OBOE_DIR}/src/opensles/StreamBuffered.cpp
+        ${OBOE_DIR}/src/opensles/StreamOpenSLES.cpp
+        )
+
 include_directories(${OBOE_DIR}/include ${OBOE_DIR}/src)
 add_library(oboe STATIC ${OBOE_SOURCES})
 
