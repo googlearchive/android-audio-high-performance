@@ -23,7 +23,7 @@
 
 constexpr int32_t kBufferSizeAutomatic = 0;
 
-class PlayAudioEngine : oboe::StreamCallback {
+class PlayAudioEngine : oboe::AudioStreamCallback {
 
 public:
     PlayAudioEngine();
@@ -42,9 +42,10 @@ public:
 
     // oboe::StreamCallback methods
     oboe::DataCallbackResult
-    onAudioReady(oboe::Stream *audioStream, void *audioData, int32_t numFrames) override;
+    onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames);
 
-    void onErrorAfterClose(oboe::Stream *oboeStream, oboe::Result error) override;
+    void onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error);
+
 
 private:
     int32_t mPlaybackDeviceId = oboe::kUnspecified;
@@ -55,7 +56,7 @@ private:
     double mCurrentOutputLatencyMillis = 0;
     int32_t mBufferSizeSelection = kBufferSizeAutomatic;
     bool mIsLatencyDetectionSupported = false;
-    oboe::Stream *mPlayStream;
+    oboe::AudioStream *mPlayStream;
     oboe::LatencyTuner *mLatencyTuner;
     std::mutex mRestartingLock;
 
@@ -69,11 +70,11 @@ private:
 
     void restartStream();
 
-    void setupPlaybackStreamParameters(oboe::StreamBuilder *builder);
+    void setupPlaybackStreamParameters(oboe::AudioStreamBuilder *builder);
 
     void prepareOscillators();
 
-    oboe::Result calculateCurrentOutputLatencyMillis(oboe::Stream *stream, double *latencyMillis);
+    oboe::Result calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream, double *latencyMillis);
 };
 
 #endif //OBOE_HELLOOBOE_PLAYAUDIOENGINE_H

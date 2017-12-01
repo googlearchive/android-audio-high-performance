@@ -61,7 +61,7 @@ void PlayAudioEngine::setDeviceId(int32_t deviceId) {
  */
 void PlayAudioEngine::createPlaybackStream() {
 
-    oboe::StreamBuilder builder;
+    oboe::AudioStreamBuilder builder;
     setupPlaybackStreamParameters(&builder);
 
     oboe::Result result = builder.openStream(&mPlayStream);
@@ -85,14 +85,14 @@ void PlayAudioEngine::createPlaybackStream() {
         // Start the stream - the dataCallback function will start being called
         result = mPlayStream->requestStart();
         if (result != oboe::Result::OK) {
-            LOGE("Error starting stream. %s", oboe::convertResultToText(result));
+            LOGE("Error starting stream. %s", oboe::convertToText(result));
         }
 
         mIsLatencyDetectionSupported = (mPlayStream->getTimestamp(CLOCK_MONOTONIC, 0, 0) !=
                 oboe::Result::ErrorUnimplemented);
 
     } else {
-        LOGE("Failed to create stream. Error: %s", oboe::convertResultToText(result));
+        LOGE("Failed to create stream. Error: %s", oboe::convertToText(result));
     }
 }
 
@@ -106,7 +106,7 @@ void PlayAudioEngine::prepareOscillators() {
  * callback class, which must be set for low latency playback.
  * @param builder The playback stream builder
  */
-void PlayAudioEngine::setupPlaybackStreamParameters(oboe::StreamBuilder *builder) {
+void PlayAudioEngine::setupPlaybackStreamParameters(oboe::AudioStreamBuilder *builder) {
     builder->setDeviceId(mPlaybackDeviceId);
     builder->setChannelCount(mSampleChannels);
 
@@ -122,12 +122,12 @@ void PlayAudioEngine::closeOutputStream() {
     if (mPlayStream != nullptr) {
         oboe::Result result = mPlayStream->requestStop();
         if (result != oboe::Result::OK) {
-            LOGE("Error stopping output stream. %s", oboe::convertResultToText(result));
+            LOGE("Error stopping output stream. %s", oboe::convertToText(result));
         }
 
         result = mPlayStream->close();
         if (result != oboe::Result::OK) {
-            LOGE("Error closing output stream. %s", oboe::convertResultToText(result));
+            LOGE("Error closing output stream. %s", oboe::convertToText(result));
         }
     }
 }
@@ -146,7 +146,7 @@ void PlayAudioEngine::setToneOn(bool isToneOn) {
  * or OBOE_CALLBACK_RESULT_STOP if the stream should stop.
  */
 oboe::DataCallbackResult
-PlayAudioEngine::onAudioReady(oboe::Stream *audioStream, void *audioData, int32_t numFrames) {
+PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) {
 
     int32_t bufferSize = audioStream->getBufferSizeInFrames();
 
@@ -224,7 +224,7 @@ PlayAudioEngine::onAudioReady(oboe::Stream *audioStream, void *audioData, int32_
  * has started because the timestamps are not yet available.
  */
 oboe::Result
-PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::Stream *stream, double *latencyMillis) {
+PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream, double *latencyMillis) {
 
     // Get the time that a known audio frame was presented for playing
     int64_t existingFrameIndex;
@@ -252,7 +252,7 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::Stream *stream, doubl
         *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)
                          / kNanosPerMillisecond;
     } else {
-        LOGE("Error calculating latency: %s", oboe::convertResultToText(result));
+        LOGE("Error calculating latency: %s", oboe::convertToText(result));
     }
 
     return result;
@@ -269,7 +269,7 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::Stream *stream, doubl
  *
  * @see oboe::StreamCallback
  */
-void PlayAudioEngine::onErrorAfterClose(oboe::Stream *oboeStream, oboe::Result error) {
+void PlayAudioEngine::onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error) {
     if (error == oboe::Result::ErrorDisconnected) restartStream();
 }
 
