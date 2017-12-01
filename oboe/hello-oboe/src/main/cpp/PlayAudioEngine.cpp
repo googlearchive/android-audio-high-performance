@@ -78,10 +78,8 @@ void PlayAudioEngine::createPlaybackStream() {
         // PrintAudioStreamInfo(mPlayStream);
         prepareOscillators();
 
-        // TODO: MEMORY LEAK - CLEAN THIS UP
         // Create a latency tuner which will automatically tune our buffer size.
-        mLatencyTuner = new oboe::LatencyTuner(*mPlayStream);
-
+        mLatencyTuner = std::make_unique<oboe::LatencyTuner>(*mPlayStream);
         // Start the stream - the dataCallback function will start being called
         result = mPlayStream->requestStart();
         if (result != oboe::Result::OK) {
@@ -151,7 +149,7 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
     int32_t bufferSize = audioStream->getBufferSizeInFrames();
 
     if (mBufferSizeSelection == kBufferSizeAutomatic){
-        //mLatencyTuner->tune();
+        mLatencyTuner->tune();
     } else if (bufferSize != (mBufferSizeSelection * mFramesPerBurst)) {
         audioStream->setBufferSizeInFrames(mBufferSizeSelection * mFramesPerBurst);
         bufferSize = audioStream->getBufferSizeInFrames();

@@ -57,7 +57,7 @@ private:
     int32_t mBufferSizeSelection = kBufferSizeAutomatic;
     bool mIsLatencyDetectionSupported = false;
     oboe::AudioStream *mPlayStream;
-    oboe::LatencyTuner *mLatencyTuner;
+    std::unique_ptr<oboe::LatencyTuner> mLatencyTuner;
     std::mutex mRestartingLock;
 
     // The SineGenerators generate audio data, feel free to replace with your own audio generators
