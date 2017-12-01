@@ -18,12 +18,12 @@
 #define OBOE_HELLOOBOE_PLAYAUDIOENGINE_H
 
 #include <thread>
-#include "oboe/Oboe.h"
+#include <oboe/Oboe.h>
 #include "SineGenerator.h"
 
 constexpr int32_t kBufferSizeAutomatic = 0;
 
-class PlayAudioEngine : OboeStreamCallback {
+class PlayAudioEngine : oboe::AudioStreamCallback {
 
 public:
     PlayAudioEngine();
@@ -40,14 +40,15 @@ public:
 
     bool isLatencyDetectionSupported();
 
-    // OboeStreamCallback methods
-    oboe_data_callback_result_t
-    onAudioReady(OboeStream *audioStream, void *audioData, int32_t numFrames) override;
+    // oboe::StreamCallback methods
+    oboe::DataCallbackResult
+    onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames);
 
-    void onErrorAfterClose(OboeStream *oboeStream, oboe_result_t error) override;
+    void onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error);
+
 
 private:
-    int32_t mPlaybackDeviceId = OBOE_UNSPECIFIED;
+    int32_t mPlaybackDeviceId = oboe::kUnspecified;
     int32_t mSampleRate;
     int16_t mSampleChannels;
     bool mIsToneOn = false;
@@ -55,8 +56,8 @@ private:
     double mCurrentOutputLatencyMillis = 0;
     int32_t mBufferSizeSelection = kBufferSizeAutomatic;
     bool mIsLatencyDetectionSupported = false;
-    OboeStream *mPlayStream;
-    OboeLatencyTuner *mLatencyTuner;
+    oboe::AudioStream *mPlayStream;
+    std::unique_ptr<oboe::LatencyTuner> mLatencyTuner;
     std::mutex mRestartingLock;
 
     // The SineGenerators generate audio data, feel free to replace with your own audio generators
@@ -69,11 +70,11 @@ private:
 
     void restartStream();
 
-    void setupPlaybackStreamParameters(OboeStreamBuilder *builder);
+    void setupPlaybackStreamParameters(oboe::AudioStreamBuilder *builder);
 
     void prepareOscillators();
 
-    oboe_result_t calculateCurrentOutputLatencyMillis(OboeStream *stream, double *latencyMillis);
+    oboe::Result calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream, double *latencyMillis);
 };
 
 #endif //OBOE_HELLOOBOE_PLAYAUDIOENGINE_H
