@@ -40,7 +40,7 @@ PlayAudioEngine::~PlayAudioEngine() {
 }
 
 /**
- * Set the audio device which should be used for playback. Can be set to OBOE_UNSPECIFIED if
+ * Set the audio device which should be used for playback. Can be set to oboe::kUnspecified if
  * you want to use the default playback device (which is usually the built-in speaker if
  * no other audio devices, such as headphones, are attached).
  *
@@ -140,8 +140,8 @@ void PlayAudioEngine::setToneOn(bool isToneOn) {
  * @param audioStream the audio stream which is requesting data, this is the mPlayStream object
  * @param audioData an empty buffer into which we can write our audio data
  * @param numFrames the number of audio frames which are required
- * @return Either OBOE_CALLBACK_RESULT_CONTINUE if the stream should continue requesting data
- * or OBOE_CALLBACK_RESULT_STOP if the stream should stop.
+ * @return Either oboe::DataCallbackResult::Continue if the stream should continue requesting data
+ * or oboe::DataCallbackResult::Stop if the stream should stop.
  */
 oboe::DataCallbackResult
 PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) {
@@ -209,7 +209,7 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
  * Here's how the calculation works:
  *
  * 1) Get the time a particular frame was presented to the audio hardware
- * @see OboeStream::getTimestamp
+ * @see AudioStream::getTimestamp
  * 2) From this extrapolate the time which the *next* audio frame written to the stream
  * will be presented
  * 3) Assume that the next audio frame is written at the current time
@@ -218,8 +218,8 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
  * @param stream The stream being written to
  * @param latencyMillis pointer to a variable to receive the latency in milliseconds between
  * writing a frame to the stream and that frame being presented to the audio hardware.
- * @return OBOE_OK or a negative error. It is normal to receive an error soon after a stream
- * has started because the timestamps are not yet available.
+ * @return oboe::Result::OK or a oboe::Result::Error* value. It is normal to receive an error soon
+ * after a stream has started because the timestamps are not yet available.
  */
 oboe::Result
 PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream, double *latencyMillis) {
@@ -263,7 +263,7 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream, 
  *
  * @param audioStream the stream with the error
  * @param error the error which occured, a human readable string can be obtained using
- * Oboe_convertResultToText(error);
+ * oboe::convertToText(error);
  *
  * @see oboe::StreamCallback
  */
