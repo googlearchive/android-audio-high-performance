@@ -79,7 +79,7 @@ void PlayAudioEngine::createPlaybackStream() {
         prepareOscillators();
 
         // Create a latency tuner which will automatically tune our buffer size.
-        mLatencyTuner = std::make_unique<oboe::LatencyTuner>(*mPlayStream);
+        mLatencyTuner = std::unique_ptr<oboe::LatencyTuner>(new oboe::LatencyTuner(*mPlayStream));
         // Start the stream - the dataCallback function will start being called
         result = mPlayStream->requestStart();
         if (result != oboe::Result::OK) {
