@@ -19,7 +19,19 @@ cmake_minimum_required(VERSION 3.4.1)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 
 # Include the Oboe library
-set (OBOE_DIR ../../../oboe)
+
+get_filename_component(OBOE_DIR
+                       ${CMAKE_CURRENT_SOURCE_DIR}/../lib-oboe
+                       ABSOLUTE)
+# clone Oboe repo if not cloned yet.
+if ((NOT EXISTS ${OBOE_DIR}) OR
+    (NOT EXISTS ${OBOE_DIR}/CMakeLists.txt))
+    execute_process(COMMAND git clone
+                            https://github.com/google/oboe.git
+                            ${OBOE_DIR}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..)
+endif()
+
 add_subdirectory(${OBOE_DIR} ./oboe)
 include_directories(${OBOE_DIR}/include ${OBOE_DIR}/src)
 
