@@ -16,7 +16,6 @@
 
 #include <trace.h>
 #include <inttypes.h>
-#include <common/AudioClock.h>
 
 #include "PlayAudioEngine.h"
 #include "logging_macros.h"
@@ -244,7 +243,9 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream, 
         int64_t nextFramePresentationTime = existingFramePresentationTime + frameTimeDelta;
 
         // Assume that the next frame will be written at the current time
-        int64_t nextFrameWriteTime = oboe::AudioClock::getNanoseconds(CLOCK_MONOTONIC);
+        using namespace std::chrono;
+        int64_t nextFrameWriteTime =
+                duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count();
 
         // Calculate the latency
         *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)

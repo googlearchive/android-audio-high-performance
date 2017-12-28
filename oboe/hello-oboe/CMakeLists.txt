@@ -42,9 +42,7 @@ endif()
 add_subdirectory(${OBOE_DIR} ./oboe)
 
 # Include the Oboe headers
-# TODO: Remove 'src' from this list
-# see https://github.com/googlesamples/android-audio-high-performance/issues/95
-include_directories(${OBOE_DIR}/include ${OBOE_DIR}/src)
+include_directories(${OBOE_DIR}/include)
 
 ### END OBOE INCLUDE SECTION ###
 
