@@ -18,10 +18,35 @@ cmake_minimum_required(VERSION 3.4.1)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 
-# Include the Oboe library
-set (OBOE_DIR ../../../oboe)
+### INCLUDE OBOE LIBRARY ###
+
+# Set the path to the Oboe library directory (may not exist yet)
+set (OBOE_RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../lib-oboe)
+
+# Get the absolute path to the Oboe library directory
+get_filename_component(OBOE_DIR
+                       ${OBOE_RELATIVE_PATH}
+                       ABSOLUTE)
+
+# If the Oboe library directory doesn't exist, clone it from github
+if ((NOT EXISTS ${OBOE_DIR}) OR
+    (NOT EXISTS ${OBOE_DIR}/CMakeLists.txt))
+    execute_process(COMMAND git clone
+                            https://github.com/google/oboe.git
+                            ${OBOE_DIR}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..)
+endif()
+
+# Add the Oboe library as a subproject. Since Oboe is an out-of-tree source library we must also
+# specify a binary directory
 add_subdirectory(${OBOE_DIR} ./oboe)
+
+# Include the Oboe headers
+# TODO: Remove 'src' from this list
+# see https://github.com/googlesamples/android-audio-high-performance/issues/95
 include_directories(${OBOE_DIR}/include ${OBOE_DIR}/src)
+
+### END OBOE INCLUDE SECTION ###
 
 # Debug utilities
 set (DEBUG_UTILS_PATH "../../debug-utils")
