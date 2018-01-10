@@ -60,6 +60,11 @@ public class PlaybackEngine {
         return mEngineHandle != 0 && native_isLatencyDetectionSupported(mEngineHandle);
     }
 
+    static void restartStream() {
+        if (mEngineHandle != 0) native_restartStream(mEngineHandle);
+    }
+
+
     // Native methods
     private static native long native_createEngine();
     private static native void native_deleteEngine(long engineHandle);
@@ -68,4 +73,6 @@ public class PlaybackEngine {
     private static native void native_setBufferSizeInBursts(long engineHandle, int bufferSizeInBursts);
     private static native double native_getCurrentOutputLatencyMillis(long engineHandle);
     private static native boolean native_isLatencyDetectionSupported(long engineHandle);
+    private static native void native_restartStream(long engineHandle);
+
 }

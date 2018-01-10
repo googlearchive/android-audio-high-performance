@@ -109,4 +109,14 @@ Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1isLatencyDetectionS
     return (jboolean) engine->isLatencyDetectionSupported();
 }
 
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1restartStream(JNIEnv *env, jclass type,
+                                                                           jlong engineHandle) {
+    PlayAudioEngine *engine = (PlayAudioEngine *) engineHandle;
+    if (engine == nullptr) {
+        LOGE("Engine is null, you must call createEngine before calling this method");
+        return;
+    }
+    engine->restartStream();
 }

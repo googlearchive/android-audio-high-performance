@@ -10,4 +10,5 @@
     <string name="buffer_size_description_key">description</string>
     <string name="buffer_size_value_key">value</string>
     <string name="only_supported_on_api_26">Only supported on API 26+</string>
+    <string name="restart_stream">Restart Stream</string>
 </resources>

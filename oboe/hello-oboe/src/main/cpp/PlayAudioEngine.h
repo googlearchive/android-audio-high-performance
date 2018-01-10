@@ -46,6 +46,7 @@ public:
 
     void onErrorAfterClose(oboe::AudioStream *oboeStream, oboe::Result error);
 
+    void restartStream();
 
 private:
     int32_t mPlaybackDeviceId = oboe::kUnspecified;
@@ -67,8 +68,6 @@ private:
     void createPlaybackStream();
 
     void closeOutputStream();
-
-    void restartStream();
 
     void setupPlaybackStreamParameters(oboe::AudioStreamBuilder *builder);
 
