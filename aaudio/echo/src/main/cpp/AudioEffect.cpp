@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "audio_effect.h"
+#include "AudioEffect.h"
 
 void AudioEffect::process(int16_t *inputBuffer, int32_t samplesPerFrame, int32_t numFrames) {
 

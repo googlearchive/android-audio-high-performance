@@ -17,71 +17,60 @@
 
 #include <jni.h>
 #include <logging_macros.h>
-#include "play_audio_engine.h"
+#include "EchoAudioEngine.h"
 
-static PlayAudioEngine *engine = nullptr;
+static EchoAudioEngine *engine = nullptr;
 
 extern "C" {
 
 JNIEXPORT bool JNICALL
-Java_com_google_sample_aaudio_play_PlaybackEngine_create(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoEngine_create(JNIEnv *env,
                                                                jclass) {
   if (engine == nullptr) {
-    engine = new PlayAudioEngine();
+    engine = new EchoAudioEngine();
   }
 
   return (engine != nullptr);
 }
 
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_play_PlaybackEngine_delete(JNIEnv *env,
+Java_com_google_sample_aaudio_echo_EchoEngine_delete(JNIEnv *env,
                                                                jclass) {
   delete engine;
   engine = nullptr;
 }
 
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_play_PlaybackEngine_setToneOn(JNIEnv *env,
-                                                               jclass, jboolean isToneOn) {
+Java_com_google_sample_aaudio_echo_EchoEngine_setEchoOn(JNIEnv *env,
+                                                                   jclass, jboolean isEchoOn) {
   if (engine == nullptr) {
     LOGE("Engine is null, you must call createEngine before calling this method");
     return;
   }
 
-  engine->setToneOn(isToneOn);
+  engine->setEchoOn(isEchoOn);
 }
 
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_play_PlaybackEngine_setAudioDeviceId(JNIEnv *env,
-                                                            jclass, jint deviceId) {
+Java_com_google_sample_aaudio_echo_EchoEngine_setRecordingDeviceId(JNIEnv *env,
+                                                                   jclass, jint deviceId) {
   if (engine == nullptr) {
     LOGE("Engine is null, you must call createEngine before calling this method");
     return;
   }
 
-  engine->setDeviceId(deviceId);
+  engine->setRecordingDeviceId(deviceId);
 }
 
 JNIEXPORT void JNICALL
-Java_com_google_sample_aaudio_play_PlaybackEngine_setBufferSizeInBursts(
-    JNIEnv *env, jclass, jint bufferSizeInBursts) {
+Java_com_google_sample_aaudio_echo_EchoEngine_setPlaybackDeviceId(JNIEnv *env,
+                                                                           jclass, jint deviceId) {
   if (engine == nullptr) {
     LOGE("Engine is null, you must call createEngine before calling this method");
     return;
   }
 
-  engine->setBufferSizeInBursts(bufferSizeInBursts);
-}
-
-
-JNIEXPORT jdouble JNICALL
-Java_com_google_sample_aaudio_play_PlaybackEngine_getCurrentOutputLatencyMillis(JNIEnv *env,
-                                                                            jclass) {
-  if (engine == nullptr) {
-    LOGE("Engine is null, you must call createEngine before calling this method");
-    return -1;
-  }
-  return (jdouble)engine->getCurrentOutputLatencyMillis();
+  engine->setPlaybackDeviceId(deviceId);
 }
 
 

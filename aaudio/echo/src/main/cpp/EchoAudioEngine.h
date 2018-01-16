@@ -19,7 +19,7 @@
 
 #include <thread>
 #include "audio_common.h"
-#include "audio_effect.h"
+#include "AudioEffect.h"
 
 class EchoAudioEngine {
 

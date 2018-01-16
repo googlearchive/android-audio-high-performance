@@ -18,7 +18,7 @@
 #include <climits>
 #include <assert.h>
 #include <audio_common.h>
-#include "echo_audio_engine.h"
+#include "EchoAudioEngine.h"
 
 
 /**

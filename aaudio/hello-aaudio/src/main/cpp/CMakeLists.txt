@@ -19,16 +19,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 
 # Debug utilities
 set (DEBUG_UTILS_PATH "../../../../../debug-utils")
-set (DEBUG_UTILS_SOURCES ${DEBUG_UTILS_PATH}/trace.cc)
+set (DEBUG_UTILS_SOURCES ${DEBUG_UTILS_PATH}/trace.cpp)
 
 # Code shared between AAudio samples
 set (AAUDIO_COMMON_PATH "../../../../common")
-set (AAUDIO_COMMON_SOURCES ${AAUDIO_COMMON_PATH}/audio_common.cc)
+set (AAUDIO_COMMON_SOURCES ${AAUDIO_COMMON_PATH}/audio_common.cpp)
 
 # Build the shared library for this sample
 add_library(hello-aaudio SHARED
-            play_audio_engine.cc
-            jni_bridge.cc
+            PlayAudioEngine.cpp
+            jni_bridge.cpp
             ${DEBUG_UTILS_SOURCES}
             ${AAUDIO_COMMON_SOURCES})
 

@@ -17,16 +17,16 @@ cmake_minimum_required(VERSION 3.4.1)
 
 # Debug utilities
 set (DEBUG_UTILS_PATH "../../../../../debug-utils")
-set (DEBUG_UTILS_SOURCES ${DEBUG_UTILS_PATH}/trace.cc)
+set (DEBUG_UTILS_SOURCES ${DEBUG_UTILS_PATH}/trace.cpp)
 
 # Code shared between AAudio samples
 set (AAUDIO_COMMON_PATH "../../../../common")
-set (AAUDIO_COMMON_SOURCES ${AAUDIO_COMMON_PATH}/audio_common.cc)
+set (AAUDIO_COMMON_SOURCES ${AAUDIO_COMMON_PATH}/audio_common.cpp)
 
 add_library(echo SHARED
-            echo_audio_engine.cc
-            jni_bridge.cc
-            audio_effect.cc
+            EchoAudioEngine.cpp
+            jni_bridge.cpp
+            AudioEffect.cpp
             ${DEBUG_UTILS_SOURCES}
             ${AAUDIO_COMMON_SOURCES}
             )
