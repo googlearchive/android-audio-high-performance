@@ -44,7 +44,9 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getName();
     private static final long UPDATE_LATENCY_EVERY_MILLIS = 1000;
     private static final int[] BUFFER_SIZE_OPTIONS = {0, 1, 2, 4, 8};
+    private static final String[] AUDIO_API_OPTIONS = {"Unspecified", "OpenSL ES", "AAudio"};
 
+    private Spinner mAudioApiSpinner;
     private AudioDeviceSpinner mPlaybackDeviceSpinner;
     private Spinner mBufferSizeSpinner;
     private TextView mLatencyText;
@@ -73,6 +75,26 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mAudioApiSpinner = findViewById(R.id.audioApisSpinner);
+        mAudioApiSpinner.setAdapter(new SimpleAdapter(
+                this,
+                createAudioApisOptionsList(),
+                R.layout.audio_apis_spinner, // the xml layout
+                new String[]{getString(R.string.audio_api_description_key)}, // field to display
+                new int[]{R.id.audioApiOption})); // View to show field in
+
+        mAudioApiSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                PlaybackEngine.setAudioApi(i);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         mPlaybackDeviceSpinner = findViewById(R.id.playbackDevicesSpinner);
 
@@ -138,36 +160,37 @@ public class MainActivity extends Activity {
 
     private void setupLatencyUpdater() {
 
-        if (PlaybackEngine.isLatencyDetectionSupported()){
+        //Update the latency every 1s
+        TimerTask latencyUpdateTask = new TimerTask() {
+            @Override
+            public void run() {
 
-            //Update the latency every 1s
-            TimerTask latencyUpdateTask = new TimerTask() {
+            final String latencyStr;
+
+            if (PlaybackEngine.isLatencyDetectionSupported()){
+
+                double latency = PlaybackEngine.getCurrentOutputLatencyMillis();
+                if (latency >= 0){
+                    latencyStr = String.format(Locale.getDefault(), "%.2fms", latency);
+                } else {
+                    latencyStr = "Unknown";
+                }
+            } else {
+                latencyStr = getString(R.string.only_supported_on_api_26);
+            }
+
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-
-                    double latency = PlaybackEngine.getCurrentOutputLatencyMillis();
-                    final String latencyStr;
-                    if (latency >= 0){
-                        latencyStr = String.format(Locale.getDefault(), "%.2fms", latency);
-                    } else {
-                        latencyStr = "Unknown";
-                    }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mLatencyText.setText(getString(R.string.latency, latencyStr));
-                        }
-                    });
+                mLatencyText.setText(getString(R.string.latency, latencyStr));
                 }
-            };
+            });
+            }
+        };
 
-            mLatencyUpdater = new Timer();
-            mLatencyUpdater.schedule(latencyUpdateTask, 0, UPDATE_LATENCY_EVERY_MILLIS);
+        mLatencyUpdater = new Timer();
+        mLatencyUpdater.schedule(latencyUpdateTask, 0, UPDATE_LATENCY_EVERY_MILLIS);
 
-        } else {
-            mLatencyText.setText(getString(R.string.latency,
-                    getString(R.string.only_supported_on_api_26)));
-        }
     }
 
     @Override
@@ -200,5 +223,18 @@ public class MainActivity extends Activity {
         }
 
         return bufferSizeOptions;
+    }
+
+    private List<HashMap<String,String>> createAudioApisOptionsList(){
+
+        ArrayList<HashMap<String,String>> audioApiOptions = new ArrayList<>();
+
+        for (int i = 0; i < AUDIO_API_OPTIONS.length; i++){
+            HashMap<String,String> option = new HashMap<>();
+            option.put(getString(R.string.buffer_size_description_key), AUDIO_API_OPTIONS[i]);
+            option.put(getString(R.string.buffer_size_value_key), String.valueOf(i));
+            audioApiOptions.add(option);
+        }
+        return audioApiOptions;
     }
 }

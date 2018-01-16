@@ -21,21 +21,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 ### INCLUDE OBOE LIBRARY ###
 
 # Set the path to the Oboe library directory (may not exist yet)
-set (OBOE_RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../lib-oboe)
+set (OBOE_RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../oboe)
 
 # Get the absolute path to the Oboe library directory
 get_filename_component(OBOE_DIR
                        ${OBOE_RELATIVE_PATH}
                        ABSOLUTE)
-
-# If the Oboe library directory doesn't exist, clone it from github
-if ((NOT EXISTS ${OBOE_DIR}) OR
-    (NOT EXISTS ${OBOE_DIR}/CMakeLists.txt))
-    execute_process(COMMAND git clone
-                            https://github.com/google/oboe.git
-                            ${OBOE_DIR}
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..)
-endif()
 
 # Add the Oboe library as a subproject. Since Oboe is an out-of-tree source library we must also
 # specify a binary directory
