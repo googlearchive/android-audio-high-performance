@@ -1,13 +1,14 @@
 # Android High Performance Audio Samples
 ![Bugdroid DJing image](djdroid-light.png "Bugdroid DJing image")
 
-Welcome to the Android high-performance audio samples repository. These samples demonstrate how to use the [AAudio](https://developer.android.com/ndk/guides/audio/aaudio/aaudio.html) and [OpenSL ES](https://developer.android.com/ndk/guides/audio/opensl/index.html) audio APIs on Android to create real-time audio apps. 
+Welcome to the Android high-performance audio samples repository. These samples demonstrate how to use the [Oboe](https://github.com/google/oboe), [AAudio](https://developer.android.com/ndk/guides/audio/aaudio/aaudio.html) and [OpenSL ES](https://developer.android.com/ndk/guides/audio/opensl/index.html) audio APIs on Android to create real-time audio apps. 
 
 If you haven't already it's worth reading the [high-performance audio guide](https://developer.android.com/ndk/guides/audio/index.html). There's also [plenty of other resources](RESOURCES.md) to help you create amazing audio apps on Android.
 
 ### Sample list
 The repository is structured as follows: 
 
+- [oboe](oboe): This folder contains all the samples for the Oboe library
 - [aaudio](aaudio): This folder contains all the samples for the AAudio API
 - [SimpleSynth](SimpleSynth): Shows how to achieve optimal output latency and avoid audio glitches using OpenSL ES 
 
