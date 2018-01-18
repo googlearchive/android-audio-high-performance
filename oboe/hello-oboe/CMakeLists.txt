@@ -48,7 +48,7 @@ include_directories(${OBOE_DIR}/include)
 
 # Debug utilities
 set (DEBUG_UTILS_PATH "../../debug-utils")
-set (DEBUG_UTILS_SOURCES ${DEBUG_UTILS_PATH}/trace.cc)
+set (DEBUG_UTILS_SOURCES ${DEBUG_UTILS_PATH}/trace.cpp)
 include_directories(${DEBUG_UTILS_PATH})
 
 # App specific sources
