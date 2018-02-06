@@ -54,6 +54,20 @@ Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1setToneOn(JNIEnv *e
 }
 
 JNIEXPORT void JNICALL
+Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1setAudioApi(JNIEnv *env, jclass type,
+                                                                         jlong engineHandle,
+                                                                         jint audioApi) {
+    PlayAudioEngine *engine = (PlayAudioEngine *) engineHandle;
+    if (engine == nullptr) {
+        LOGE("Engine handle is invalid, call createHandle() to create a new one");
+        return;
+    }
+
+    oboe::AudioApi api = static_cast<oboe::AudioApi>(audioApi);
+    engine->setAudioApi(api);
+}
+
+JNIEXPORT void JNICALL
 Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1setAudioDeviceId(JNIEnv *env,
                                                                       jclass,
                                                                       jlong engineHandle,

@@ -104,6 +104,7 @@ void PlayAudioEngine::prepareOscillators() {
  * @param builder The playback stream builder
  */
 void PlayAudioEngine::setupPlaybackStreamParameters(oboe::AudioStreamBuilder *builder) {
+    builder->setAudioApi(mAudioApi);
     builder->setDeviceId(mPlaybackDeviceId);
     builder->setChannelCount(mSampleChannels);
 
@@ -298,4 +299,15 @@ void PlayAudioEngine::setBufferSizeInBursts(int32_t numBursts) {
 
 bool PlayAudioEngine::isLatencyDetectionSupported() {
     return mIsLatencyDetectionSupported;
+}
+
+void PlayAudioEngine::setAudioApi(oboe::AudioApi audioApi) {
+    if (audioApi != mAudioApi){
+        LOGD("Setting Audio API to %s", oboe::convertToText(audioApi));
+        mAudioApi = audioApi;
+        restartStream();
+    } else {
+        LOGW("Audio API was already set to %s, not setting", oboe::convertToText(audioApi));
+    }
+
 }
