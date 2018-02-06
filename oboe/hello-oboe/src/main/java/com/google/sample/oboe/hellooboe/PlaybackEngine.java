@@ -43,6 +43,10 @@ public class PlaybackEngine {
         if (mEngineHandle != 0) native_setToneOn(mEngineHandle, isToneOn);
     }
 
+    static void setAudioApi(int audioApi){
+        if (mEngineHandle != 0) native_setAudioApi(mEngineHandle, audioApi);
+    }
+
     static void setAudioDeviceId(int deviceId){
         if (mEngineHandle != 0) native_setAudioDeviceId(mEngineHandle, deviceId);
     }
@@ -64,6 +68,7 @@ public class PlaybackEngine {
     private static native long native_createEngine();
     private static native void native_deleteEngine(long engineHandle);
     private static native void native_setToneOn(long engineHandle, boolean isToneOn);
+    private static native void native_setAudioApi(long engineHandle, int audioApi);
     private static native void native_setAudioDeviceId(long engineHandle, int deviceId);
     private static native void native_setBufferSizeInBursts(long engineHandle, int bufferSizeInBursts);
     private static native double native_getCurrentOutputLatencyMillis(long engineHandle);

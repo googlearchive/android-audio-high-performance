@@ -30,6 +30,8 @@ public:
 
     ~PlayAudioEngine();
 
+    void setAudioApi(oboe::AudioApi audioApi);
+
     void setDeviceId(int32_t deviceId);
 
     void setToneOn(bool isToneOn);
@@ -48,6 +50,7 @@ public:
 
 
 private:
+    oboe::AudioApi mAudioApi = oboe::AudioApi::Unspecified;
     int32_t mPlaybackDeviceId = oboe::kUnspecified;
     int32_t mSampleRate;
     int16_t mSampleChannels;
@@ -75,6 +78,7 @@ private:
     void prepareOscillators();
 
     oboe::Result calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream, double *latencyMillis);
+
 };
 
 #endif //OBOE_HELLOOBOE_PLAYAUDIOENGINE_H
