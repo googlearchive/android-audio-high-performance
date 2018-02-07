@@ -78,11 +78,12 @@ public class MainActivity extends Activity {
 
         mAudioApiSpinner = findViewById(R.id.audioApisSpinner);
         mAudioApiSpinner.setAdapter(new SimpleAdapter(
-                this,
-                createAudioApisOptionsList(),
-                R.layout.audio_apis_spinner, // the xml layout
-                new String[]{getString(R.string.audio_api_description_key)}, // field to display
-                new int[]{R.id.audioApiOption})); // View to show field in
+            this,
+            createAudioApisOptionsList(),
+            R.layout.audio_apis_spinner, // the xml layout
+            new String[]{ getString(R.string.audio_api_description_key) }, // field to display
+            new int[] { R.id.audioApiOption } // View to show field in
+        ));
 
         mAudioApiSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -98,7 +99,7 @@ public class MainActivity extends Activity {
 
         mPlaybackDeviceSpinner = findViewById(R.id.playbackDevicesSpinner);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             mPlaybackDeviceSpinner.setDirectionType(AudioManager.GET_DEVICES_OUTPUTS);
             mPlaybackDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
@@ -115,11 +116,12 @@ public class MainActivity extends Activity {
 
         mBufferSizeSpinner = findViewById(R.id.bufferSizeSpinner);
         mBufferSizeSpinner.setAdapter(new SimpleAdapter(
-                this,
-                createBufferSizeOptionsList(), // list of buffer size options
-                R.layout.buffer_sizes_spinner, // the xml layout
-                new String[]{getString(R.string.buffer_size_description_key)}, // field to display
-                new int[]{R.id.bufferSizeOption})); // View to show field in
+            this,
+            createBufferSizeOptionsList(), // list of buffer size options
+            R.layout.buffer_sizes_spinner, // the xml layout
+            new String[] { getString(R.string.buffer_size_description_key) }, // field to display
+            new int[] { R.id.bufferSizeOption } // View to show field in
+        ));
 
         mBufferSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -141,13 +143,13 @@ public class MainActivity extends Activity {
         setupLatencyUpdater();
     }
 
-    private int getPlaybackDeviceId(){
+    private int getPlaybackDeviceId() {
         return ((AudioDeviceListEntry) mPlaybackDeviceSpinner.getSelectedItem()).getId();
     }
 
-    private int getBufferSizeInBursts(){
+    private int getBufferSizeInBursts() {
         @SuppressWarnings("unchecked")
-        HashMap<String,String> selectedOption = (HashMap<String,String>)
+        HashMap<String, String> selectedOption = (HashMap<String, String>)
                 mBufferSizeSpinner.getSelectedItem();
 
         String valueKey = getString(R.string.buffer_size_value_key);
@@ -165,26 +167,26 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
 
-            final String latencyStr;
+                final String latencyStr;
 
-            if (PlaybackEngine.isLatencyDetectionSupported()){
+                if (PlaybackEngine.isLatencyDetectionSupported()) {
 
-                double latency = PlaybackEngine.getCurrentOutputLatencyMillis();
-                if (latency >= 0){
-                    latencyStr = String.format(Locale.getDefault(), "%.2fms", latency);
+                    double latency = PlaybackEngine.getCurrentOutputLatencyMillis();
+                    if (latency >= 0) {
+                        latencyStr = String.format(Locale.getDefault(), "%.2fms", latency);
+                    } else {
+                        latencyStr = "Unknown";
+                    }
                 } else {
-                    latencyStr = "Unknown";
+                    latencyStr = getString(R.string.only_supported_on_api_26);
                 }
-            } else {
-                latencyStr = getString(R.string.only_supported_on_api_26);
-            }
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                mLatencyText.setText(getString(R.string.latency, latencyStr));
-                }
-            });
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    mLatencyText.setText(getString(R.string.latency, latencyStr));
+                    }
+                });
             }
         };
 
@@ -208,12 +210,12 @@ public class MainActivity extends Activity {
      *
      * @return list of buffer size options
      */
-    private List<HashMap<String,String>> createBufferSizeOptionsList(){
+    private List<HashMap<String, String>> createBufferSizeOptionsList() {
 
-        ArrayList<HashMap<String,String>> bufferSizeOptions = new ArrayList<>();
+        ArrayList<HashMap<String, String>> bufferSizeOptions = new ArrayList<>();
 
-        for (int i : BUFFER_SIZE_OPTIONS){
-            HashMap<String,String> option = new HashMap<>();
+        for (int i : BUFFER_SIZE_OPTIONS) {
+            HashMap<String, String> option = new HashMap<>();
             String strValue = String.valueOf(i);
             String description = (i == 0) ? getString(R.string.automatic) : strValue;
             option.put(getString(R.string.buffer_size_description_key), description);
@@ -225,12 +227,12 @@ public class MainActivity extends Activity {
         return bufferSizeOptions;
     }
 
-    private List<HashMap<String,String>> createAudioApisOptionsList(){
+    private List<HashMap<String,String>> createAudioApisOptionsList() {
 
         ArrayList<HashMap<String,String>> audioApiOptions = new ArrayList<>();
 
-        for (int i = 0; i < AUDIO_API_OPTIONS.length; i++){
-            HashMap<String,String> option = new HashMap<>();
+        for (int i = 0; i < AUDIO_API_OPTIONS.length; i++) {
+            HashMap<String, String> option = new HashMap<>();
             option.put(getString(R.string.buffer_size_description_key), AUDIO_API_OPTIONS[i]);
             option.put(getString(R.string.buffer_size_value_key), String.valueOf(i));
             audioApiOptions.add(option);
