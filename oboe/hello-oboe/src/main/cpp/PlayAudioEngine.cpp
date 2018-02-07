@@ -86,7 +86,7 @@ void PlayAudioEngine::createPlaybackStream() {
         }
 
         mIsLatencyDetectionSupported = (mPlayStream->getTimestamp(CLOCK_MONOTONIC, 0, 0) !=
-                oboe::Result::ErrorUnimplemented);
+                                        oboe::Result::ErrorUnimplemented);
 
     } else {
         LOGE("Failed to create stream. Error: %s", oboe::convertToText(result));
@@ -148,7 +148,7 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
 
     int32_t bufferSize = audioStream->getBufferSizeInFrames();
 
-    if (mBufferSizeSelection == kBufferSizeAutomatic){
+    if (mBufferSizeSelection == kBufferSizeAutomatic) {
         mLatencyTuner->tune();
     } else if (bufferSize != (mBufferSizeSelection * mFramesPerBurst)) {
         audioStream->setBufferSizeInFrames(mBufferSizeSelection * mFramesPerBurst);
@@ -168,7 +168,7 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
     int32_t samplesPerFrame = mSampleChannels;
 
     // If the tone is on we need to use our synthesizer to render the audio data for the sine waves
-    if (audioStream->getFormat() == oboe::AudioFormat::Float){
+    if (audioStream->getFormat() == oboe::AudioFormat::Float) {
         if (mIsToneOn) {
             mSineOscRight.render(static_cast<float *>(audioData),
                                  samplesPerFrame, numFrames);
@@ -222,14 +222,15 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
  * after a stream has started because the timestamps are not yet available.
  */
 oboe::Result
-PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream, double *latencyMillis) {
+PlayAudioEngine::calculateCurrentOutputLatencyMillis(oboe::AudioStream *stream,
+                                                     double *latencyMillis) {
 
     // Get the time that a known audio frame was presented for playing
     int64_t existingFrameIndex;
     int64_t existingFramePresentationTime;
     oboe::Result result = stream->getTimestamp(CLOCK_MONOTONIC,
-                                                &existingFrameIndex,
-                                                &existingFramePresentationTime);
+                                               &existingFrameIndex,
+                                               &existingFramePresentationTime);
 
     if (result == oboe::Result::OK) {
 
@@ -302,7 +303,7 @@ bool PlayAudioEngine::isLatencyDetectionSupported() {
 }
 
 void PlayAudioEngine::setAudioApi(oboe::AudioApi audioApi) {
-    if (audioApi != mAudioApi){
+    if (audioApi != mAudioApi) {
         LOGD("Setting Audio API to %s", oboe::convertToText(audioApi));
         mAudioApi = audioApi;
         restartStream();

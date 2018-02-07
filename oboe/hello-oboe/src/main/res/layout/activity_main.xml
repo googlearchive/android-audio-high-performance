@@ -32,7 +32,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         android:id="@+id/audioApisTitleText"/>
     <Spinner
-        android:id="@+id/audioApisSpinner"
+        android:id="@+id/audioApiSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/activity_horizontal_margin"
@@ -43,7 +43,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/playback_device"
-        app:layout_constraintTop_toBottomOf="@+id/audioApisSpinner"
+        app:layout_constraintTop_toBottomOf="@+id/audioApiSpinner"
         android:layout_marginStart="@dimen/activity_horizontal_margin"
         android:layout_marginTop="@dimen/activity_vertical_margin"
         app:layout_constraintLeft_toLeftOf="parent"

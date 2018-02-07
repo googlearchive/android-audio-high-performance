@@ -16,7 +16,6 @@
 
 package com.google.sample.oboe.hellooboe;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.media.AudioManager;
 import android.os.Build;
@@ -61,28 +60,29 @@ public class MainActivity extends Activity {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = MotionEventCompat.getActionMasked(event);
-        switch(action) {
-            case (MotionEvent.ACTION_DOWN) :
+        switch (action) {
+            case (MotionEvent.ACTION_DOWN):
                 PlaybackEngine.setToneOn(true);
                 break;
-            case (MotionEvent.ACTION_UP) :
+            case (MotionEvent.ACTION_UP):
                 PlaybackEngine.setToneOn(false);
                 break;
         }
         return super.onTouchEvent(event);
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mAudioApiSpinner = findViewById(R.id.audioApisSpinner);
+        mAudioApiSpinner = findViewById(R.id.audioApiSpinner);
         mAudioApiSpinner.setAdapter(new SimpleAdapter(
-            this,
-            createAudioApisOptionsList(),
-            R.layout.audio_apis_spinner, // the xml layout
-            new String[]{ getString(R.string.audio_api_description_key) }, // field to display
-            new int[] { R.id.audioApiOption } // View to show field in
+                this,
+                createAudioApisOptionsList(),
+                R.layout.audio_apis_spinner, // the xml layout
+                new String[]{getString(R.string.audio_api_description_key)}, // field to display
+                new int[]{R.id.audioApiOption} // View to show field in
         ));
 
         mAudioApiSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -116,11 +116,11 @@ public class MainActivity extends Activity {
 
         mBufferSizeSpinner = findViewById(R.id.bufferSizeSpinner);
         mBufferSizeSpinner.setAdapter(new SimpleAdapter(
-            this,
-            createBufferSizeOptionsList(), // list of buffer size options
-            R.layout.buffer_sizes_spinner, // the xml layout
-            new String[] { getString(R.string.buffer_size_description_key) }, // field to display
-            new int[] { R.id.bufferSizeOption } // View to show field in
+                this,
+                createBufferSizeOptionsList(), // list of buffer size options
+                R.layout.buffer_sizes_spinner, // the xml layout
+                new String[]{getString(R.string.buffer_size_description_key)}, // field to display
+                new int[]{R.id.bufferSizeOption} // View to show field in
         ));
 
         mBufferSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -184,7 +184,7 @@ public class MainActivity extends Activity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                    mLatencyText.setText(getString(R.string.latency, latencyStr));
+                        mLatencyText.setText(getString(R.string.latency, latencyStr));
                     }
                 });
             }
@@ -227,9 +227,9 @@ public class MainActivity extends Activity {
         return bufferSizeOptions;
     }
 
-    private List<HashMap<String,String>> createAudioApisOptionsList() {
+    private List<HashMap<String, String>> createAudioApisOptionsList() {
 
-        ArrayList<HashMap<String,String>> audioApiOptions = new ArrayList<>();
+        ArrayList<HashMap<String, String>> audioApiOptions = new ArrayList<>();
 
         for (int i = 0; i < AUDIO_API_OPTIONS.length; i++) {
             HashMap<String, String> option = new HashMap<>();
