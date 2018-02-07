@@ -9,5 +9,8 @@
     <string name="automatic">Automatic</string>
     <string name="buffer_size_description_key">description</string>
     <string name="buffer_size_value_key">value</string>
-    <string name="only_supported_on_api_26">Only supported on API 26+</string>
+    <string name="audio_api_description_key">description</string>
+    <string name="audio_api_value_key">value</string>
+    <string name="only_supported_on_api_26">Only supported in AAudio (API 26+)</string>
+    <string name="audio_api">Audio API</string>
 </resources>

@@ -44,7 +44,9 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getName();
     private static final long UPDATE_LATENCY_EVERY_MILLIS = 1000;
     private static final int[] BUFFER_SIZE_OPTIONS = {0, 1, 2, 4, 8};
+    private static final String[] AUDIO_API_OPTIONS = {"Unspecified", "OpenSL ES", "AAudio"};
 
+    private Spinner mAudioApiSpinner;
     private AudioDeviceSpinner mPlaybackDeviceSpinner;
     private Spinner mBufferSizeSpinner;
     private TextView mLatencyText;
@@ -74,9 +76,30 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mAudioApiSpinner = findViewById(R.id.audioApisSpinner);
+        mAudioApiSpinner.setAdapter(new SimpleAdapter(
+            this,
+            createAudioApisOptionsList(),
+            R.layout.audio_apis_spinner, // the xml layout
+            new String[]{ getString(R.string.audio_api_description_key) }, // field to display
+            new int[] { R.id.audioApiOption } // View to show field in
+        ));
+
+        mAudioApiSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                PlaybackEngine.setAudioApi(i);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
         mPlaybackDeviceSpinner = findViewById(R.id.playbackDevicesSpinner);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             mPlaybackDeviceSpinner.setDirectionType(AudioManager.GET_DEVICES_OUTPUTS);
             mPlaybackDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
@@ -93,11 +116,12 @@ public class MainActivity extends Activity {
 
         mBufferSizeSpinner = findViewById(R.id.bufferSizeSpinner);
         mBufferSizeSpinner.setAdapter(new SimpleAdapter(
-                this,
-                createBufferSizeOptionsList(), // list of buffer size options
-                R.layout.buffer_sizes_spinner, // the xml layout
-                new String[]{getString(R.string.buffer_size_description_key)}, // field to display
-                new int[]{R.id.bufferSizeOption})); // View to show field in
+            this,
+            createBufferSizeOptionsList(), // list of buffer size options
+            R.layout.buffer_sizes_spinner, // the xml layout
+            new String[] { getString(R.string.buffer_size_description_key) }, // field to display
+            new int[] { R.id.bufferSizeOption } // View to show field in
+        ));
 
         mBufferSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -119,13 +143,13 @@ public class MainActivity extends Activity {
         setupLatencyUpdater();
     }
 
-    private int getPlaybackDeviceId(){
+    private int getPlaybackDeviceId() {
         return ((AudioDeviceListEntry) mPlaybackDeviceSpinner.getSelectedItem()).getId();
     }
 
-    private int getBufferSizeInBursts(){
+    private int getBufferSizeInBursts() {
         @SuppressWarnings("unchecked")
-        HashMap<String,String> selectedOption = (HashMap<String,String>)
+        HashMap<String, String> selectedOption = (HashMap<String, String>)
                 mBufferSizeSpinner.getSelectedItem();
 
         String valueKey = getString(R.string.buffer_size_value_key);
@@ -138,36 +162,37 @@ public class MainActivity extends Activity {
 
     private void setupLatencyUpdater() {
 
-        if (PlaybackEngine.isLatencyDetectionSupported()){
+        //Update the latency every 1s
+        TimerTask latencyUpdateTask = new TimerTask() {
+            @Override
+            public void run() {
 
-            //Update the latency every 1s
-            TimerTask latencyUpdateTask = new TimerTask() {
-                @Override
-                public void run() {
+                final String latencyStr;
+
+                if (PlaybackEngine.isLatencyDetectionSupported()) {
 
                     double latency = PlaybackEngine.getCurrentOutputLatencyMillis();
-                    final String latencyStr;
-                    if (latency >= 0){
+                    if (latency >= 0) {
                         latencyStr = String.format(Locale.getDefault(), "%.2fms", latency);
                     } else {
                         latencyStr = "Unknown";
                     }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mLatencyText.setText(getString(R.string.latency, latencyStr));
-                        }
-                    });
+                } else {
+                    latencyStr = getString(R.string.only_supported_on_api_26);
                 }
-            };
 
-            mLatencyUpdater = new Timer();
-            mLatencyUpdater.schedule(latencyUpdateTask, 0, UPDATE_LATENCY_EVERY_MILLIS);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    mLatencyText.setText(getString(R.string.latency, latencyStr));
+                    }
+                });
+            }
+        };
 
-        } else {
-            mLatencyText.setText(getString(R.string.latency,
-                    getString(R.string.only_supported_on_api_26)));
-        }
+        mLatencyUpdater = new Timer();
+        mLatencyUpdater.schedule(latencyUpdateTask, 0, UPDATE_LATENCY_EVERY_MILLIS);
+
     }
 
     @Override
@@ -185,12 +210,12 @@ public class MainActivity extends Activity {
      *
      * @return list of buffer size options
      */
-    private List<HashMap<String,String>> createBufferSizeOptionsList(){
+    private List<HashMap<String, String>> createBufferSizeOptionsList() {
 
-        ArrayList<HashMap<String,String>> bufferSizeOptions = new ArrayList<>();
+        ArrayList<HashMap<String, String>> bufferSizeOptions = new ArrayList<>();
 
-        for (int i : BUFFER_SIZE_OPTIONS){
-            HashMap<String,String> option = new HashMap<>();
+        for (int i : BUFFER_SIZE_OPTIONS) {
+            HashMap<String, String> option = new HashMap<>();
             String strValue = String.valueOf(i);
             String description = (i == 0) ? getString(R.string.automatic) : strValue;
             option.put(getString(R.string.buffer_size_description_key), description);
@@ -200,5 +225,18 @@ public class MainActivity extends Activity {
         }
 
         return bufferSizeOptions;
+    }
+
+    private List<HashMap<String,String>> createAudioApisOptionsList() {
+
+        ArrayList<HashMap<String,String>> audioApiOptions = new ArrayList<>();
+
+        for (int i = 0; i < AUDIO_API_OPTIONS.length; i++) {
+            HashMap<String, String> option = new HashMap<>();
+            option.put(getString(R.string.buffer_size_description_key), AUDIO_API_OPTIONS[i]);
+            option.put(getString(R.string.buffer_size_value_key), String.valueOf(i));
+            audioApiOptions.add(option);
+        }
+        return audioApiOptions;
     }
 }
