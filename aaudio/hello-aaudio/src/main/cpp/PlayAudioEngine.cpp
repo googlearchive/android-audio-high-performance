@@ -354,7 +354,8 @@ void PlayAudioEngine::errorCallback(AAudioStream *stream,
 
     // Handle stream restart on a separate thread
     std::function<void(void)> restartStream = std::bind(&PlayAudioEngine::restartStream, this);
-    streamRestartThread_ = new std::thread(restartStream);
+    std::thread streamRestartThread(restartStream);
+    streamRestartThread.detach();
   }
 }
 
