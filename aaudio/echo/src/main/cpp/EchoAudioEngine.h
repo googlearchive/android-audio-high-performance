@@ -47,7 +47,6 @@ private:
   AAudioStream *recordingStream_ = nullptr;
   AAudioStream *playStream_ = nullptr;
   int32_t framesPerBurst_;
-  std::thread* streamRestartThread_;
   std::mutex restartingLock_;
   AudioEffect audioEffect_;
 
