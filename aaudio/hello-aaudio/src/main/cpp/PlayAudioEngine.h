@@ -59,7 +59,6 @@ private:
 
 private:
 
-  std::thread* streamRestartThread_;
   std::mutex restartingLock_;
 
   void createPlaybackStream();
