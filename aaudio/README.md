@@ -1,4 +1,4 @@
-AAudio Samples
+AAudio Sample
 ==============
 These samples demonstrate how to use the AAudio API:
 
