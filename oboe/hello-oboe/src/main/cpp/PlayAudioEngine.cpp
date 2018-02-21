@@ -20,8 +20,8 @@
 #include "PlayAudioEngine.h"
 #include "logging_macros.h"
 
-constexpr int32_t kAudioSampleChannels = 4;
 constexpr int64_t kNanosPerMillisecond = 1000000; // Use int64_t to avoid overflows in calculations
+constexpr int32_t kDefaultChannelCount = 2; // Stereo
 
 PlayAudioEngine::PlayAudioEngine() {
 
@@ -29,7 +29,7 @@ PlayAudioEngine::PlayAudioEngine() {
     // blocking. See https://developer.android.com/studio/profile/systrace-commandline.html
     Trace::initialize();
 
-    mSampleChannels = kAudioSampleChannels;
+    mChannelCount = kDefaultChannelCount;
     createPlaybackStream();
 }
 
@@ -40,11 +40,6 @@ PlayAudioEngine::~PlayAudioEngine() {
 
 /**
  * Set the audio device which should be used for playback. Can be set to oboe::kUnspecified if
- *
- *
- *
- *
- *
  * you want to use the default playback device (which is usually the built-in speaker if
  * no other audio devices, such as headphones, are attached).
  *
@@ -75,8 +70,10 @@ void PlayAudioEngine::createPlaybackStream() {
         mSampleRate = mPlayStream->getSampleRate();
         mFramesPerBurst = mPlayStream->getFramesPerBurst();
 
-        mSampleChannels = mPlayStream->getChannelCount();
-        LOGD("Stream has %d channels", mSampleChannels);
+        int channelCount = mPlayStream->getChannelCount();
+        if (channelCount != mChannelCount){
+            LOGW("Requested %d channels but received %d", mChannelCount, channelCount);
+        }
 
         // Set the buffer size to the burst size - this will give us the minimum possible latency
         mPlayStream->setBufferSizeInFrames(mFramesPerBurst);
@@ -102,10 +99,15 @@ void PlayAudioEngine::createPlaybackStream() {
 }
 
 void PlayAudioEngine::prepareOscillators() {
-    mSineOscLeftOne.setup(440.0, mSampleRate, 0.25);
-    mSineOscRightOne.setup(660.0, mSampleRate, 0.25);
-    mSineOscLeftTwo.setup(330.0, mSampleRate, 0.25);
-    mSineOscRightTwo.setup(550.0, mSampleRate, 0.25);
+
+    double frequency = 440.0;
+    constexpr double interval = 110.0;
+    constexpr float amplitude = 0.25;
+
+    for (SineGenerator &osc : mOscillators){
+        osc.setup(frequency, mSampleRate, amplitude);
+        frequency += interval;
+    }
 }
 
 /**
@@ -116,7 +118,7 @@ void PlayAudioEngine::prepareOscillators() {
 void PlayAudioEngine::setupPlaybackStreamParameters(oboe::AudioStreamBuilder *builder) {
     builder->setAudioApi(mAudioApi);
     builder->setDeviceId(mPlaybackDeviceId);
-    builder->setChannelCount(mSampleChannels);
+    builder->setChannelCount(mChannelCount);
 
     // We request EXCLUSIVE mode since this will give us the lowest possible latency.
     // If EXCLUSIVE mode isn't available the builder will fall back to SHARED mode.
@@ -175,48 +177,27 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
 
     Trace::beginSection("numFrames %d, Underruns %d, buffer size %d",
                         numFrames, underrunCount, bufferSize);
-    int32_t samplesPerFrame = mSampleChannels;
+
+    int32_t channelCount = audioStream->getChannelCount();
 
     // If the tone is on we need to use our synthesizer to render the audio data for the sine waves
     if (audioStream->getFormat() == oboe::AudioFormat::Float) {
         if (mIsToneOn) {
-            mSineOscLeftOne.render(static_cast<float *>(audioData),
-                                 samplesPerFrame, numFrames);
-            if (mSampleChannels >= 2) {
-                mSineOscRightOne.render(static_cast<float *>(audioData) + 1,
-                                    samplesPerFrame, numFrames);
-            }
-            if (mSampleChannels >= 3) {
-                mSineOscLeftTwo.render(static_cast<float *>(audioData) + 2,
-                                       samplesPerFrame, numFrames);
-            }
-            if (mSampleChannels >= 4) {
-                mSineOscRightTwo.render(static_cast<float *>(audioData) + 3,
-                                       samplesPerFrame, numFrames);
+            for (int i = 0; i < channelCount; ++i) {
+                mOscillators[i].render(static_cast<float *>(audioData) + i, channelCount, numFrames);
             }
         } else {
             memset(static_cast<uint8_t *>(audioData), 0,
-                   sizeof(float) * samplesPerFrame * numFrames);
+                   sizeof(float) * channelCount * numFrames);
         }
     } else {
         if (mIsToneOn) {
-            mSineOscLeftOne.render(static_cast<int16_t *>(audioData),
-                                 samplesPerFrame, numFrames);
-            if (mSampleChannels >= 2) {
-                mSineOscRightOne.render(static_cast<int16_t *>(audioData) + 1,
-                                    samplesPerFrame, numFrames);
-            }
-            if (mSampleChannels >= 3) {
-                mSineOscLeftTwo.render(static_cast<int16_t *>(audioData) + 2,
-                                       samplesPerFrame, numFrames);
-            }
-            if (mSampleChannels >= 4) {
-                mSineOscRightTwo.render(static_cast<int16_t *>(audioData) + 3,
-                                       samplesPerFrame, numFrames);
+            for (int i = 0; i < channelCount; ++i) {
+                mOscillators[i].render(static_cast<int16_t *>(audioData) + i, channelCount, numFrames);
             }
         } else {
             memset(static_cast<uint8_t *>(audioData), 0,
-                   sizeof(int16_t) * samplesPerFrame * numFrames);
+                   sizeof(int16_t) * channelCount * numFrames);
         }
     }
 
@@ -336,5 +317,15 @@ void PlayAudioEngine::setAudioApi(oboe::AudioApi audioApi) {
     } else {
         LOGW("Audio API was already set to %s, not setting", oboe::convertToText(audioApi));
     }
+}
 
+void PlayAudioEngine::setChannelCount(int channelCount) {
+
+    if (channelCount != mChannelCount) {
+        LOGD("Setting channel count to %d", channelCount);
+        mChannelCount = channelCount;
+        restartStream();
+    } else {
+        LOGW("Channel count was already %d, not setting", channelCount);
+    }
 }
