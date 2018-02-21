@@ -20,7 +20,7 @@
 #include "PlayAudioEngine.h"
 #include "logging_macros.h"
 
-constexpr int32_t kAudioSampleChannels = 2; // Stereo
+constexpr int32_t kAudioSampleChannels = 4;
 constexpr int64_t kNanosPerMillisecond = 1000000; // Use int64_t to avoid overflows in calculations
 
 PlayAudioEngine::PlayAudioEngine() {
@@ -40,6 +40,11 @@ PlayAudioEngine::~PlayAudioEngine() {
 
 /**
  * Set the audio device which should be used for playback. Can be set to oboe::kUnspecified if
+ *
+ *
+ *
+ *
+ *
  * you want to use the default playback device (which is usually the built-in speaker if
  * no other audio devices, such as headphones, are attached).
  *
@@ -70,6 +75,9 @@ void PlayAudioEngine::createPlaybackStream() {
         mSampleRate = mPlayStream->getSampleRate();
         mFramesPerBurst = mPlayStream->getFramesPerBurst();
 
+        mSampleChannels = mPlayStream->getChannelCount();
+        LOGD("Stream has %d channels", mSampleChannels);
+
         // Set the buffer size to the burst size - this will give us the minimum possible latency
         mPlayStream->setBufferSizeInFrames(mFramesPerBurst);
 
@@ -94,8 +102,10 @@ void PlayAudioEngine::createPlaybackStream() {
 }
 
 void PlayAudioEngine::prepareOscillators() {
-    mSineOscLeft.setup(440.0, mSampleRate, 0.25);
-    mSineOscRight.setup(660.0, mSampleRate, 0.25);
+    mSineOscLeftOne.setup(440.0, mSampleRate, 0.25);
+    mSineOscRightOne.setup(660.0, mSampleRate, 0.25);
+    mSineOscLeftTwo.setup(330.0, mSampleRate, 0.25);
+    mSineOscRightTwo.setup(550.0, mSampleRate, 0.25);
 }
 
 /**
@@ -170,11 +180,19 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
     // If the tone is on we need to use our synthesizer to render the audio data for the sine waves
     if (audioStream->getFormat() == oboe::AudioFormat::Float) {
         if (mIsToneOn) {
-            mSineOscRight.render(static_cast<float *>(audioData),
+            mSineOscLeftOne.render(static_cast<float *>(audioData),
                                  samplesPerFrame, numFrames);
-            if (mSampleChannels == 2) {
-                mSineOscLeft.render(static_cast<float *>(audioData) + 1,
+            if (mSampleChannels >= 2) {
+                mSineOscRightOne.render(static_cast<float *>(audioData) + 1,
                                     samplesPerFrame, numFrames);
+            }
+            if (mSampleChannels >= 3) {
+                mSineOscLeftTwo.render(static_cast<float *>(audioData) + 2,
+                                       samplesPerFrame, numFrames);
+            }
+            if (mSampleChannels >= 4) {
+                mSineOscRightTwo.render(static_cast<float *>(audioData) + 3,
+                                       samplesPerFrame, numFrames);
             }
         } else {
             memset(static_cast<uint8_t *>(audioData), 0,
@@ -182,11 +200,19 @@ PlayAudioEngine::onAudioReady(oboe::AudioStream *audioStream, void *audioData, i
         }
     } else {
         if (mIsToneOn) {
-            mSineOscRight.render(static_cast<int16_t *>(audioData),
+            mSineOscLeftOne.render(static_cast<int16_t *>(audioData),
                                  samplesPerFrame, numFrames);
-            if (mSampleChannels == 2) {
-                mSineOscLeft.render(static_cast<int16_t *>(audioData) + 1,
+            if (mSampleChannels >= 2) {
+                mSineOscRightOne.render(static_cast<int16_t *>(audioData) + 1,
                                     samplesPerFrame, numFrames);
+            }
+            if (mSampleChannels >= 3) {
+                mSineOscLeftTwo.render(static_cast<int16_t *>(audioData) + 2,
+                                       samplesPerFrame, numFrames);
+            }
+            if (mSampleChannels >= 4) {
+                mSineOscRightTwo.render(static_cast<int16_t *>(audioData) + 3,
+                                       samplesPerFrame, numFrames);
             }
         } else {
             memset(static_cast<uint8_t *>(audioData), 0,

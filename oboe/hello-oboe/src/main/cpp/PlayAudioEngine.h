@@ -53,7 +53,7 @@ private:
     oboe::AudioApi mAudioApi = oboe::AudioApi::Unspecified;
     int32_t mPlaybackDeviceId = oboe::kUnspecified;
     int32_t mSampleRate;
-    int16_t mSampleChannels;
+    int32_t mSampleChannels;
     bool mIsToneOn = false;
     int32_t mFramesPerBurst;
     double mCurrentOutputLatencyMillis = 0;
@@ -64,8 +64,10 @@ private:
     std::mutex mRestartingLock;
 
     // The SineGenerators generate audio data, feel free to replace with your own audio generators
-    SineGenerator mSineOscLeft;
-    SineGenerator mSineOscRight;
+    SineGenerator mSineOscLeftOne;
+    SineGenerator mSineOscRightOne;
+    SineGenerator mSineOscLeftTwo;
+    SineGenerator mSineOscRightTwo;
 
     void createPlaybackStream();
 
