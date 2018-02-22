@@ -51,6 +51,10 @@ public class PlaybackEngine {
         if (mEngineHandle != 0) native_setAudioDeviceId(mEngineHandle, deviceId);
     }
 
+    static void setChannelCount(int channelCount) {
+        if (mEngineHandle != 0) native_setChannelCount(mEngineHandle, channelCount);
+    }
+
     static void setBufferSizeInBursts(int bufferSizeInBursts){
         if (mEngineHandle != 0) native_setBufferSizeInBursts(mEngineHandle, bufferSizeInBursts);
     }
@@ -70,6 +74,7 @@ public class PlaybackEngine {
     private static native void native_setToneOn(long engineHandle, boolean isToneOn);
     private static native void native_setAudioApi(long engineHandle, int audioApi);
     private static native void native_setAudioDeviceId(long engineHandle, int deviceId);
+    private static native void native_setChannelCount(long mEngineHandle, int channelCount);
     private static native void native_setBufferSizeInBursts(long engineHandle, int bufferSizeInBursts);
     private static native double native_getCurrentOutputLatencyMillis(long engineHandle);
     private static native boolean native_isLatencyDetectionSupported(long engineHandle);

@@ -92,6 +92,21 @@ Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1setAudioDeviceId(
 }
 
 JNIEXPORT void JNICALL
+Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1setChannelCount(
+        JNIEnv *env,
+        jclass type,
+        jlong engineHandle,
+        jint channelCount) {
+
+    PlayAudioEngine *engine = (PlayAudioEngine *) engineHandle;
+    if (engine == nullptr) {
+        LOGE("Engine handle is invalid, call createHandle() to create a new one");
+        return;
+    }
+    engine->setChannelCount(channelCount);
+}
+
+JNIEXPORT void JNICALL
 Java_com_google_sample_oboe_hellooboe_PlaybackEngine_native_1setBufferSizeInBursts(
         JNIEnv *env,
         jclass,

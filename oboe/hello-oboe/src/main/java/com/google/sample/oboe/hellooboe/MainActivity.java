@@ -24,6 +24,7 @@ import android.support.v4.view.MotionEventCompat;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.SimpleAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -42,11 +43,15 @@ public class MainActivity extends Activity {
 
     private static final String TAG = MainActivity.class.getName();
     private static final long UPDATE_LATENCY_EVERY_MILLIS = 1000;
+    private static final Integer[] CHANNEL_COUNT_OPTIONS = {1, 2, 3, 4, 5, 6, 7, 8};
+    // Default to Stereo (OPTIONS is zero-based array so index 1 = 2 channels)
+    private static final int CHANNEL_COUNT_DEFAULT_OPTION_INDEX = 1;
     private static final int[] BUFFER_SIZE_OPTIONS = {0, 1, 2, 4, 8};
     private static final String[] AUDIO_API_OPTIONS = {"Unspecified", "OpenSL ES", "AAudio"};
 
     private Spinner mAudioApiSpinner;
     private AudioDeviceSpinner mPlaybackDeviceSpinner;
+    private Spinner mChannelCountSpinner;
     private Spinner mBufferSizeSpinner;
     private TextView mLatencyText;
     private Timer mLatencyUpdater;
@@ -76,19 +81,30 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mAudioApiSpinner = findViewById(R.id.audioApiSpinner);
-        mAudioApiSpinner.setAdapter(new SimpleAdapter(
-                this,
-                createAudioApisOptionsList(),
-                R.layout.audio_apis_spinner, // the xml layout
-                new String[]{getString(R.string.audio_api_description_key)}, // field to display
-                new int[]{R.id.audioApiOption} // View to show field in
-        ));
+        setupAudioApiSpinner();
+        setupPlaybackDeviceSpinner();
+        setupChannelCountSpinner();
+        setupBufferSizeSpinner();
 
-        mAudioApiSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        // initialize native audio system
+        PlaybackEngine.create();
+
+        // Periodically update the UI with the output stream latency
+        mLatencyText = findViewById(R.id.latencyText);
+        setupLatencyUpdater();
+    }
+
+    private void setupChannelCountSpinner() {
+        mChannelCountSpinner = findViewById(R.id.channelCountSpinner);
+
+        ArrayAdapter<Integer> channelCountAdapter = new ArrayAdapter<Integer>(this, R.layout.channel_counts_spinner, CHANNEL_COUNT_OPTIONS);
+        mChannelCountSpinner.setAdapter(channelCountAdapter);
+        mChannelCountSpinner.setSelection(CHANNEL_COUNT_DEFAULT_OPTION_INDEX);
+
+        mChannelCountSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                PlaybackEngine.setAudioApi(i);
+                PlaybackEngine.setChannelCount(CHANNEL_COUNT_OPTIONS[mChannelCountSpinner.getSelectedItemPosition()]);
             }
 
             @Override
@@ -96,24 +112,9 @@ public class MainActivity extends Activity {
 
             }
         });
+    }
 
-        mPlaybackDeviceSpinner = findViewById(R.id.playbackDevicesSpinner);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            mPlaybackDeviceSpinner.setDirectionType(AudioManager.GET_DEVICES_OUTPUTS);
-            mPlaybackDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                    PlaybackEngine.setAudioDeviceId(getPlaybackDeviceId());
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> adapterView) {
-
-                }
-            });
-        }
-
+    private void setupBufferSizeSpinner() {
         mBufferSizeSpinner = findViewById(R.id.bufferSizeSpinner);
         mBufferSizeSpinner.setAdapter(new SimpleAdapter(
                 this,
@@ -134,13 +135,48 @@ public class MainActivity extends Activity {
 
             }
         });
+    }
 
-        // initialize native audio system
-        PlaybackEngine.create();
+    private void setupPlaybackDeviceSpinner() {
+        mPlaybackDeviceSpinner = findViewById(R.id.playbackDevicesSpinner);
 
-        // Periodically update the UI with the output stream latency
-        mLatencyText = findViewById(R.id.latencyText);
-        setupLatencyUpdater();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            mPlaybackDeviceSpinner.setDirectionType(AudioManager.GET_DEVICES_OUTPUTS);
+            mPlaybackDeviceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                    PlaybackEngine.setAudioDeviceId(getPlaybackDeviceId());
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                }
+            });
+        }
+    }
+
+    private void setupAudioApiSpinner() {
+        mAudioApiSpinner = findViewById(R.id.audioApiSpinner);
+        mAudioApiSpinner.setAdapter(new SimpleAdapter(
+                this,
+                createAudioApisOptionsList(),
+                R.layout.audio_apis_spinner, // the xml layout
+                new String[]{getString(R.string.audio_api_description_key)}, // field to display
+                new int[]{R.id.audioApiOption} // View to show field in
+        ));
+
+        mAudioApiSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                PlaybackEngine.setAudioApi(i);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
     private int getPlaybackDeviceId() {
