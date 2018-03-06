@@ -291,7 +291,7 @@ void AudioPlayer::setThreadAffinity() {
   if (result == 0) {
     LOGV("Thread affinity set");
   } else {
-    LOGW("Error setting thread affinity. Error no: %d", errno);
+    LOGW("Error setting thread affinity. Error no: %d", result);
   }
 
   is_thread_affinity_set_ = true;
