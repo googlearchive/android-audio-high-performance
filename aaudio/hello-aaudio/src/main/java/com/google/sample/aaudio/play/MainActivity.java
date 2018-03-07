@@ -121,6 +121,23 @@ public class MainActivity extends Activity {
         return ((AudioDeviceListEntry) mPlaybackDeviceSpinner.getSelectedItem()).getId();
     }
 
+    /**
+     * Get the buffer size from the buffer size spinner. Returns a value in "bursts".
+     *
+     * A burst is the minimum number of audio frames which can be read by the stream in a single
+     * operation. Typically this will be between 128 and 240 frames for a low latency audio stream.
+     * The exact value for a burst will depend on the audio device being used, the stream's path
+     * through the audio framework and a number of other factors.
+     *
+     * When specifying a buffer size to a stream it is desirable to specify it in bursts, rather
+     * than frames because this ensures that the buffer size is an exact multiple of the number of
+     * frames which are read/written to the stream in a single operation.
+     *
+     * For production apps a buffer size (in bursts) of 2 or more (double buffering) is recommended
+     * to protect against underruns.
+     *
+     * @return the selected value from the buffer size spinner
+     */
     private int getBufferSizeInBursts(){
         @SuppressWarnings("unchecked")
         HashMap<String,String> selectedOption = (HashMap<String,String>)
