@@ -21,6 +21,9 @@ Getting Started
     - Browse to oboe/build.gradle
     - Click "OK"
 1. Click Run -> Run, choose the sample you wish to run
+1. Update sample's copy of Oboe source code after the sample has been compiled before
+    - go to oboe/lib-oboe
+    - git pull origin master
 
 Screenshots
 -----------
