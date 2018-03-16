@@ -21,9 +21,9 @@ Getting Started
     - Browse to oboe/build.gradle
     - Click "OK"
 1. Click Run -> Run, choose the sample you wish to run
-1. Update sample's copy of Oboe source code after the sample has been compiled before
-    - go to oboe/lib-oboe
-    - git pull origin master
+1. The Oboe library will be downloaded from github the first time the sample is compiled. To update Oboe manually (e.g. to obtain the latest Oboe release) open a Terminal window and do the following: 
+    - Navigate to the oboe/lib-oboe folder
+    - Run `git pull origin master`
 
 Screenshots
 -----------
