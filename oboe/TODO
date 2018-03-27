@@ -1,7 +1,0 @@
-Oboe Samples TODO
-- Figure out a way of not duplicating the "common" module in both the aaudio and oboe samples.
-This can be done:
-https://stackoverflow.com/questions/17479076/android-studio-add-external-project-to-build-gradle
-- Buffer size selection isn't working - does it work in hello-aaudio?
-- Getting crash on Pixel 2 when changing playback device quickly, probably need to have a
-"restarting streams" state which blocks calls to change the device id
