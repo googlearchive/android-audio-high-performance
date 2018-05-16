@@ -31,6 +31,7 @@ android{
             signingConfig signingConfigs.release
             minifyEnabled = false
             proguardFiles.add(file('proguard-rules.txt'))
+            // Note: The following line may affect your compiler flags: see https://github.com/android-ndk/ndk/issues/699
             debuggable true
         }
     }
