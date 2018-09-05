@@ -2,12 +2,11 @@ apply plugin: 'com.android.application'
 
 
 android{
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 28
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 25
+        targetSdkVersion 26
         applicationId "com.example.simplesynth"
         versionName "3.0"
         versionCode 3
@@ -44,5 +43,5 @@ android{
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:appcompat-v7:28.0.0-rc02'
 }
