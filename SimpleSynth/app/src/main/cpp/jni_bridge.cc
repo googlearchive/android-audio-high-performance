@@ -80,6 +80,17 @@ JNIEXPORT void JNICALL Java_com_example_simplesynth_MainActivity_native_1createE
   SLASSERT(result);
 }
 
+JNIEXPORT void JNICALL
+Java_com_example_simplesynth_MainActivity_native_1destroyEngine(
+    JNIEnv *env,
+    jclass type) {
+
+    if (sl_output_mix_object_itf != nullptr){
+        (*sl_output_mix_object_itf)->Destroy(sl_output_mix_object_itf);
+    }
+    if (sl_engine_object_itf != nullptr) (*sl_engine_object_itf)->Destroy(sl_engine_object_itf);
+}
+
 JNIEXPORT jobject JNICALL Java_com_example_simplesynth_MainActivity_native_1createAudioPlayer(
     JNIEnv *env,
     jclass clazz,
@@ -122,6 +133,17 @@ JNIEXPORT jobject JNICALL Java_com_example_simplesynth_MainActivity_native_1crea
 
   player->play();
   return player->getAudioTrack();
+}
+
+JNIEXPORT void JNICALL
+Java_com_example_simplesynth_MainActivity_native_1destroyAudioPlayer(
+    JNIEnv *env,
+    jclass type) {
+
+  player->stop();
+  delete player;
+  delete load_stabilizer;
+  delete synth;
 }
 
 JNIEXPORT void JNICALL Java_com_example_simplesynth_MainActivity_native_1noteOn(

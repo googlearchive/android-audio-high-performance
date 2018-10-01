@@ -88,6 +88,11 @@ AudioPlayer::AudioPlayer(SLEngineItf engine_itf,
   registerCallback(sl_buffer_queue_itf_, SLPlayerCallback, this);
 }
 
+AudioPlayer::~AudioPlayer() {
+  if (sl_player_object_itf_ != nullptr) (*sl_player_object_itf_)->Destroy(sl_player_object_itf_);
+  delete[] audio_buffer_;
+}
+
 void AudioPlayer::initAudioBuffer(int frames_per_buffer,
                                   int num_audio_channels,
                                   int16_t *&audio_buffer) {
@@ -251,6 +256,17 @@ void AudioPlayer::play() {
           samples_rendered * sizeof(audio_buffer_[0]));
       assert(SL_RESULT_SUCCESS == result);
     }
+  }
+}
+
+void AudioPlayer::stop() {
+
+  if (sl_play_itf_ == nullptr) {
+    LOGE("SLPlayItf was null");
+  } else {
+    SLresult result = (*sl_play_itf_)->SetPlayState(sl_play_itf_, SL_PLAYSTATE_STOPPED);
+    assert(SL_RESULT_SUCCESS == result);
+    LOGV("play state set to stopped");
   }
 }
 

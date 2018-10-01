@@ -40,9 +40,13 @@ public:
               AudioStreamFormat stream_format,
               int api_level);
 
+  virtual ~AudioPlayer();
+
   void processSLCallback(SLAndroidSimpleBufferQueueItf buffer_queue_itf);
 
   void play();
+
+  void stop();
 
   void setCallbackThreadCPUIds(std::vector<int> core_ids);
 

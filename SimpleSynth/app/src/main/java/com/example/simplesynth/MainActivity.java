@@ -59,13 +59,16 @@ public class MainActivity extends AppCompatActivity {
     private AudioTrack mAudioTrack;
     private VariableLoadGenerator mLoadThread;
     private SharedPreferences mSettings;
+    private Timer mUnderrunUpdater;
 
     // Native methods
     private static native void native_createEngine(int apiLevel);
+    private static native void native_destroyEngine();
     private static native AudioTrack native_createAudioPlayer(int frameRate,
                                                         int framesPerBuffer,
                                                         int numBuffers,
                                                         int[] exclusiveCores);
+    private static native void native_destroyAudioPlayer();
     private static native void native_noteOn();
     private static native void native_noteOff();
     private static native void native_setWorkCycles(int workCycles);
@@ -106,6 +109,11 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = mSettings.edit();
         editor.putInt(PREFERENCES_KEY_WORK_CYCLES, workCycles);
         editor.apply();
+
+        if (mUnderrunUpdater != null) mUnderrunUpdater.cancel();
+
+        native_destroyAudioPlayer();
+        native_destroyEngine();
     }
 
     private void initDeviceInfoUI(){
@@ -269,8 +277,8 @@ public class MainActivity extends AppCompatActivity {
                     " see README for more");
         } else {
 
-            Timer underrunUpdater = new Timer();
-            underrunUpdater.schedule(new TimerTask() {
+            mUnderrunUpdater = new Timer();
+            mUnderrunUpdater.schedule(new TimerTask() {
                 @Override
                 @TargetApi(Build.VERSION_CODES.N)
                 public void run() {
