@@ -89,7 +89,10 @@ AudioPlayer::AudioPlayer(SLEngineItf engine_itf,
 }
 
 AudioPlayer::~AudioPlayer() {
-  if (sl_player_object_itf_ != nullptr) (*sl_player_object_itf_)->Destroy(sl_player_object_itf_);
+  if (sl_player_object_itf_ != nullptr){
+    (*sl_player_object_itf_)->Destroy(sl_player_object_itf_);
+    sl_player_object_itf_ = nullptr;
+  }
   delete[] audio_buffer_;
 }
 

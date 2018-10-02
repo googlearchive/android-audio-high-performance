@@ -86,9 +86,13 @@ Java_com_example_simplesynth_MainActivity_native_1destroyEngine(
     jclass type) {
 
     if (sl_output_mix_object_itf != nullptr){
-        (*sl_output_mix_object_itf)->Destroy(sl_output_mix_object_itf);
+      (*sl_output_mix_object_itf)->Destroy(sl_output_mix_object_itf);
+      sl_output_mix_object_itf = nullptr;
     }
-    if (sl_engine_object_itf != nullptr) (*sl_engine_object_itf)->Destroy(sl_engine_object_itf);
+    if (sl_engine_object_itf != nullptr){
+      (*sl_engine_object_itf)->Destroy(sl_engine_object_itf);
+      sl_engine_object_itf = nullptr;
+    }
 }
 
 JNIEXPORT jobject JNICALL Java_com_example_simplesynth_MainActivity_native_1createAudioPlayer(
